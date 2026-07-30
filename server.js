@@ -25,6 +25,12 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
+  if (req.url === '/api/online-count') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ count: wss.clients.size }));
+    return;
+  }
+
   let filePath = req.url === '/' ? '/index.html' : req.url;
   filePath = path.join(__dirname, 'public', filePath);
 

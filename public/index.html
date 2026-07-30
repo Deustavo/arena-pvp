@@ -93,7 +93,7 @@
   #canvas-wrap {
     position: relative;
   }
-  #gameOverOverlay {
+  #gameOverOverlay, #waitingOverlay {
     display: none;
     position: absolute;
     inset: 2px;
@@ -101,8 +101,9 @@
     align-items: center;
     justify-content: center;
     gap: 20px;
+    background: #2b2b3d;
   }
-  #gameOverOverlay h2 {
+  #gameOverOverlay h2, #waitingOverlay h2 {
     margin: 0;
     font-size: 36px;
   }
@@ -112,11 +113,11 @@
   #gameOverOverlay.lose h2 {
     color: #e63946;
   }
-  #gameOverOverlay .overlay-buttons {
+  #gameOverOverlay .overlay-buttons, #waitingOverlay .overlay-buttons {
     display: flex;
     gap: 16px;
   }
-  #gameOverOverlay button {
+  #gameOverOverlay button, #waitingOverlay button {
     font-size: 16px;
     padding: 10px 22px;
     border-radius: 8px;
@@ -125,30 +126,71 @@
     background: #457b9d;
     color: #fff;
   }
-  #gameOverOverlay button:hover {
+  #gameOverOverlay button:hover, #waitingOverlay button:hover {
     background: #3a6a89;
   }
-  #gameOverOverlay button#btnBackToMenu {
+  #gameOverOverlay button#btnBackToMenu, #waitingOverlay button#btnLeaveQueue {
     background: #555;
   }
-  #gameOverOverlay button#btnBackToMenu:hover {
+  #gameOverOverlay button#btnBackToMenu:hover, #waitingOverlay button#btnLeaveQueue:hover {
     background: #444;
   }
-  #status {
-    margin-top: 8px;
-    font-size: 16px;
-    min-height: 24px;
-  }
-  #btnMenu {
-    margin-top: 10px;
+  #onlineCount {
+    margin-top: 4px;
     font-size: 14px;
-    padding: 8px 18px;
-    border-radius: 6px;
+    color: #4ade80;
+  }
+  #menuDivider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #444;
+    margin: 4px 0;
+  }
+  #btnHowToPlay {
+    background: #333;
+  }
+  #btnHowToPlay:hover {
+    background: #222;
+  }
+  #howToPlayOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #howToPlayOverlay .modal {
+    background: #2b2b3d;
+    border: 2px solid #555;
+    border-radius: 10px;
+    padding: 24px 32px;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #howToPlayOverlay h2 {
+    margin: 0;
+  }
+  #howToPlayOverlay ul {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.6;
+  }
+  #howToPlayOverlay button {
+    align-self: center;
+    font-size: 16px;
+    padding: 10px 22px;
+    border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #555;
+    background: #457b9d;
     color: #fff;
-    display: none;
+  }
+  #howToPlayOverlay button:hover {
+    background: #3a6a89;
   }
 </style>
 </head>
@@ -157,6 +199,23 @@
     <h1>Jogo do Ano</h1>
     <button id="btnOnline">Jogar Online</button>
     <button id="btnBot">Jogar contra Bot</button>
+    <hr id="menuDivider">
+    <button id="btnHowToPlay">Como jogar</button>
+    <div id="onlineCount">● <span id="onlineCountValue">--</span> jogador(es) online</div>
+  </div>
+
+  <div id="howToPlayOverlay">
+    <div class="modal">
+      <h2>Como jogar</h2>
+      <ul>
+        <li>Mova-se com <strong>WASD</strong> ou as <strong>setas</strong> do teclado.</li>
+        <li>Clique na tela para atirar em direção ao cursor.</li>
+        <li>Cada jogador tem 3 vidas; acertar um tiro tira uma vida do oponente.</li>
+        <li>Vence quem deixar o adversário sem vidas.</li>
+        <li>Jogue online contra outra pessoa ou treine contra o bot.</li>
+      </ul>
+      <button id="btnCloseHowToPlay">Entendi</button>
+    </div>
   </div>
 
   <div id="game-wrap">
@@ -179,9 +238,13 @@
           <button id="btnBackToMenu">Menu inicial</button>
         </div>
       </div>
+      <div id="waitingOverlay">
+        <h2 id="waitingMessage">Aguardando oponente...</h2>
+        <div class="overlay-buttons">
+          <button id="btnLeaveQueue">Sair da fila</button>
+        </div>
+      </div>
     </div>
-    <div id="status"></div>
-    <button id="btnMenu">Voltar ao Menu</button>
   </div>
 
   <script src="client.js"></script>

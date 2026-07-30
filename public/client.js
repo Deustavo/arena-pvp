@@ -1,17 +1,21 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const statusEl = document.getElementById('status');
 const livesP0El = document.getElementById('livesP0');
 const livesP1El = document.getElementById('livesP1');
 const menuEl = document.getElementById('menu');
 const gameWrapEl = document.getElementById('game-wrap');
 const btnOnline = document.getElementById('btnOnline');
 const btnBot = document.getElementById('btnBot');
-const btnMenu = document.getElementById('btnMenu');
 const gameOverOverlayEl = document.getElementById('gameOverOverlay');
 const gameOverMessageEl = document.getElementById('gameOverMessage');
 const btnPlayAgain = document.getElementById('btnPlayAgain');
 const btnBackToMenu = document.getElementById('btnBackToMenu');
+const waitingOverlayEl = document.getElementById('waitingOverlay');
+const btnLeaveQueue = document.getElementById('btnLeaveQueue');
+const btnHowToPlay = document.getElementById('btnHowToPlay');
+const btnCloseHowToPlay = document.getElementById('btnCloseHowToPlay');
+const howToPlayOverlayEl = document.getElementById('howToPlayOverlay');
+const onlineCountValueEl = document.getElementById('onlineCountValue');
 
 // Shared constants (must match server.js physics for online mode;
 // bot mode simulates the same values locally).
@@ -91,12 +95,11 @@ function checkDeathExplosion(rawIndex, playerState) {
   prevAlive[rawIndex] = playerState.alive;
 }
 
-function recordGameOver(result, message) {
+function recordGameOver(result) {
   gameOver = true;
   gameOverAt = Date.now();
   overlayShown = false;
   lastResult = result;
-  statusEl.textContent = message;
 }
 
 function showGameOverOverlay() {
@@ -114,6 +117,14 @@ function showGameOverOverlay() {
   }
   gameOverMessageEl.textContent = text;
   gameOverOverlayEl.style.display = 'flex';
+}
+
+function showWaitingOverlay() {
+  waitingOverlayEl.style.display = 'flex';
+}
+
+function hideWaitingOverlay() {
+  waitingOverlayEl.style.display = 'none';
 }
 
 // ---------- Pixel-art hearts ----------
@@ -199,13 +210,13 @@ const keyMap = {
 
 btnOnline.addEventListener('click', () => startOnline());
 btnBot.addEventListener('click', () => startBot());
-btnMenu.addEventListener('click', () => {
-  if (mode === 'online' && playerIndex === null && !gameOver) {
-    leaveQueue();
-  } else {
-    backToMenu();
-  }
+btnHowToPlay.addEventListener('click', () => {
+  howToPlayOverlayEl.style.display = 'flex';
 });
+btnCloseHowToPlay.addEventListener('click', () => {
+  howToPlayOverlayEl.style.display = 'none';
+});
+btnLeaveQueue.addEventListener('click', () => leaveQueue());
 btnPlayAgain.addEventListener('click', () => {
   if (mode === 'online') startOnline();
   else if (mode === 'bot') startBot();
@@ -215,12 +226,43 @@ btnBackToMenu.addEventListener('click', () => backToMenu());
 function showMenu() {
   menuEl.style.display = 'flex';
   gameWrapEl.style.display = 'none';
-  btnMenu.style.display = 'none';
+  hideWaitingOverlay();
+  startOnlineCountPolling();
 }
 
 function showGame() {
   menuEl.style.display = 'none';
   gameWrapEl.style.display = 'flex';
+  stopOnlineCountPolling();
+}
+
+// ---------- Online player count ----------
+
+const ONLINE_COUNT_POLL_MS = 5000;
+let onlineCountInterval = null;
+
+async function fetchOnlineCount() {
+  try {
+    const res = await fetch('/api/online-count');
+    const data = await res.json();
+    onlineCountValueEl.textContent = data.count;
+  } catch {
+    onlineCountValueEl.textContent = '--';
+  }
+}
+
+function startOnlineCountPolling() {
+  fetchOnlineCount();
+  if (!onlineCountInterval) {
+    onlineCountInterval = setInterval(fetchOnlineCount, ONLINE_COUNT_POLL_MS);
+  }
+}
+
+function stopOnlineCountPolling() {
+  if (onlineCountInterval) {
+    clearInterval(onlineCountInterval);
+    onlineCountInterval = null;
+  }
 }
 
 function resetSharedState() {
@@ -242,6 +284,7 @@ function resetSharedState() {
   explosionParticles = [];
   gameOverOverlayEl.style.display = 'none';
   gameOverOverlayEl.classList.remove('win', 'lose');
+  hideWaitingOverlay();
 }
 
 function backToMenu() {
@@ -262,13 +305,12 @@ function startOnline() {
   mode = 'online';
   resetSharedState();
   showGame();
-  statusEl.textContent = 'Conectando...';
 
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   ws = new WebSocket(`${protocol}//${location.host}`);
 
   ws.onopen = () => {
-    statusEl.textContent = 'Conectado. Aguardando oponente...';
+    showWaitingOverlay();
   };
 
   ws.onmessage = (event) => {
@@ -276,16 +318,16 @@ function startOnline() {
   };
 
   ws.onclose = () => {
-    if (mode === 'online') statusEl.textContent = 'Conexão encerrada.';
+    if (mode === 'online') {
+      hideWaitingOverlay();
+    }
   };
 }
 
 function handleOnlineMessage(msg) {
   switch (msg.type) {
     case 'waiting':
-      statusEl.textContent = 'Aguardando oponente...';
-      btnMenu.textContent = 'Sair da fila';
-      btnMenu.style.display = 'inline-block';
+      showWaitingOverlay();
       break;
     case 'left':
       backToMenu();
@@ -300,8 +342,7 @@ function handleOnlineMessage(msg) {
       canvas.width = arena.w;
       canvas.height = arena.h;
       gameOver = false;
-      btnMenu.style.display = 'none';
-      statusEl.textContent = `Partida #${matchId.slice(0, 8)} iniciada! Mova com WASD/setas, clique para atirar.`;
+      hideWaitingOverlay();
       break;
     case 'state':
       latestState = msg;
@@ -309,11 +350,11 @@ function handleOnlineMessage(msg) {
       break;
     case 'gameover':
       if (msg.winnerIndex === playerIndex) {
-        recordGameOver('win', 'Você venceu!');
+        recordGameOver('win');
       } else if (msg.winnerIndex === null) {
-        recordGameOver('draw', 'Partida encerrada.');
+        recordGameOver('draw');
       } else {
-        recordGameOver('lose', 'Você perdeu!');
+        recordGameOver('lose');
       }
       break;
   }
@@ -354,8 +395,6 @@ function startBot() {
   resetSharedState();
   playerIndex = 0;
   showGame();
-  btnMenu.style.display = 'none';
-  statusEl.textContent = 'Contra o bot! Mova com WASD/setas, clique para atirar.';
 
   bot = {
     players: [makeBotPlayer(0), makeBotPlayer(1)],
@@ -471,7 +510,7 @@ function botTick() {
         target.lives = 0;
         target.alive = false;
         const winnerIndex = proj.ownerIndex;
-        recordGameOver(winnerIndex === 0 ? 'win' : 'lose', winnerIndex === 0 ? 'Você venceu!' : 'Você perdeu!');
+        recordGameOver(winnerIndex === 0 ? 'win' : 'lose');
         stopBotInterval();
       }
       return false;
