@@ -11,6 +11,8 @@ const gameOverMessageEl = document.getElementById('gameOverMessage');
 const btnPlayAgain = document.getElementById('btnPlayAgain');
 const btnBackToMenu = document.getElementById('btnBackToMenu');
 const waitingOverlayEl = document.getElementById('waitingOverlay');
+const countdownOverlayEl = document.getElementById('countdownOverlay');
+const countdownNumberEl = document.getElementById('countdownNumber');
 const btnLeaveQueue = document.getElementById('btnLeaveQueue');
 const btnHowToPlay = document.getElementById('btnHowToPlay');
 const btnCloseHowToPlay = document.getElementById('btnCloseHowToPlay');
@@ -28,6 +30,7 @@ const PROJECTILE_COOLDOWN_MS = 300;
 const MAX_LIVES = 3;
 const TICK_MS = 1000 / 60;
 const COLORS = ['#e63946', '#457b9d'];
+const BOT_COUNTDOWN_MS = 3000;
 
 let mode = null; // 'online' | 'bot'
 let ws = null;
@@ -40,6 +43,8 @@ let colors = COLORS;
 
 let latestState = { players: [], projectiles: [] };
 let gameOver = false;
+let matchStarted = false;
+let countdownTimer = null;
 
 // Entity interpolation buffer: render slightly in the past so movement stays
 // smooth between server ticks even when network delivery is jittery.
@@ -138,6 +143,55 @@ function showWaitingOverlay() {
 
 function hideWaitingOverlay() {
   waitingOverlayEl.style.display = 'none';
+}
+
+function showCountdown(ms, onDone) {
+  hideWaitingOverlay();
+  hideCountdown();
+  countdownOverlayEl.style.display = 'flex';
+  const endAt = Date.now() + ms;
+  const tick = () => {
+    const remaining = endAt - Date.now();
+    const secs = Math.ceil(remaining / 1000);
+    if (remaining <= 0) {
+      countdownOverlayEl.style.display = 'none';
+      countdownTimer = null;
+      if (onDone) onDone();
+      return;
+    }
+    countdownNumberEl.textContent = secs;
+    countdownTimer = setTimeout(tick, 100);
+  };
+  tick();
+}
+
+function hideCountdown() {
+  if (countdownTimer) {
+    clearTimeout(countdownTimer);
+    countdownTimer = null;
+  }
+  countdownOverlayEl.style.display = 'none';
+}
+
+function playStartSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioCtx();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.45);
+    osc.onended = () => audioCtx.close();
+  } catch {
+    // Audio unavailable (e.g. no user interaction yet) — fail silently.
+  }
 }
 
 // ---------- Pixel-art hearts ----------
@@ -290,6 +344,7 @@ function resetSharedState() {
   predicted = { x: 0, y: 0, initialized: false };
   lastFrameTime = null;
   gameOver = false;
+  matchStarted = false;
   input.up = input.down = input.left = input.right = false;
   canvas.width = arena.w;
   canvas.height = arena.h;
@@ -301,6 +356,7 @@ function resetSharedState() {
   gameOverOverlayEl.style.display = 'none';
   gameOverOverlayEl.classList.remove('win', 'lose');
   hideWaitingOverlay();
+  hideCountdown();
 }
 
 function backToMenu() {
@@ -358,7 +414,15 @@ function handleOnlineMessage(msg) {
       canvas.width = arena.w;
       canvas.height = arena.h;
       gameOver = false;
-      hideWaitingOverlay();
+      matchStarted = false;
+      latestState = { players: msg.players, projectiles: [] };
+      updateHud();
+      showCountdown(msg.countdownMs);
+      break;
+    case 'start':
+      matchStarted = true;
+      hideCountdown();
+      playStartSound();
       break;
     case 'state': {
       latestState = msg;
@@ -422,11 +486,22 @@ function startBot() {
     players: [makeBotPlayer(0), makeBotPlayer(1)],
     projectiles: [],
     nextProjectileId: 1,
-    botNextShot: Date.now() + 800,
+    botNextShot: 0,
     botDodgeUntil: 0,
   };
 
-  botInterval = setInterval(botTick, TICK_MS);
+  latestState = {
+    players: bot.players.map((p) => ({ x: p.x, y: p.y, lives: p.lives, alive: p.alive })),
+    projectiles: [],
+  };
+  updateHud();
+
+  showCountdown(BOT_COUNTDOWN_MS, () => {
+    matchStarted = true;
+    playStartSound();
+    bot.botNextShot = Date.now() + 800;
+    botInterval = setInterval(botTick, TICK_MS);
+  });
 }
 
 function stopBotInterval() {
@@ -675,7 +750,7 @@ window.addEventListener('keyup', (e) => {
 });
 
 canvas.addEventListener('click', (e) => {
-  if (!mode || gameOver) return;
+  if (!mode || gameOver || !matchStarted) return;
   const rect = canvas.getBoundingClientRect();
   const targetX = e.clientX - rect.left;
   const targetY = e.clientY - rect.top;

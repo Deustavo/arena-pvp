@@ -93,7 +93,7 @@
   #canvas-wrap {
     position: relative;
   }
-  #gameOverOverlay, #waitingOverlay {
+  #gameOverOverlay, #waitingOverlay, #countdownOverlay {
     display: none;
     position: absolute;
     inset: 2px;
@@ -102,6 +102,15 @@
     justify-content: center;
     gap: 20px;
     background: #2b2b3d;
+  }
+  #countdownOverlay {
+    background: rgba(43, 43, 61, 0.85);
+  }
+  #countdownNumber {
+    font-size: 120px;
+    font-weight: bold;
+    color: #4ade80;
+    text-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
   }
   #gameOverOverlay h2, #waitingOverlay h2 {
     margin: 0;
@@ -243,6 +252,10 @@
         <div class="overlay-buttons">
           <button id="btnLeaveQueue">Sair da fila</button>
         </div>
+      </div>
+      <div id="countdownOverlay">
+        <h2>Partida encontrada!</h2>
+        <div id="countdownNumber"></div>
       </div>
     </div>
   </div>

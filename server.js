@@ -15,6 +15,7 @@ const PROJECTILE_SPEED = 9;
 const PROJECTILE_COOLDOWN_MS = 300;
 const MAX_LIVES = 3;
 const TICK_MS = 1000 / 60;
+const COUNTDOWN_MS = 3000;
 
 const COLORS = ['#e63946', '#457b9d'];
 
@@ -88,11 +89,23 @@ function createMatch(wsA, wsB) {
       playerSize: PLAYER_SIZE,
       projectileSize: PROJECTILE_SIZE,
       colors: COLORS,
+      countdownMs: COUNTDOWN_MS,
+      players: players.map((pl) => ({
+        x: pl.x, y: pl.y, lives: pl.lives, alive: pl.alive,
+      })),
     }));
   });
 
-  match.interval = setInterval(() => tick(match), TICK_MS);
   matches.add(match);
+  setTimeout(() => {
+    if (!match.running) return;
+    const payload = JSON.stringify({ type: 'start' });
+    for (const p of match.players) {
+      if (p.ws.readyState === WebSocket.OPEN) p.ws.send(payload);
+    }
+    match.interval = setInterval(() => tick(match), TICK_MS);
+  }, COUNTDOWN_MS);
+
   console.log(`Partida ${match.id} iniciada. Partidas ativas: ${matches.size}`);
   return match;
 }
@@ -209,7 +222,7 @@ wss.on('connection', (ws) => {
     } else if (msg.type === 'shoot' && ws.player && ws.match) {
       const player = ws.player;
       const match = ws.match;
-      if (!player.alive) return;
+      if (!player.alive || !match.interval) return;
       const now = Date.now();
       if (now - player.lastShot < PROJECTILE_COOLDOWN_MS) return;
       player.lastShot = now;
