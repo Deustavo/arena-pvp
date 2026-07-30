@@ -46,7 +46,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ server, perMessageDeflate: false });
 
 // Waiting room: at most one match forms at a time for simplicity.
 let waitingPlayer = null;

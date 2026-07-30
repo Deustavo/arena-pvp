@@ -3,6 +3,7 @@ services:
     name: jogo-do-ano
     runtime: node
     plan: free
+    region: ohio
     buildCommand: npm install
     startCommand: npm start
     envVars:

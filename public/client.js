@@ -41,6 +41,11 @@ let colors = COLORS;
 let latestState = { players: [], projectiles: [] };
 let gameOver = false;
 
+// Entity interpolation buffer: render slightly in the past so movement stays
+// smooth between server ticks even when network delivery is jittery.
+const INTERP_DELAY_MS = 100;
+let stateBuffer = [];
+
 // ---------- Game over overlay / explosion ----------
 
 const GAMEOVER_OVERLAY_DELAY = 2000;
@@ -273,6 +278,7 @@ function resetSharedState() {
   projectileSize = PROJECTILE_SIZE;
   colors = COLORS;
   latestState = { players: [], projectiles: [] };
+  stateBuffer = [];
   gameOver = false;
   input.up = input.down = input.left = input.right = false;
   canvas.width = arena.w;
@@ -344,10 +350,15 @@ function handleOnlineMessage(msg) {
       gameOver = false;
       hideWaitingOverlay();
       break;
-    case 'state':
+    case 'state': {
       latestState = msg;
+      const now = Date.now();
+      stateBuffer.push({ t: now, players: msg.players, projectiles: msg.projectiles });
+      const cutoff = now - 1000;
+      while (stateBuffer.length > 2 && stateBuffer[0].t < cutoff) stateBuffer.shift();
       updateHud();
       break;
+    }
     case 'gameover':
       if (msg.winnerIndex === playerIndex) {
         recordGameOver('win');
@@ -549,6 +560,31 @@ function clamp(v, min, max) {
 
 // ---------- Input / HUD / rendering (shared) ----------
 
+function getRenderState() {
+  if (mode !== 'online' || stateBuffer.length < 2) return latestState;
+
+  const renderTime = Date.now() - INTERP_DELAY_MS;
+  let older = stateBuffer[0];
+  let newer = stateBuffer[stateBuffer.length - 1];
+  for (let i = 0; i < stateBuffer.length - 1; i++) {
+    if (stateBuffer[i].t <= renderTime && stateBuffer[i + 1].t >= renderTime) {
+      older = stateBuffer[i];
+      newer = stateBuffer[i + 1];
+      break;
+    }
+  }
+
+  const span = newer.t - older.t;
+  const t = span > 0 ? clamp((renderTime - older.t) / span, 0, 1) : 1;
+  const players = newer.players.map((np, i) => {
+    const op = older.players[i];
+    if (!op || !np.alive || !op.alive) return np;
+    return { ...np, x: op.x + (np.x - op.x) * t, y: op.y + (np.y - op.y) * t };
+  });
+
+  return { players, projectiles: newer.projectiles };
+}
+
 function updateHud() {
   const oppIndex = playerIndex === 0 ? 1 : 0;
   const me = latestState.players[playerIndex];
@@ -607,8 +643,9 @@ function render() {
       ctx.fillStyle = '#4a4a4a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else {
-      for (let i = 0; i < latestState.players.length; i++) {
-        const p = latestState.players[i];
+      const renderState = getRenderState();
+      for (let i = 0; i < renderState.players.length; i++) {
+        const p = renderState.players[i];
         if (!p || !p.alive) continue;
 
         const flashRemaining = hitFlashUntil[i] - now;
@@ -631,7 +668,7 @@ function render() {
         }
       }
 
-      for (const proj of latestState.projectiles) {
+      for (const proj of renderState.projectiles) {
         ctx.fillStyle = colors[proj.ownerIndex];
         ctx.beginPath();
         ctx.arc(proj.x, proj.y, projectileSize / 2, 0, Math.PI * 2);
