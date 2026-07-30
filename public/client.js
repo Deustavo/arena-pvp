@@ -46,6 +46,14 @@ let gameOver = false;
 const INTERP_DELAY_MS = 100;
 let stateBuffer = [];
 
+// Client-side prediction for the local player: move it immediately on
+// input instead of waiting for the round trip, then reconcile against the
+// authoritative server position as it arrives.
+const RECONCILE_LERP = 0.2;
+const RECONCILE_SNAP_DIST = 40;
+let predicted = { x: 0, y: 0, initialized: false };
+let lastFrameTime = null;
+
 // ---------- Game over overlay / explosion ----------
 
 const GAMEOVER_OVERLAY_DELAY = 2000;
@@ -279,6 +287,8 @@ function resetSharedState() {
   colors = COLORS;
   latestState = { players: [], projectiles: [] };
   stateBuffer = [];
+  predicted = { x: 0, y: 0, initialized: false };
+  lastFrameTime = null;
   gameOver = false;
   input.up = input.down = input.left = input.right = false;
   canvas.width = arena.w;
@@ -356,6 +366,7 @@ function handleOnlineMessage(msg) {
       stateBuffer.push({ t: now, players: msg.players, projectiles: msg.projectiles });
       const cutoff = now - 1000;
       while (stateBuffer.length > 2 && stateBuffer[0].t < cutoff) stateBuffer.shift();
+      reconcilePrediction(msg.players[playerIndex]);
       updateHud();
       break;
     }
@@ -560,6 +571,52 @@ function clamp(v, min, max) {
 
 // ---------- Input / HUD / rendering (shared) ----------
 
+function reconcilePrediction(mine) {
+  if (!mine) return;
+  if (!predicted.initialized || !mine.alive) {
+    predicted.x = mine.x;
+    predicted.y = mine.y;
+    predicted.initialized = true;
+    return;
+  }
+  const dx = mine.x - predicted.x;
+  const dy = mine.y - predicted.y;
+  if (Math.hypot(dx, dy) > RECONCILE_SNAP_DIST) {
+    predicted.x = mine.x;
+    predicted.y = mine.y;
+  } else {
+    predicted.x += dx * RECONCILE_LERP;
+    predicted.y += dy * RECONCILE_LERP;
+  }
+}
+
+function advancePrediction() {
+  const now = performance.now();
+  if (lastFrameTime === null) {
+    lastFrameTime = now;
+    return;
+  }
+  const dt = now - lastFrameTime;
+  lastFrameTime = now;
+
+  if (!predicted.initialized) return;
+  const me = latestState.players[playerIndex];
+  if (!me || !me.alive) return;
+
+  let dx = 0, dy = 0;
+  if (input.up) dy -= 1;
+  if (input.down) dy += 1;
+  if (input.left) dx -= 1;
+  if (input.right) dx += 1;
+  if (dx !== 0 && dy !== 0) {
+    dx *= Math.SQRT1_2;
+    dy *= Math.SQRT1_2;
+  }
+  const speedPerMs = PLAYER_SPEED / TICK_MS;
+  predicted.x = clamp(predicted.x + dx * speedPerMs * dt, 0, arena.w - playerSize);
+  predicted.y = clamp(predicted.y + dy * speedPerMs * dt, 0, arena.h - playerSize);
+}
+
 function getRenderState() {
   if (mode !== 'online' || stateBuffer.length < 2) return latestState;
 
@@ -643,10 +700,14 @@ function render() {
       ctx.fillStyle = '#4a4a4a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else {
+      if (mode === 'online') advancePrediction();
       const renderState = getRenderState();
       for (let i = 0; i < renderState.players.length; i++) {
-        const p = renderState.players[i];
+        let p = renderState.players[i];
         if (!p || !p.alive) continue;
+        if (mode === 'online' && i === playerIndex && predicted.initialized) {
+          p = { ...p, x: predicted.x, y: predicted.y };
+        }
 
         const flashRemaining = hitFlashUntil[i] - now;
         let ox = 0, oy = 0;
