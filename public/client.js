@@ -8,6 +8,10 @@ const gameWrapEl = document.getElementById('game-wrap');
 const btnOnline = document.getElementById('btnOnline');
 const btnBot = document.getElementById('btnBot');
 const btnMenu = document.getElementById('btnMenu');
+const gameOverOverlayEl = document.getElementById('gameOverOverlay');
+const gameOverMessageEl = document.getElementById('gameOverMessage');
+const btnPlayAgain = document.getElementById('btnPlayAgain');
+const btnBackToMenu = document.getElementById('btnBackToMenu');
 
 // Shared constants (must match server.js physics for online mode;
 // bot mode simulates the same values locally).
@@ -33,6 +37,156 @@ let colors = COLORS;
 let latestState = { players: [], projectiles: [] };
 let gameOver = false;
 
+// ---------- Game over overlay / explosion ----------
+
+const GAMEOVER_OVERLAY_DELAY = 2000;
+let gameOverAt = 0;
+let overlayShown = false;
+let lastResult = null; // 'win' | 'lose' | 'draw'
+let prevAlive = [true, true];
+
+const EXPLOSION_PARTICLE_COUNT = 26;
+const EXPLOSION_LIFE_MS = 800;
+let explosionParticles = [];
+
+function spawnExplosion(ownerIndex, cx, cy) {
+  const color = colors[ownerIndex] || '#ffffff';
+  const now = Date.now();
+  for (let i = 0; i < EXPLOSION_PARTICLE_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 4;
+    explosionParticles.push({
+      x: cx,
+      y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 2 + Math.random() * 4,
+      color,
+      startTime: now,
+      life: EXPLOSION_LIFE_MS * (0.7 + Math.random() * 0.4),
+    });
+  }
+}
+
+function updateAndDrawExplosions(now) {
+  if (!explosionParticles.length) return;
+  explosionParticles = explosionParticles.filter((p) => now - p.startTime < p.life);
+  for (const p of explosionParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.95;
+    p.vy *= 0.95;
+    const t = (now - p.startTime) / p.life;
+    ctx.globalAlpha = Math.max(0, 1 - t);
+    ctx.fillStyle = t < 0.4 ? '#ffffff' : p.color;
+    ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function checkDeathExplosion(rawIndex, playerState) {
+  if (prevAlive[rawIndex] && !playerState.alive) {
+    spawnExplosion(rawIndex, playerState.x + playerSize / 2, playerState.y + playerSize / 2);
+  }
+  prevAlive[rawIndex] = playerState.alive;
+}
+
+function recordGameOver(result, message) {
+  gameOver = true;
+  gameOverAt = Date.now();
+  overlayShown = false;
+  lastResult = result;
+  statusEl.textContent = message;
+}
+
+function showGameOverOverlay() {
+  overlayShown = true;
+  gameOverOverlayEl.classList.remove('win', 'lose');
+  let text;
+  if (lastResult === 'win') {
+    text = 'Você ganhou';
+    gameOverOverlayEl.classList.add('win');
+  } else if (lastResult === 'lose') {
+    text = 'Você perdeu';
+    gameOverOverlayEl.classList.add('lose');
+  } else {
+    text = 'Partida encerrada';
+  }
+  gameOverMessageEl.textContent = text;
+  gameOverOverlayEl.style.display = 'flex';
+}
+
+// ---------- Pixel-art hearts ----------
+
+const HEART_PIXELS = [
+  [0, 1], [0, 2], [0, 4], [0, 5],
+  [1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6],
+  [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [2, 6],
+  [3, 1], [3, 2], [3, 3], [3, 4], [3, 5],
+  [4, 2], [4, 3], [4, 4],
+  [5, 3],
+];
+const HEART_PIXEL_SIZE = 3;
+
+let heartsEls = [[], []];
+let prevLives = [MAX_LIVES, MAX_LIVES];
+const HIT_FLASH_DURATION = 400;
+let hitFlashUntil = [0, 0];
+
+function createHeartEl() {
+  const heart = document.createElement('div');
+  heart.className = 'heart';
+  for (const [row, col] of HEART_PIXELS) {
+    const px = document.createElement('div');
+    px.className = 'heart-pixel';
+    px.style.left = `${col * HEART_PIXEL_SIZE}px`;
+    px.style.top = `${row * HEART_PIXEL_SIZE}px`;
+    heart.appendChild(px);
+  }
+  return heart;
+}
+
+function createHeartsRow(container, count) {
+  container.innerHTML = '';
+  const hearts = [];
+  for (let i = 0; i < count; i++) {
+    const heart = createHeartEl();
+    container.appendChild(heart);
+    hearts.push(heart);
+  }
+  return hearts;
+}
+
+function initHearts() {
+  heartsEls[0] = createHeartsRow(livesP0El, MAX_LIVES);
+  heartsEls[1] = createHeartsRow(livesP1El, MAX_LIVES);
+  prevLives = [MAX_LIVES, MAX_LIVES];
+  hitFlashUntil = [0, 0];
+  prevAlive = [true, true];
+}
+
+function triggerHeartBlink(heartEl) {
+  heartEl.classList.remove('blink');
+  void heartEl.offsetWidth; // force reflow to restart the animation
+  heartEl.classList.add('blink');
+}
+
+function updateHeartsRow(row, lives, rawIndex) {
+  const hearts = heartsEls[row];
+  if (!hearts.length) return;
+  const prev = prevLives[row];
+  for (let i = 0; i < hearts.length; i++) {
+    hearts[i].classList.toggle('lost', i >= lives);
+  }
+  if (lives < prev) {
+    for (let i = lives; i < prev; i++) {
+      if (hearts[i]) triggerHeartBlink(hearts[i]);
+    }
+    hitFlashUntil[rawIndex] = Date.now() + HIT_FLASH_DURATION;
+  }
+  prevLives[row] = lives;
+}
+
 const input = { up: false, down: false, left: false, right: false };
 const keyMap = {
   KeyW: 'up', ArrowUp: 'up',
@@ -52,6 +206,11 @@ btnMenu.addEventListener('click', () => {
     backToMenu();
   }
 });
+btnPlayAgain.addEventListener('click', () => {
+  if (mode === 'online') startOnline();
+  else if (mode === 'bot') startBot();
+});
+btnBackToMenu.addEventListener('click', () => backToMenu());
 
 function showMenu() {
   menuEl.style.display = 'flex';
@@ -76,6 +235,13 @@ function resetSharedState() {
   input.up = input.down = input.left = input.right = false;
   canvas.width = arena.w;
   canvas.height = arena.h;
+  initHearts();
+  gameOverAt = 0;
+  overlayShown = false;
+  lastResult = null;
+  explosionParticles = [];
+  gameOverOverlayEl.style.display = 'none';
+  gameOverOverlayEl.classList.remove('win', 'lose');
 }
 
 function backToMenu() {
@@ -142,15 +308,12 @@ function handleOnlineMessage(msg) {
       updateHud();
       break;
     case 'gameover':
-      gameOver = true;
-      btnMenu.textContent = 'Voltar ao Menu';
-      btnMenu.style.display = 'inline-block';
       if (msg.winnerIndex === playerIndex) {
-        statusEl.textContent = 'Você venceu!';
+        recordGameOver('win', 'Você venceu!');
       } else if (msg.winnerIndex === null) {
-        statusEl.textContent = 'Partida encerrada.';
+        recordGameOver('draw', 'Partida encerrada.');
       } else {
-        statusEl.textContent = 'Você perdeu!';
+        recordGameOver('lose', 'Você perdeu!');
       }
       break;
   }
@@ -205,11 +368,15 @@ function startBot() {
   botInterval = setInterval(botTick, TICK_MS);
 }
 
-function stopBot() {
+function stopBotInterval() {
   if (botInterval) {
     clearInterval(botInterval);
     botInterval = null;
   }
+}
+
+function stopBot() {
+  stopBotInterval();
   bot = null;
 }
 
@@ -304,10 +471,8 @@ function botTick() {
         target.lives = 0;
         target.alive = false;
         const winnerIndex = proj.ownerIndex;
-        gameOver = true;
-        btnMenu.style.display = 'inline-block';
-        statusEl.textContent = winnerIndex === 0 ? 'Você venceu!' : 'Você perdeu!';
-        stopBot();
+        recordGameOver(winnerIndex === 0 ? 'win' : 'lose', winnerIndex === 0 ? 'Você venceu!' : 'Você perdeu!');
+        stopBotInterval();
       }
       return false;
     }
@@ -346,10 +511,17 @@ function clamp(v, min, max) {
 // ---------- Input / HUD / rendering (shared) ----------
 
 function updateHud() {
+  const oppIndex = playerIndex === 0 ? 1 : 0;
   const me = latestState.players[playerIndex];
-  const opp = latestState.players[playerIndex === 0 ? 1 : 0];
-  livesP0El.textContent = `Você: ${me ? me.lives : '-'}`;
-  livesP1El.textContent = `Oponente: ${opp ? opp.lives : '-'}`;
+  const opp = latestState.players[oppIndex];
+  if (me) {
+    updateHeartsRow(0, me.lives, playerIndex);
+    checkDeathExplosion(playerIndex, me);
+  }
+  if (opp) {
+    updateHeartsRow(1, opp.lives, oppIndex);
+    checkDeathExplosion(oppIndex, opp);
+  }
 }
 
 window.addEventListener('keydown', (e) => {
@@ -389,23 +561,45 @@ function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (mode) {
-    for (let i = 0; i < latestState.players.length; i++) {
-      const p = latestState.players[i];
-      if (!p || !p.alive) continue;
-      ctx.fillStyle = colors[i];
-      ctx.fillRect(p.x, p.y, playerSize, playerSize);
-      if (i === playerIndex) {
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(p.x, p.y, playerSize, playerSize);
-      }
-    }
+    const now = Date.now();
 
-    ctx.fillStyle = '#f1c40f';
-    for (const proj of latestState.projectiles) {
-      ctx.beginPath();
-      ctx.arc(proj.x, proj.y, projectileSize / 2, 0, Math.PI * 2);
-      ctx.fill();
+    if (gameOver && gameOverAt && now - gameOverAt >= GAMEOVER_OVERLAY_DELAY) {
+      if (!overlayShown) showGameOverOverlay();
+      ctx.fillStyle = '#4a4a4a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+      for (let i = 0; i < latestState.players.length; i++) {
+        const p = latestState.players[i];
+        if (!p || !p.alive) continue;
+
+        const flashRemaining = hitFlashUntil[i] - now;
+        let ox = 0, oy = 0;
+        if (flashRemaining > 0) {
+          const t = 1 - flashRemaining / HIT_FLASH_DURATION;
+          const flicker = Math.floor(t * 12) % 2 === 0;
+          ctx.fillStyle = flicker ? '#ffffff' : colors[i];
+          const shake = (1 - t) * 4;
+          ox = (Math.random() - 0.5) * shake;
+          oy = (Math.random() - 0.5) * shake;
+        } else {
+          ctx.fillStyle = colors[i];
+        }
+        ctx.fillRect(p.x + ox, p.y + oy, playerSize, playerSize);
+        if (i === playerIndex) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(p.x + ox, p.y + oy, playerSize, playerSize);
+        }
+      }
+
+      for (const proj of latestState.projectiles) {
+        ctx.fillStyle = colors[proj.ownerIndex];
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, projectileSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      updateAndDrawExplosions(now);
     }
   }
 

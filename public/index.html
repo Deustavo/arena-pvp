@@ -54,9 +54,85 @@
     gap: 40px;
     font-size: 18px;
   }
+  .hud-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hearts {
+    display: flex;
+    gap: 4px;
+  }
+  .heart {
+    position: relative;
+    width: 21px;
+    height: 18px;
+    color: #e63946;
+  }
+  .heart.lost {
+    color: #555;
+  }
+  .heart-pixel {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: currentColor;
+  }
+  .heart.blink {
+    animation: heartBlink 0.4s steps(1, start) 3;
+  }
+  @keyframes heartBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.15; }
+  }
   canvas {
     background: #2b2b3d;
     border: 2px solid #555;
+    display: block;
+  }
+  #canvas-wrap {
+    position: relative;
+  }
+  #gameOverOverlay {
+    display: none;
+    position: absolute;
+    inset: 2px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  #gameOverOverlay h2 {
+    margin: 0;
+    font-size: 36px;
+  }
+  #gameOverOverlay.win h2 {
+    color: #4ade80;
+  }
+  #gameOverOverlay.lose h2 {
+    color: #e63946;
+  }
+  #gameOverOverlay .overlay-buttons {
+    display: flex;
+    gap: 16px;
+  }
+  #gameOverOverlay button {
+    font-size: 16px;
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #457b9d;
+    color: #fff;
+  }
+  #gameOverOverlay button:hover {
+    background: #3a6a89;
+  }
+  #gameOverOverlay button#btnBackToMenu {
+    background: #555;
+  }
+  #gameOverOverlay button#btnBackToMenu:hover {
+    background: #444;
   }
   #status {
     margin-top: 8px;
@@ -85,10 +161,25 @@
 
   <div id="game-wrap">
     <div id="hud">
-      <div id="livesP0">Você: ---</div>
-      <div id="livesP1">Oponente: ---</div>
+      <div class="hud-row">
+        <span>Você:</span>
+        <div class="hearts" id="livesP0"></div>
+      </div>
+      <div class="hud-row">
+        <span>Oponente:</span>
+        <div class="hearts" id="livesP1"></div>
+      </div>
     </div>
-    <canvas id="game" width="800" height="600"></canvas>
+    <div id="canvas-wrap">
+      <canvas id="game" width="800" height="600"></canvas>
+      <div id="gameOverOverlay">
+        <h2 id="gameOverMessage"></h2>
+        <div class="overlay-buttons">
+          <button id="btnPlayAgain">Jogar novamente</button>
+          <button id="btnBackToMenu">Menu inicial</button>
+        </div>
+      </div>
+    </div>
     <div id="status"></div>
     <button id="btnMenu">Voltar ao Menu</button>
   </div>
