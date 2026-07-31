@@ -5,7 +5,8 @@
   "type": "module",
   "main": "src/server/index.js",
   "scripts": {
-    "start": "node src/server/index.js"
+    "start": "node src/server/index.js",
+    "test": "node --test"
   },
   "dependencies": {
     "ws": "^8.18.0"
