@@ -14,6 +14,8 @@ const PROJECTILE_SIZE = 8;
 const PROJECTILE_SPEED = 9;
 const PROJECTILE_COOLDOWN_MS = 300;
 const MAX_LIVES = 3;
+const SHIELD_RADIUS = 34;
+const SHIELD_MAX_HITS = 3;
 const TICK_MS = 1000 / 60;
 const COUNTDOWN_MS = 3000;
 
@@ -64,6 +66,8 @@ function makePlayer(ws, index) {
     input: { up: false, down: false, left: false, right: false },
     lastShot: 0,
     alive: true,
+    shielding: false,
+    shieldHits: 0,
   };
 }
 
@@ -90,8 +94,11 @@ function createMatch(wsA, wsB) {
       projectileSize: PROJECTILE_SIZE,
       colors: COLORS,
       countdownMs: COUNTDOWN_MS,
+      shieldRadius: SHIELD_RADIUS,
+      shieldMaxHits: SHIELD_MAX_HITS,
       players: players.map((pl) => ({
         x: pl.x, y: pl.y, lives: pl.lives, alive: pl.alive,
+        shielding: pl.shielding, shieldHits: pl.shieldHits,
       })),
     }));
   });
@@ -116,6 +123,10 @@ function tick(match) {
 
   for (const p of match.players) {
     if (!p.alive) continue;
+    // Escudo esgotado não pode mais ser usado.
+    if (p.shielding && p.shieldHits >= SHIELD_MAX_HITS) p.shielding = false;
+    // Em modo de defesa o jogador fica imóvel.
+    if (p.shielding) continue;
     let dx = 0, dy = 0;
     if (p.input.up) dy -= 1;
     if (p.input.down) dy += 1;
@@ -139,6 +150,13 @@ function tick(match) {
     }
 
     const target = match.players[proj.ownerIndex === 0 ? 1 : 0];
+    if (target.alive && target.shielding && target.shieldHits < SHIELD_MAX_HITS &&
+      circleHitsProjectile(target, proj)) {
+      target.shieldHits += 1;
+      if (target.shieldHits >= SHIELD_MAX_HITS) target.shielding = false;
+      return false;
+    }
+
     if (target.alive && rectsIntersect(
       proj.x - PROJECTILE_SIZE / 2, proj.y - PROJECTILE_SIZE / 2, PROJECTILE_SIZE, PROJECTILE_SIZE,
       target.x, target.y, PLAYER_SIZE, PLAYER_SIZE
@@ -162,6 +180,12 @@ function rectsIntersect(ax, ay, aw, ah, bx, by, bw, bh) {
   return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
 }
 
+function circleHitsProjectile(player, proj) {
+  const cx = player.x + PLAYER_SIZE / 2;
+  const cy = player.y + PLAYER_SIZE / 2;
+  return Math.hypot(proj.x - cx, proj.y - cy) <= SHIELD_RADIUS + PROJECTILE_SIZE / 2;
+}
+
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
@@ -171,6 +195,7 @@ function broadcastState(match) {
     type: 'state',
     players: match.players.map((p) => ({
       x: p.x, y: p.y, lives: p.lives, alive: p.alive,
+      shielding: p.shielding, shieldHits: p.shieldHits,
     })),
     projectiles: match.projectiles.map((proj) => ({
       x: proj.x, y: proj.y, ownerIndex: proj.ownerIndex,
@@ -215,14 +240,17 @@ wss.on('connection', (ws) => {
     }
 
     if (msg.type === 'input' && ws.player) {
-      const { up, down, left, right } = msg;
+      const { up, down, left, right, shield } = msg;
       ws.player.input = {
         up: !!up, down: !!down, left: !!left, right: !!right,
       };
+      ws.player.shielding = !!shield && ws.player.shieldHits < SHIELD_MAX_HITS;
     } else if (msg.type === 'shoot' && ws.player && ws.match) {
       const player = ws.player;
       const match = ws.match;
       if (!player.alive || !match.interval) return;
+      // Em modo de defesa o jogador não atira.
+      if (player.shielding) return;
       const now = Date.now();
       if (now - player.lastShot < PROJECTILE_COOLDOWN_MS) return;
       player.lastShot = now;

@@ -28,6 +28,8 @@ const PROJECTILE_SIZE = 8;
 const PROJECTILE_SPEED = 9;
 const PROJECTILE_COOLDOWN_MS = 300;
 const MAX_LIVES = 3;
+const SHIELD_RADIUS = 34;
+const SHIELD_MAX_HITS = 3;
 const TICK_MS = 1000 / 60;
 const COLORS = ['#e63946', '#457b9d'];
 const BOT_COUNTDOWN_MS = 3000;
@@ -40,6 +42,8 @@ let arena = ARENA;
 let playerSize = PLAYER_SIZE;
 let projectileSize = PROJECTILE_SIZE;
 let colors = COLORS;
+let shieldRadius = SHIELD_RADIUS;
+let shieldMaxHits = SHIELD_MAX_HITS;
 
 let latestState = { players: [], projectiles: [] };
 let gameOver = false;
@@ -265,7 +269,7 @@ function updateHeartsRow(row, lives, rawIndex) {
   prevLives[row] = lives;
 }
 
-const input = { up: false, down: false, left: false, right: false };
+const input = { up: false, down: false, left: false, right: false, shield: false };
 const keyMap = {
   KeyW: 'up', ArrowUp: 'up',
   KeyS: 'down', ArrowDown: 'down',
@@ -339,13 +343,15 @@ function resetSharedState() {
   playerSize = PLAYER_SIZE;
   projectileSize = PROJECTILE_SIZE;
   colors = COLORS;
+  shieldRadius = SHIELD_RADIUS;
+  shieldMaxHits = SHIELD_MAX_HITS;
   latestState = { players: [], projectiles: [] };
   stateBuffer = [];
   predicted = { x: 0, y: 0, initialized: false };
   lastFrameTime = null;
   gameOver = false;
   matchStarted = false;
-  input.up = input.down = input.left = input.right = false;
+  input.up = input.down = input.left = input.right = input.shield = false;
   canvas.width = arena.w;
   canvas.height = arena.h;
   initHearts();
@@ -411,6 +417,8 @@ function handleOnlineMessage(msg) {
       playerSize = msg.playerSize;
       projectileSize = msg.projectileSize;
       colors = msg.colors;
+      shieldRadius = msg.shieldRadius ?? SHIELD_RADIUS;
+      shieldMaxHits = msg.shieldMaxHits ?? SHIELD_MAX_HITS;
       canvas.width = arena.w;
       canvas.height = arena.h;
       gameOver = false;
@@ -473,6 +481,8 @@ function makeBotPlayer(index) {
     input: { up: false, down: false, left: false, right: false },
     lastShot: 0,
     alive: true,
+    shielding: false,
+    shieldHits: 0,
   };
 }
 
@@ -491,7 +501,10 @@ function startBot() {
   };
 
   latestState = {
-    players: bot.players.map((p) => ({ x: p.x, y: p.y, lives: p.lives, alive: p.alive })),
+    players: bot.players.map((p) => ({
+      x: p.x, y: p.y, lives: p.lives, alive: p.alive,
+      shielding: p.shielding, shieldHits: p.shieldHits,
+    })),
     projectiles: [],
   };
   updateHud();
@@ -541,6 +554,11 @@ function updateBotAI() {
     enemy.input.down = !enemy.input.up;
   }
 
+  // Defende quando o tiro está muito perto e ainda restam cargas de escudo.
+  const veryClose = incoming && Math.abs(incoming.x - (enemy.x + PLAYER_SIZE / 2)) < 90;
+  enemy.shielding = !!veryClose && enemy.shieldHits < SHIELD_MAX_HITS;
+  if (enemy.shielding) return;
+
   if (now >= bot.botNextShot && me.alive) {
     const cx = enemy.x + PLAYER_SIZE / 2;
     const cy = enemy.y + PLAYER_SIZE / 2;
@@ -571,10 +589,14 @@ function botTick() {
   if (gameOver || !bot) return;
 
   bot.players[0].input = { ...input };
+  bot.players[0].shielding = input.shield && bot.players[0].shieldHits < SHIELD_MAX_HITS;
   updateBotAI();
 
   for (const p of bot.players) {
     if (!p.alive) continue;
+    if (p.shielding && p.shieldHits >= SHIELD_MAX_HITS) p.shielding = false;
+    // Em modo de defesa o jogador fica imóvel.
+    if (p.shielding) continue;
     let dx = 0, dy = 0;
     if (p.input.up) dy -= 1;
     if (p.input.down) dy += 1;
@@ -598,6 +620,13 @@ function botTick() {
     }
 
     const target = bot.players[proj.ownerIndex === 0 ? 1 : 0];
+    if (target.alive && target.shielding && target.shieldHits < SHIELD_MAX_HITS &&
+      circleHitsProjectile(target, proj)) {
+      target.shieldHits += 1;
+      if (target.shieldHits >= SHIELD_MAX_HITS) target.shielding = false;
+      return false;
+    }
+
     if (target.alive && rectsIntersect(
       proj.x - PROJECTILE_SIZE / 2, proj.y - PROJECTILE_SIZE / 2, PROJECTILE_SIZE, PROJECTILE_SIZE,
       target.x, target.y, PLAYER_SIZE, PLAYER_SIZE
@@ -617,7 +646,10 @@ function botTick() {
   });
 
   latestState = {
-    players: bot.players.map((p) => ({ x: p.x, y: p.y, lives: p.lives, alive: p.alive })),
+    players: bot.players.map((p) => ({
+      x: p.x, y: p.y, lives: p.lives, alive: p.alive,
+      shielding: p.shielding, shieldHits: p.shieldHits,
+    })),
     projectiles: bot.projectiles.map((p) => ({ x: p.x, y: p.y, ownerIndex: p.ownerIndex })),
   };
   updateHud();
@@ -642,6 +674,12 @@ function rectsIntersect(ax, ay, aw, ah, bx, by, bw, bh) {
 
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
+}
+
+function circleHitsProjectile(player, proj) {
+  const cx = player.x + PLAYER_SIZE / 2;
+  const cy = player.y + PLAYER_SIZE / 2;
+  return Math.hypot(proj.x - cx, proj.y - cy) <= SHIELD_RADIUS + PROJECTILE_SIZE / 2;
 }
 
 // ---------- Input / HUD / rendering (shared) ----------
@@ -677,6 +715,8 @@ function advancePrediction() {
   if (!predicted.initialized) return;
   const me = latestState.players[playerIndex];
   if (!me || !me.alive) return;
+  // Em modo de defesa o jogador não se move.
+  if (input.shield && me.shieldHits < shieldMaxHits) return;
 
   let dx = 0, dy = 0;
   if (input.up) dy -= 1;
@@ -718,6 +758,11 @@ function getRenderState() {
 }
 
 function updateHud() {
+  // Escudo esgotado: solta a defesa mesmo com espaço pressionado.
+  if (input.shield && !isShieldAvailable()) {
+    input.shield = false;
+    sendInput();
+  }
   const oppIndex = playerIndex === 0 ? 1 : 0;
   const me = latestState.players[playerIndex];
   const opp = latestState.players[oppIndex];
@@ -731,10 +776,30 @@ function updateHud() {
   }
 }
 
+function shieldCharges(index) {
+  const p = latestState.players[index];
+  if (!p) return shieldMaxHits;
+  return shieldMaxHits - (p.shieldHits || 0);
+}
+
+function isShieldAvailable() {
+  return playerIndex !== null && shieldCharges(playerIndex) > 0;
+}
+
 window.addEventListener('keydown', (e) => {
   if (!mode) return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (!input.shield && matchStarted && !gameOver && isShieldAvailable()) {
+      input.shield = true;
+      // Ao defender, o movimento acumulado é descartado.
+      input.up = input.down = input.left = input.right = false;
+      sendInput();
+    }
+    return;
+  }
   const dir = keyMap[e.code];
-  if (dir && !input[dir]) {
+  if (dir && !input[dir] && !input.shield) {
     input[dir] = true;
     sendInput();
   }
@@ -742,6 +807,14 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => {
   if (!mode) return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (input.shield) {
+      input.shield = false;
+      sendInput();
+    }
+    return;
+  }
   const dir = keyMap[e.code];
   if (dir && input[dir]) {
     input[dir] = false;
@@ -751,6 +824,8 @@ window.addEventListener('keyup', (e) => {
 
 canvas.addEventListener('click', (e) => {
   if (!mode || gameOver || !matchStarted) return;
+  // Em modo de defesa o jogador não atira.
+  if (input.shield && isShieldAvailable()) return;
   const rect = canvas.getBoundingClientRect();
   const targetX = e.clientX - rect.left;
   const targetY = e.clientY - rect.top;
@@ -763,6 +838,33 @@ canvas.addEventListener('click', (e) => {
     botShoot(targetX, targetY);
   }
 });
+
+// Campo de força: círculo pulsante com um arco por carga restante.
+function drawShield(cx, cy, charges, now) {
+  if (charges <= 0) return;
+  const pulse = 1 + Math.sin(now / 120) * 0.03;
+  const r = shieldRadius * pulse;
+
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#7dd3fc';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.9;
+  ctx.strokeStyle = '#7dd3fc';
+  ctx.lineWidth = 3;
+  const gap = 0.18;
+  const step = (Math.PI * 2) / shieldMaxHits;
+  for (let i = 0; i < charges; i++) {
+    const start = -Math.PI / 2 + i * step + gap / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, start, start + step - gap);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -801,6 +903,14 @@ function render() {
           ctx.strokeStyle = '#fff';
           ctx.lineWidth = 2;
           ctx.strokeRect(p.x + ox, p.y + oy, playerSize, playerSize);
+        }
+
+        const shieldingNow = i === playerIndex
+          ? (input.shield && isShieldAvailable())
+          : !!p.shielding;
+        if (shieldingNow) {
+          drawShield(p.x + ox + playerSize / 2, p.y + oy + playerSize / 2,
+            shieldMaxHits - (p.shieldHits || 0), now);
         }
       }
 
