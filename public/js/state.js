@@ -49,6 +49,7 @@ export const state = {
   botInterval: null,
 
   input: { up: false, down: false, left: false, right: false, shield: false },
+  mouse: { x: 0, y: 0 },
 };
 
 // Reseta os campos de uma sessão de partida (chamado ao entrar em uma nova

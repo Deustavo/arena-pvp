@@ -28,6 +28,7 @@ function snapshotPlayers(players) {
     shieldMaxHits: p.shieldMaxHits,
     classId: p.classId,
     name: i === 0 ? (state.nickname || 'Você') : BOT_NAME,
+    lastShot: p.lastShot,
   }));
 }
 

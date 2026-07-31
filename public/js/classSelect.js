@@ -2,21 +2,11 @@ import { CLASSES, DEFAULT_CLASS_ID } from '../../shared/classes.js';
 import { state } from './state.js';
 import { classListEl, classDetailsEl } from './dom.js';
 
-// Ícones simples em SVG (traço único, `currentColor`) que diferenciam
-// visualmente cada classe no quadrado ao lado do nome.
-const CLASS_ICONS = {
-  // Atirador: mira/alvo.
-  atirador: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>',
-  // Mago: cajado mágico com brilho na ponta.
-  mago: '<svg viewBox="0 0 24 24"><path d="M4 20L14 10"/><path d="M17 2l1.2 3 3 1.2-3 1.2-1.2 3-1.2-3-3-1.2 3-1.2 1.2-3z"/><circle cx="6" cy="6" r="1"/></svg>',
-  // Tank: escudo.
-  tank: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
-};
-
 function statLines(cls) {
-  const seconds = (cls.shotCooldownMs / 1000).toFixed(0);
+  const seconds = cls.shotCooldownMs / 1000;
+  const secondsLabel = Number.isInteger(seconds) ? `${seconds}` : seconds.toFixed(1);
   return [
-    `Tempo do tiro: ${seconds}s`,
+    `Tempo do tiro: ${secondsLabel}s`,
     `Dano: ${cls.damage} ${cls.damage === 1 ? 'coração' : 'corações'}`,
     `Escudo: ${cls.shieldMaxHits}`,
     `Vidas: ${cls.maxLives}`,
@@ -31,7 +21,7 @@ function createClassCard(cls) {
 
   const icon = document.createElement('div');
   icon.className = 'class-icon';
-  icon.innerHTML = CLASS_ICONS[cls.id] || '';
+  icon.innerHTML = cls.icon || '';
   card.appendChild(icon);
 
   const title = document.createElement('span');
@@ -48,7 +38,7 @@ function renderDetails(cls) {
 
   const icon = document.createElement('div');
   icon.className = 'class-icon';
-  icon.innerHTML = CLASS_ICONS[cls.id] || '';
+  icon.innerHTML = cls.icon || '';
   classDetailsEl.appendChild(icon);
 
   const info = document.createElement('div');

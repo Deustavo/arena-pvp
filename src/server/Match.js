@@ -29,6 +29,7 @@ function playerSnapshot(p) {
     shieldMaxHits: p.shieldMaxHits,
     classId: p.classId,
     name: p.name,
+    lastShot: p.lastShot,
   };
 }
 

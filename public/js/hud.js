@@ -1,8 +1,10 @@
 import {
-  livesP0El, livesP1El, nameP0El, nameP1El,
+  livesP0El, livesP1El, nameP0El, nameP1El, cooldownP0El, cooldownP1El,
+  classIconP0El, classIconP1El,
 } from './dom.js';
 import { state } from './state.js';
 import { checkDeathExplosion } from './explosions.js';
+import { getClass } from '../../shared/classes.js';
 
 export const HEART_PIXELS = [
   [0, 1], [0, 2], [0, 4], [0, 5],
@@ -18,6 +20,13 @@ const HIT_FLASH_DURATION = 400;
 let heartsEls = [[], []];
 let prevLives = [0, 0];
 export let hitFlashUntil = [0, 0];
+let prevClassIds = [null, null];
+
+function updateClassIcon(el, row, classId) {
+  if (!el || classId === prevClassIds[row]) return;
+  prevClassIds[row] = classId;
+  el.innerHTML = getClass(classId).icon || '';
+}
 
 function createHeartEl() {
   const heart = document.createElement('div');
@@ -86,17 +95,35 @@ export function isShieldAvailable() {
   return state.playerIndex !== null && shieldCharges(state.playerIndex) > 0;
 }
 
+function updateCooldownBar(el, player, now) {
+  if (!player) return;
+  const cooldownMs = getClass(player.classId).shotCooldownMs;
+  const ratio = Math.min(1, (now - (player.lastShot || 0)) / cooldownMs);
+  el.style.width = `${ratio * 100}%`;
+  el.classList.toggle('ready', ratio >= 1);
+}
+
+export function updateCooldownBars(now = Date.now()) {
+  const oppIndex = state.playerIndex === 0 ? 1 : 0;
+  const me = state.latestState.players[state.playerIndex];
+  const opp = state.latestState.players[oppIndex];
+  updateCooldownBar(cooldownP0El, me, now);
+  updateCooldownBar(cooldownP1El, opp, now);
+}
+
 export function updateHud() {
   const oppIndex = state.playerIndex === 0 ? 1 : 0;
   const me = state.latestState.players[state.playerIndex];
   const opp = state.latestState.players[oppIndex];
   if (me) {
     nameP0El.textContent = me.name || 'Você';
+    updateClassIcon(classIconP0El, 0, me.classId);
     updateHeartsRow(0, me.lives, state.playerIndex);
     checkDeathExplosion(state.playerIndex, me);
   }
   if (opp) {
     nameP1El.textContent = opp.name || 'Oponente';
+    updateClassIcon(classIconP1El, 1, opp.classId);
     updateHeartsRow(1, opp.lives, oppIndex);
     checkDeathExplosion(oppIndex, opp);
   }

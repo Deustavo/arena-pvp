@@ -8,6 +8,10 @@ export const livesP0El = document.getElementById('livesP0');
 export const livesP1El = document.getElementById('livesP1');
 export const nameP0El = document.getElementById('nameP0');
 export const nameP1El = document.getElementById('nameP1');
+export const classIconP0El = document.getElementById('classIconP0');
+export const classIconP1El = document.getElementById('classIconP1');
+export const cooldownP0El = document.getElementById('cooldownP0');
+export const cooldownP1El = document.getElementById('cooldownP1');
 
 export const menuEl = document.getElementById('menu');
 export const gameWrapEl = document.getElementById('game-wrap');

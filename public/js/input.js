@@ -48,6 +48,12 @@ export function initInput() {
     }
   });
 
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    state.mouse.x = e.clientX - rect.left;
+    state.mouse.y = e.clientY - rect.top;
+  });
+
   canvas.addEventListener('click', (e) => {
     if (!state.mode || state.gameOver || !state.matchStarted) return;
     // Em modo de defesa o jogador não atira.
