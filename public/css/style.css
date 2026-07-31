@@ -247,6 +247,57 @@
     margin: 0;
     font-size: 36px;
   }
+  #waitingOverlay h2 {
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  #waitingOverlay .loader {
+    --color-1: #fff;
+    --color-2: #4ade80;
+    --size: 1px;
+
+    width: calc(48 * var(--size));
+    height: calc(48 * var(--size));
+    display: inline-block;
+    position: relative;
+    border: calc(2 * var(--size)) solid var(--color-1);
+    box-sizing: border-box;
+    animation: rotation 2s linear infinite;
+  }
+  #waitingOverlay .loader::after,
+  #waitingOverlay .loader::before {
+    content: '';
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    border: calc(2 * var(--size)) solid var(--color-2);
+    width: calc(38 * var(--size));
+    height: calc(38 * var(--size));
+    animation: rotationBack 1.5s linear infinite;
+    transform-origin: center center;
+  }
+  #waitingOverlay .loader::before {
+    width: calc(28 * var(--size));
+    height: calc(28 * var(--size));
+    border-color: var(--color-1);
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
+  @keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes rotationBack {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
   #gameOverOverlay.win h2 {
     color: #4ade80;
   }
