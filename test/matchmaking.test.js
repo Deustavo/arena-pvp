@@ -121,6 +121,43 @@ describe('matchmaking', () => {
     assert.equal(wsNext.sent[0].type, 'waiting');
   });
 
+  test('jogador sem oponente após 5s entra em partida contra um bot', () => {
+    const ws = makeFakeWs();
+    matchmaking.handleConnection(ws, 'Alice');
+
+    mock.timers.tick(5000);
+
+    assert.equal(matchmaking.activeMatchCount(), 1);
+    const init = ws.sent.find((m) => m.type === 'init');
+    assert.ok(init);
+    assert.equal(init.players[0].name, 'Alice');
+    assert.match(init.players[1].name, /^\[BOT\] /);
+  });
+
+  test('jogador real que entra antes dos 5s cancela a partida contra o bot', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    matchmaking.handleConnection(wsA);
+
+    mock.timers.tick(4000);
+    matchmaking.handleConnection(wsB);
+    mock.timers.tick(5000);
+
+    assert.equal(matchmaking.activeMatchCount(), 1);
+    const initA = wsA.sent.find((m) => m.type === 'init');
+    assert.equal(initA.players[1].name, 'Jogador');
+  });
+
+  test('handleLeaveQueue cancela o timer da partida contra o bot', () => {
+    const ws = makeFakeWs();
+    matchmaking.handleConnection(ws);
+    matchmaking.handleLeaveQueue(ws);
+
+    mock.timers.tick(5000);
+
+    assert.equal(matchmaking.activeMatchCount(), 0);
+  });
+
   test('handleDisconnect durante partida ativa encerra a partida e declara o oponente vencedor', () => {
     const wsA = makeFakeWs();
     const wsB = makeFakeWs();

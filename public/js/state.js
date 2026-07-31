@@ -7,7 +7,7 @@ import {
   ARENA, PLAYER_SIZE, PROJECTILE_SIZE, COLORS, SHIELD_RADIUS,
 } from '../../shared/constants.js';
 import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
-import { DEFAULT_BOT_DIFFICULTY } from './botDifficulty.js';
+import { DEFAULT_BOT_DIFFICULTY } from '../../shared/botDifficulty.js';
 
 export const state = {
   mode: null, // 'online' | 'bot'

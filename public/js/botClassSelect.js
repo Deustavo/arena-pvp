@@ -5,7 +5,7 @@ import {
   btnBotClassClose, btnBotClassConfirm,
 } from './dom.js';
 import { createClassPicker } from './classSelect.js';
-import { BOT_DIFFICULTIES, DEFAULT_BOT_DIFFICULTY } from './botDifficulty.js';
+import { BOT_DIFFICULTIES, DEFAULT_BOT_DIFFICULTY } from '../../shared/botDifficulty.js';
 
 let onConfirm = null;
 let playerPicker = null;

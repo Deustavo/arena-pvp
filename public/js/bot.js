@@ -9,7 +9,7 @@ import { showCountdown } from './overlays.js';
 import { updateHud, isShieldAvailable, initHearts } from './hud.js';
 import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
-import { getBotDifficulty } from './botDifficulty.js';
+import { getBotDifficulty } from '../../shared/botDifficulty.js';
 
 const BOT_COUNTDOWN_MS = 3000;
 

@@ -7,6 +7,7 @@ import {
 import { createPlayerState } from '../../shared/entities.js';
 import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 import { stepPlayers, stepProjectiles } from '../../shared/simulation.js';
+import { createBotState, tickBot } from './botAI.js';
 
 function makePlayer(ws, index) {
   return {
@@ -37,7 +38,7 @@ function send(ws, payload) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
 }
 
-export function createMatch(wsA, wsB, { onEnd } = {}) {
+export function createMatch(wsA, wsB, { onEnd, bot = false, botDifficulty = 'intermediario' } = {}) {
   const players = [makePlayer(wsA, 0), makePlayer(wsB, 1)];
   const match = {
     id: crypto.randomUUID(),
@@ -47,6 +48,8 @@ export function createMatch(wsA, wsB, { onEnd } = {}) {
     running: true,
     interval: null,
     onEnd,
+    bot,
+    botState: bot ? createBotState(botDifficulty) : null,
   };
 
   players.forEach((p, i) => {
@@ -78,6 +81,7 @@ export function createMatch(wsA, wsB, { onEnd } = {}) {
 function tick(match) {
   if (!match.running) return;
 
+  if (match.bot) tickBot(match);
   stepPlayers(match.players, ARENA);
   match.projectiles = stepProjectiles(match.projectiles, match.players, ARENA, (winnerIndex) => {
     endMatch(match, winnerIndex);
