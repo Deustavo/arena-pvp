@@ -11,9 +11,17 @@ import { playStartSound } from './audio.js';
 
 const BOT_COUNTDOWN_MS = 3000;
 
+const BOT_NAME = 'Bot';
+
 function snapshotPlayers(players) {
-  return players.map((p) => ({
-    x: p.x, y: p.y, lives: p.lives, alive: p.alive, shielding: p.shielding, shieldHits: p.shieldHits,
+  return players.map((p, i) => ({
+    x: p.x,
+    y: p.y,
+    lives: p.lives,
+    alive: p.alive,
+    shielding: p.shielding,
+    shieldHits: p.shieldHits,
+    name: i === 0 ? (state.nickname || 'Você') : BOT_NAME,
   }));
 }
 

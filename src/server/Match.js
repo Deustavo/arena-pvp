@@ -13,11 +13,14 @@ function makePlayer(ws, index) {
     ws,
     index,
     color: COLORS[index],
+    name: ws.nickname || 'Jogador',
   };
 }
 
 function playerSnapshot(p) {
-  return { x: p.x, y: p.y, lives: p.lives, alive: p.alive, shielding: p.shielding, shieldHits: p.shieldHits };
+  return {
+    x: p.x, y: p.y, lives: p.lives, alive: p.alive, shielding: p.shielding, shieldHits: p.shieldHits, name: p.name,
+  };
 }
 
 function send(ws, payload) {

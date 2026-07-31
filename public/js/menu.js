@@ -6,6 +6,7 @@ import { initHearts } from './hud.js';
 import { startOnlineCountPolling, stopOnlineCountPolling } from './onlineCount.js';
 import { startOnline as connectOnline, closeConnection } from './network.js';
 import { startBot as startBotMatch, stopBot } from './bot.js';
+import { commitNickname } from './nickname.js';
 
 export function showMenu() {
   menuEl.style.display = 'flex';
@@ -31,6 +32,7 @@ function prepareNewMatch() {
 }
 
 export function startOnline() {
+  if (!commitNickname()) return;
   state.mode = 'online';
   prepareNewMatch();
   showGame();
@@ -38,6 +40,7 @@ export function startOnline() {
 }
 
 export function startBot() {
+  if (!commitNickname()) return;
   prepareNewMatch();
   showGame();
   startBotMatch();

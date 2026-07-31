@@ -18,7 +18,8 @@ function releaseExhaustedShield() {
 
 export function startOnline(onBackToMenu) {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  state.ws = new WebSocket(`${protocol}//${location.host}`);
+  const nickname = encodeURIComponent(state.nickname);
+  state.ws = new WebSocket(`${protocol}//${location.host}?nickname=${nickname}`);
 
   state.ws.onopen = () => {
     showWaitingOverlay();

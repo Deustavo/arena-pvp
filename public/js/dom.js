@@ -6,11 +6,15 @@ export const ctx = canvas.getContext('2d');
 
 export const livesP0El = document.getElementById('livesP0');
 export const livesP1El = document.getElementById('livesP1');
+export const nameP0El = document.getElementById('nameP0');
+export const nameP1El = document.getElementById('nameP1');
 
 export const menuEl = document.getElementById('menu');
 export const gameWrapEl = document.getElementById('game-wrap');
 export const btnOnline = document.getElementById('btnOnline');
 export const btnBot = document.getElementById('btnBot');
+export const nicknameInput = document.getElementById('nicknameInput');
+export const nicknameErrorEl = document.getElementById('nicknameError');
 
 export const gameOverOverlayEl = document.getElementById('gameOverOverlay');
 export const gameOverMessageEl = document.getElementById('gameOverMessage');

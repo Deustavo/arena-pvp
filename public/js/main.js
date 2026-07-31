@@ -7,9 +7,11 @@ import { initInput } from './input.js';
 import { leaveQueue as leaveNetworkQueue } from './network.js';
 import { showMenu, startOnline, startBot, backToMenu } from './menu.js';
 import { render } from './render.js';
+import { initNicknameInput } from './nickname.js';
 
 initTutorialUI();
 initInput();
+initNicknameInput();
 
 btnOnline.addEventListener('click', () => comTutorialNaPrimeiraVez(startOnline));
 btnBot.addEventListener('click', () => comTutorialNaPrimeiraVez(startBot));

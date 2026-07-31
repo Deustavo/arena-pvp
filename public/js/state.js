@@ -12,6 +12,7 @@ export const state = {
   ws: null,
   playerIndex: null,
   matchId: null,
+  nickname: '',
 
   // Parâmetros da partida — os valores online vêm do servidor (mensagem
   // `init`) e podem, em tese, divergir das constantes locais.

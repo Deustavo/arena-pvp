@@ -1,4 +1,6 @@
-import { livesP0El, livesP1El } from './dom.js';
+import {
+  livesP0El, livesP1El, nameP0El, nameP1El,
+} from './dom.js';
 import { state } from './state.js';
 import { MAX_LIVES } from '../../shared/constants.js';
 import { checkDeathExplosion } from './explosions.js';
@@ -86,10 +88,12 @@ export function updateHud() {
   const me = state.latestState.players[state.playerIndex];
   const opp = state.latestState.players[oppIndex];
   if (me) {
+    nameP0El.textContent = me.name || 'Você';
     updateHeartsRow(0, me.lives, state.playerIndex);
     checkDeathExplosion(state.playerIndex, me);
   }
   if (opp) {
+    nameP1El.textContent = opp.name || 'Oponente';
     updateHeartsRow(1, opp.lives, oppIndex);
     checkDeathExplosion(oppIndex, opp);
   }

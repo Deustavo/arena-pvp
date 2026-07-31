@@ -1,17 +1,24 @@
 import { WebSocketServer } from 'ws';
 import { PROJECTILE_COOLDOWN_MS, PLAYER_SIZE, SHIELD_MAX_HITS } from '../../shared/constants.js';
 import { createProjectile } from '../../shared/entities.js';
+import { sanitizeNickname } from '../../shared/nickname.js';
 import { handleConnection, handleLeaveQueue, handleDisconnect } from './matchmaking.js';
 
 let wss = null;
 
+function nicknameFromRequest(req) {
+  const url = new URL(req.url, 'http://localhost');
+  const nickname = sanitizeNickname(url.searchParams.get('nickname'));
+  return nickname || 'Jogador';
+}
+
 export function createWsServer(httpServer) {
   wss = new WebSocketServer({ server: httpServer, perMessageDeflate: false });
 
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req) => {
     ws.on('message', (raw) => handleMessage(ws, raw));
     ws.on('close', () => handleDisconnect(ws));
-    handleConnection(ws);
+    handleConnection(ws, nicknameFromRequest(req));
   });
 
   return wss;

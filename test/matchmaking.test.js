@@ -50,6 +50,31 @@ describe('matchmaking', () => {
     assert.equal(initB.playerIndex, 1);
   });
 
+  test('nicknames dos jogadores são propagados para os dois lados da partida', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    matchmaking.handleConnection(wsA, 'Alice');
+    matchmaking.handleConnection(wsB, 'Bob');
+
+    const initA = wsA.sent.find((m) => m.type === 'init');
+    const initB = wsB.sent.find((m) => m.type === 'init');
+    assert.equal(initA.players[0].name, 'Alice');
+    assert.equal(initA.players[1].name, 'Bob');
+    assert.equal(initB.players[0].name, 'Alice');
+    assert.equal(initB.players[1].name, 'Bob');
+  });
+
+  test('conexão sem nickname usa um nome padrão', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    matchmaking.handleConnection(wsA);
+    matchmaking.handleConnection(wsB);
+
+    const initA = wsA.sent.find((m) => m.type === 'init');
+    assert.equal(initA.players[0].name, 'Jogador');
+    assert.equal(initA.players[1].name, 'Jogador');
+  });
+
   test('terceiro jogador fica esperando enquanto a primeira partida está ativa', () => {
     const wsA = makeFakeWs();
     const wsB = makeFakeWs();

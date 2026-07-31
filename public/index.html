@@ -8,6 +8,10 @@
 <body>
   <div id="menu">
     <h1>Jogo do Ano</h1>
+    <div id="nicknameField">
+      <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
+      <div id="nicknameError">Digite um nickname para jogar</div>
+    </div>
     <button id="btnOnline">Jogar Online</button>
     <button id="btnBot">Jogar contra Bot</button>
     <hr id="menuDivider">
@@ -38,11 +42,11 @@
   <div id="game-wrap">
     <div id="hud">
       <div class="hud-row">
-        <span>Você:</span>
+        <span id="nameP0">Você:</span>
         <div class="hearts" id="livesP0"></div>
       </div>
       <div class="hud-row">
-        <span>Oponente:</span>
+        <span id="nameP1">Oponente:</span>
         <div class="hearts" id="livesP1"></div>
       </div>
     </div>
