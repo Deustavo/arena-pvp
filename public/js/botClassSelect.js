@@ -1,14 +1,46 @@
 import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 import { state } from './state.js';
 import {
-  botClassOverlayEl, modalPlayerClassListEl, botClassListEl,
+  botClassOverlayEl, modalPlayerClassListEl, botClassListEl, botDifficultyListEl,
   btnBotClassClose, btnBotClassConfirm,
 } from './dom.js';
 import { createClassPicker } from './classSelect.js';
+import { BOT_DIFFICULTIES, DEFAULT_BOT_DIFFICULTY } from './botDifficulty.js';
 
 let onConfirm = null;
 let playerPicker = null;
 let botPicker = null;
+
+function initBotDifficultyPicker() {
+  if (!botDifficultyListEl) return { refresh() {} };
+
+  botDifficultyListEl.innerHTML = '';
+  for (const diff of Object.values(BOT_DIFFICULTIES)) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'difficulty-btn';
+    btn.dataset.difficultyId = diff.id;
+    btn.textContent = diff.name;
+    btn.addEventListener('click', () => selectDifficulty(diff.id));
+    botDifficultyListEl.appendChild(btn);
+  }
+
+  function selectDifficulty(id) {
+    state.botDifficulty = id;
+    for (const btn of botDifficultyListEl.children) {
+      btn.classList.toggle('selected', btn.dataset.difficultyId === id);
+    }
+  }
+
+  function refresh() {
+    selectDifficulty(state.botDifficulty || DEFAULT_BOT_DIFFICULTY);
+  }
+  refresh();
+
+  return { refresh };
+}
+
+let difficultyPicker = null;
 
 export function initBotClassSelect() {
   if (!botClassOverlayEl) return;
@@ -25,6 +57,8 @@ export function initBotClassSelect() {
     setSelectedId: (id) => { state.botClassId = id; },
     defaultId: DEFAULT_CLASS_ID,
   });
+
+  difficultyPicker = initBotDifficultyPicker();
 
   btnBotClassClose.addEventListener('click', closeBotClassSelect);
   btnBotClassConfirm.addEventListener('click', () => {
@@ -43,6 +77,7 @@ export function openBotClassSelect(confirmCallback) {
   onConfirm = confirmCallback;
   playerPicker.refresh();
   botPicker.refresh();
+  difficultyPicker.refresh();
   botClassOverlayEl.style.display = 'flex';
 }
 

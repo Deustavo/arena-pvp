@@ -1,4 +1,4 @@
-import { gameOverOverlayEl, gameOverMessageEl } from './dom.js';
+import { gameOverOverlayEl, gameOverMessageEl, btnSwapClasses } from './dom.js';
 import { state } from './state.js';
 
 export function recordGameOver(result) {
@@ -22,6 +22,7 @@ export function showGameOverOverlay() {
     text = 'Partida encerrada';
   }
   gameOverMessageEl.textContent = text;
+  btnSwapClasses.style.display = state.mode === 'bot' ? 'block' : 'none';
   gameOverOverlayEl.style.display = 'flex';
 }
 

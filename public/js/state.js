@@ -7,6 +7,7 @@ import {
   ARENA, PLAYER_SIZE, PROJECTILE_SIZE, COLORS, SHIELD_RADIUS,
 } from '../../shared/constants.js';
 import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
+import { DEFAULT_BOT_DIFFICULTY } from './botDifficulty.js';
 
 export const state = {
   mode: null, // 'online' | 'bot'
@@ -16,6 +17,7 @@ export const state = {
   nickname: '',
   classId: DEFAULT_CLASS_ID, // classe escolhida no menu para a próxima partida
   botClassId: null, // classe do bot escolhida no modal do modo treino
+  botDifficulty: DEFAULT_BOT_DIFFICULTY, // dificuldade do bot escolhida no modal do modo treino
 
   // Parâmetros da partida — os valores online vêm do servidor (mensagem
   // `init`) e podem, em tese, divergir das constantes locais.

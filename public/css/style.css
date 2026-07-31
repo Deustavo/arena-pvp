@@ -267,6 +267,17 @@
   #gameOverOverlay button#btnBackToMenu:hover, #waitingOverlay button#btnLeaveQueue:hover {
     background: #444;
   }
+  #gameOverOverlay button#btnSwapClasses {
+    display: none;
+    background: transparent;
+    border: 2px solid #555;
+    font-size: 14px;
+    padding: 8px 18px;
+  }
+  #gameOverOverlay button#btnSwapClasses:hover {
+    background: #3d3d52;
+    border-color: #777;
+  }
   #onlineCount {
     margin-top: 4px;
     font-size: 14px;
@@ -468,6 +479,40 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+  #botDifficultyCol {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #botDifficultyCol h3 {
+    margin: 0;
+    font-size: 13px;
+    color: #9a9ab0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  #botDifficultyList {
+    display: flex;
+    gap: 8px;
+  }
+  .difficulty-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border-radius: 8px;
+    border: 2px solid #444;
+    background: #23233a;
+    color: #cfcfe0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .difficulty-btn:hover {
+    background: #2f2f4a;
+  }
+  .difficulty-btn.selected {
+    border-color: #457b9d;
+    background: #35506b;
+    color: #fff;
   }
   #btnBotClassConfirm {
     font-size: 16px;

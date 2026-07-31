@@ -26,6 +26,7 @@ export const gameOverOverlayEl = document.getElementById('gameOverOverlay');
 export const gameOverMessageEl = document.getElementById('gameOverMessage');
 export const btnPlayAgain = document.getElementById('btnPlayAgain');
 export const btnBackToMenu = document.getElementById('btnBackToMenu');
+export const btnSwapClasses = document.getElementById('btnSwapClasses');
 
 export const waitingOverlayEl = document.getElementById('waitingOverlay');
 export const btnLeaveQueue = document.getElementById('btnLeaveQueue');
@@ -53,5 +54,6 @@ export const classDetailsEl = document.getElementById('classDetails');
 export const botClassOverlayEl = document.getElementById('botClassOverlay');
 export const modalPlayerClassListEl = document.getElementById('modalPlayerClassList');
 export const botClassListEl = document.getElementById('botClassList');
+export const botDifficultyListEl = document.getElementById('botDifficultyList');
 export const btnBotClassClose = document.getElementById('btnBotClassClose');
 export const btnBotClassConfirm = document.getElementById('btnBotClassConfirm');

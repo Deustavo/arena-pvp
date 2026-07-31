@@ -1,5 +1,5 @@
 import {
-  btnOnline, btnBot, btnHowToPlay, btnLeaveQueue, btnPlayAgain, btnBackToMenu,
+  btnOnline, btnBot, btnHowToPlay, btnLeaveQueue, btnPlayAgain, btnBackToMenu, btnSwapClasses,
 } from './dom.js';
 import { state } from './state.js';
 import { initTutorialUI, comTutorialNaPrimeiraVez, openHowToPlay } from './tutorial/tutorial.js';
@@ -26,6 +26,7 @@ btnPlayAgain.addEventListener('click', () => {
   else if (state.mode === 'bot') startBot();
 });
 btnBackToMenu.addEventListener('click', () => backToMenu());
+btnSwapClasses.addEventListener('click', () => openBotClassSelect(startBot));
 
 showMenu();
 requestAnimationFrame(render);
