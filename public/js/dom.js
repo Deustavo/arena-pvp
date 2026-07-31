@@ -49,3 +49,9 @@ export const onlineCountValueEl = document.getElementById('onlineCountValue');
 
 export const classListEl = document.getElementById('classList');
 export const classDetailsEl = document.getElementById('classDetails');
+
+export const botClassOverlayEl = document.getElementById('botClassOverlay');
+export const modalPlayerClassListEl = document.getElementById('modalPlayerClassList');
+export const botClassListEl = document.getElementById('botClassList');
+export const btnBotClassClose = document.getElementById('btnBotClassClose');
+export const btnBotClassConfirm = document.getElementById('btnBotClassConfirm');

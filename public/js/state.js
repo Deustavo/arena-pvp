@@ -15,6 +15,7 @@ export const state = {
   matchId: null,
   nickname: '',
   classId: DEFAULT_CLASS_ID, // classe escolhida no menu para a próxima partida
+  botClassId: null, // classe do bot escolhida no modal do modo treino
 
   // Parâmetros da partida — os valores online vêm do servidor (mensagem
   // `init`) e podem, em tese, divergir das constantes locais.

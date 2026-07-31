@@ -9,14 +9,16 @@ import { showMenu, startOnline, startBot, backToMenu } from './menu.js';
 import { render } from './render.js';
 import { initNicknameInput } from './nickname.js';
 import { initClassSelect } from './classSelect.js';
+import { initBotClassSelect, openBotClassSelect } from './botClassSelect.js';
 
 initTutorialUI();
 initInput();
 initNicknameInput();
 initClassSelect();
+initBotClassSelect();
 
 btnOnline.addEventListener('click', () => comTutorialNaPrimeiraVez(startOnline));
-btnBot.addEventListener('click', () => comTutorialNaPrimeiraVez(startBot));
+btnBot.addEventListener('click', () => openBotClassSelect(() => comTutorialNaPrimeiraVez(startBot)));
 btnHowToPlay.addEventListener('click', openHowToPlay);
 btnLeaveQueue.addEventListener('click', () => leaveNetworkQueue(backToMenu));
 btnPlayAgain.addEventListener('click', () => {

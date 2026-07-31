@@ -86,11 +86,11 @@
   #nicknameError.visible {
     display: block;
   }
-  #menu button#btnBot {
-    background: #e63946;
+  #menu button#btnOnline {
+    background: #2a9d5c;
   }
-  #menu button#btnBot:hover {
-    background: #c72f3b;
+  #menu button#btnOnline:hover {
+    background: #23854e;
   }
   #game-wrap {
     display: none;
@@ -400,6 +400,86 @@
   }
   #btnHowToPlay:hover {
     background: #222;
+  }
+  #botClassOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #botClassOverlay .modal {
+    background: #2b2b3d;
+    border: 2px solid #555;
+    border-radius: 10px;
+    padding: 20px 24px;
+    width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #botClassHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  #botClassHeader h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  #btnBotClassClose {
+    width: 26px;
+    height: 26px;
+    min-width: 0;
+    padding: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #9a9ab0;
+    font-size: 15px;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+  }
+  #btnBotClassClose:hover {
+    background: #3d3d52;
+    color: #fff;
+  }
+  #botClassColumns {
+    display: flex;
+    gap: 14px;
+  }
+  .class-select-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+  .class-select-col h3 {
+    margin: 0;
+    font-size: 13px;
+    color: #9a9ab0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .class-mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #btnBotClassConfirm {
+    font-size: 16px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #457b9d;
+    color: #fff;
+  }
+  #btnBotClassConfirm:hover {
+    background: #3a6a89;
   }
   #howToPlayOverlay {
     display: none;

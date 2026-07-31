@@ -11,7 +11,7 @@
       <div id="menuLeft">
         <h1>Jogo do Ano</h1>
         <button id="btnOnline">Jogar Online</button>
-        <button id="btnBot">Jogar contra Bot</button>
+        <button id="btnBot">Modo treino</button>
         <hr id="menuDivider">
         <button id="btnHowToPlay">Como jogar</button>
         <div id="onlineCount">● <span id="onlineCountValue">--</span> jogador(es) online</div>
@@ -30,6 +30,26 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="botClassOverlay">
+    <div class="modal">
+      <div id="botClassHeader">
+        <h2>Escolha as classes</h2>
+        <button id="btnBotClassClose" type="button" title="Fechar (Esc)" aria-label="Fechar">✕</button>
+      </div>
+      <div id="botClassColumns">
+        <div class="class-select-col">
+          <h3>Sua classe</h3>
+          <div id="modalPlayerClassList" class="class-mini-list"></div>
+        </div>
+        <div class="class-select-col">
+          <h3>Classe do bot</h3>
+          <div id="botClassList" class="class-mini-list"></div>
+        </div>
+      </div>
+      <button id="btnBotClassConfirm">Jogar</button>
     </div>
   </div>
 

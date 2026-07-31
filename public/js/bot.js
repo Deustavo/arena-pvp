@@ -37,7 +37,7 @@ export function startBot() {
   state.playerIndex = 0;
 
   const myClassId = state.classId;
-  const botClassId = pickRandomClassId();
+  const botClassId = state.botClassId || pickRandomClassId();
 
   state.bot = {
     players: [createPlayerState(0, myClassId), createPlayerState(1, botClassId)],
