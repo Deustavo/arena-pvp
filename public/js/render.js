@@ -8,7 +8,7 @@ import { showGameOverOverlay } from './gameOver.js';
 const GAMEOVER_OVERLAY_DELAY = 2000;
 const HIT_FLASH_DURATION = 400;
 
-function drawShield(cx, cy, charges, now) {
+function drawShield(cx, cy, charges, maxHits, now) {
   if (charges <= 0) return;
   const pulse = 1 + Math.sin(now / 120) * 0.03;
   const r = state.shieldRadius * pulse;
@@ -24,7 +24,7 @@ function drawShield(cx, cy, charges, now) {
   ctx.strokeStyle = '#7dd3fc';
   ctx.lineWidth = 3;
   const gap = 0.18;
-  const step = (Math.PI * 2) / state.shieldMaxHits;
+  const step = (Math.PI * 2) / maxHits;
   for (let i = 0; i < charges; i++) {
     const start = -Math.PI / 2 + i * step + gap / 2;
     ctx.beginPath();
@@ -66,17 +66,19 @@ function drawPlayers(renderState, now) {
       ? (state.input.shield && isShieldAvailable())
       : !!p.shielding;
     if (shieldingNow) {
+      const maxHits = p.shieldMaxHits ?? state.shieldMaxHits[i];
       drawShield(p.x + ox + state.playerSize / 2, p.y + oy + state.playerSize / 2,
-        state.shieldMaxHits - (p.shieldHits || 0), now);
+        maxHits - (p.shieldHits || 0), maxHits, now);
     }
   }
 }
 
 function drawProjectiles(renderState) {
   for (const proj of renderState.projectiles) {
+    const size = proj.size ?? state.projectileSize;
     ctx.fillStyle = state.colors[proj.ownerIndex];
     ctx.beginPath();
-    ctx.arc(proj.x, proj.y, state.projectileSize / 2, 0, Math.PI * 2);
+    ctx.arc(proj.x, proj.y, size / 2, 0, Math.PI * 2);
     ctx.fill();
   }
 }

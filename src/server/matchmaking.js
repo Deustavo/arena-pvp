@@ -14,8 +14,9 @@ function onMatchEnd(match) {
   console.log(`Partida ${match.id} encerrada. Partidas ativas: ${activeMatches.size}`);
 }
 
-export function handleConnection(ws, nickname = 'Jogador') {
+export function handleConnection(ws, nickname = 'Jogador', classId = 'atirador') {
   ws.nickname = nickname;
+  ws.classId = classId;
 
   if (waitingPlayer === null) {
     waitingPlayer = ws;

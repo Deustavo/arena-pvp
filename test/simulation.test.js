@@ -2,7 +2,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { stepPlayers, stepProjectiles } from '../shared/simulation.js';
 import { createPlayerState, createProjectile } from '../shared/entities.js';
-import { ARENA, PLAYER_SIZE, PLAYER_SPEED, SHIELD_MAX_HITS } from '../shared/constants.js';
+import { ARENA, PLAYER_SIZE, PLAYER_SPEED } from '../shared/constants.js';
+import { CLASSES } from '../shared/classes.js';
 
 describe('stepPlayers', () => {
   test('move o jogador de acordo com o input', () => {
@@ -56,7 +57,7 @@ describe('stepPlayers', () => {
   test('escudo esgotado (shieldHits no máximo) é desativado automaticamente', () => {
     const p = createPlayerState(0);
     p.shielding = true;
-    p.shieldHits = SHIELD_MAX_HITS;
+    p.shieldHits = p.shieldMaxHits;
     stepPlayers([p], ARENA);
     assert.equal(p.shielding, false);
   });
@@ -95,7 +96,7 @@ describe('stepProjectiles', () => {
     proj.vy = 0;
 
     const result = stepProjectiles([proj], players, ARENA, () => {});
-    assert.equal(target.lives, 2);
+    assert.equal(target.lives, CLASSES.atirador.maxLives - 1);
     assert.equal(target.alive, true);
     assert.equal(result.length, 0);
   });
@@ -130,7 +131,7 @@ describe('stepProjectiles', () => {
     proj.vy = 0;
 
     const result = stepProjectiles([proj], players, ARENA, () => {});
-    assert.equal(target.lives, 3);
+    assert.equal(target.lives, CLASSES.atirador.maxLives);
     assert.equal(target.shieldHits, 1);
     assert.equal(result.length, 0);
   });
@@ -138,14 +139,16 @@ describe('stepProjectiles', () => {
   test('escudo se desativa automaticamente após atingir o máximo de hits', () => {
     const players = makeMatch();
     const target = players[1];
+    target.classId = 'tank';
+    target.shieldMaxHits = CLASSES.tank.shieldMaxHits;
     target.shielding = true;
-    target.shieldHits = SHIELD_MAX_HITS - 1;
+    target.shieldHits = target.shieldMaxHits - 1;
     const proj = createProjectile(1, target.x + PLAYER_SIZE / 2, target.y + PLAYER_SIZE / 2, 0, 0, 0);
     proj.vx = 0;
     proj.vy = 0;
 
     stepProjectiles([proj], players, ARENA, () => {});
-    assert.equal(target.shieldHits, SHIELD_MAX_HITS);
+    assert.equal(target.shieldHits, target.shieldMaxHits);
     assert.equal(target.shielding, false);
   });
 
@@ -172,7 +175,37 @@ describe('stepProjectiles', () => {
     proj.vy = 0;
 
     stepProjectiles([proj], players, ARENA, () => {});
-    assert.equal(target.lives, 2);
-    assert.equal(players[1].lives, 3);
+    assert.equal(target.lives, CLASSES.atirador.maxLives - 1);
+    assert.equal(players[1].lives, CLASSES.atirador.maxLives);
+  });
+
+  test('projétil de alcance limitado some ao ultrapassar a distância percorrida', () => {
+    const players = makeMatch();
+    const proj = createProjectile(1, 400, 300, 1000, 300, 0, 9, 1, undefined, 50);
+    proj.vx = 60;
+    proj.vy = 0;
+
+    const result = stepProjectiles([proj], players, ARENA, () => {});
+    assert.equal(result.length, 0);
+  });
+
+  test('projétil de alcance limitado permanece dentro da distância permitida', () => {
+    const players = makeMatch();
+    const proj = createProjectile(1, 400, 300, 1000, 300, 0, 9, 1, undefined, 50);
+    proj.vx = 10;
+    proj.vy = 0;
+
+    const result = stepProjectiles([proj], players, ARENA, () => {});
+    assert.equal(result.length, 1);
+  });
+
+  test('projétil com alcance infinito não some ao percorrer longas distâncias', () => {
+    const players = makeMatch();
+    const proj = createProjectile(1, 400, 300, 1000, 300, 0);
+    proj.vx = 350;
+    proj.vy = 0;
+
+    const result = stepProjectiles([proj], players, ARENA, () => {});
+    assert.equal(result.length, 1);
   });
 });

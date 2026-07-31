@@ -2,14 +2,15 @@ import crypto from 'crypto';
 import WebSocket from 'ws';
 import {
   ARENA, PLAYER_SIZE, PROJECTILE_SIZE, COLORS, TICK_MS, COUNTDOWN_MS,
-  SHIELD_RADIUS, SHIELD_MAX_HITS,
+  SHIELD_RADIUS,
 } from '../../shared/constants.js';
 import { createPlayerState } from '../../shared/entities.js';
+import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 import { stepPlayers, stepProjectiles } from '../../shared/simulation.js';
 
 function makePlayer(ws, index) {
   return {
-    ...createPlayerState(index),
+    ...createPlayerState(index, ws.classId || DEFAULT_CLASS_ID),
     ws,
     index,
     color: COLORS[index],
@@ -19,7 +20,15 @@ function makePlayer(ws, index) {
 
 function playerSnapshot(p) {
   return {
-    x: p.x, y: p.y, lives: p.lives, alive: p.alive, shielding: p.shielding, shieldHits: p.shieldHits, name: p.name,
+    x: p.x,
+    y: p.y,
+    lives: p.lives,
+    alive: p.alive,
+    shielding: p.shielding,
+    shieldHits: p.shieldHits,
+    shieldMaxHits: p.shieldMaxHits,
+    classId: p.classId,
+    name: p.name,
   };
 }
 
@@ -52,7 +61,6 @@ export function createMatch(wsA, wsB, { onEnd } = {}) {
       colors: COLORS,
       countdownMs: COUNTDOWN_MS,
       shieldRadius: SHIELD_RADIUS,
-      shieldMaxHits: SHIELD_MAX_HITS,
       players: players.map(playerSnapshot),
     });
   });
@@ -81,7 +89,7 @@ function broadcastState(match) {
   const state = {
     type: 'state',
     players: match.players.map(playerSnapshot),
-    projectiles: match.projectiles.map((proj) => ({ x: proj.x, y: proj.y, ownerIndex: proj.ownerIndex })),
+    projectiles: match.projectiles.map((proj) => ({ x: proj.x, y: proj.y, ownerIndex: proj.ownerIndex, size: proj.size })),
   };
   const payload = JSON.stringify(state);
   for (const p of match.players) {

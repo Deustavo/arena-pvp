@@ -4,13 +4,13 @@
 // exatamente as mesmas regras.
 
 import { clamp, rectsIntersect, circleHitsProjectile, movementDelta } from './physics.js';
-import { PLAYER_SIZE, PROJECTILE_SIZE, PLAYER_SPEED, SHIELD_RADIUS, SHIELD_MAX_HITS } from './constants.js';
+import { PLAYER_SIZE, PROJECTILE_SIZE, PLAYER_SPEED, SHIELD_RADIUS } from './constants.js';
 
 export function stepPlayers(players, arena) {
   for (const p of players) {
     if (!p.alive) continue;
     // Escudo esgotado não pode mais ser usado.
-    if (p.shielding && p.shieldHits >= SHIELD_MAX_HITS) p.shielding = false;
+    if (p.shielding && p.shieldHits >= p.shieldMaxHits) p.shielding = false;
     // Em modo de defesa o jogador fica imóvel.
     if (p.shielding) continue;
     const { dx, dy } = movementDelta(p.input);
@@ -28,33 +28,45 @@ export function stepProjectiles(projectiles, players, arena, onPlayerDown) {
     proj.x += proj.vx;
     proj.y += proj.vy;
 
-    if (proj.x < -PROJECTILE_SIZE || proj.x > arena.w + PROJECTILE_SIZE ||
-        proj.y < -PROJECTILE_SIZE || proj.y > arena.h + PROJECTILE_SIZE) {
+    const size = proj.size ?? PROJECTILE_SIZE;
+    if (proj.x < -size || proj.x > arena.w + size ||
+        proj.y < -size || proj.y > arena.h + size) {
+      return false;
+    }
+
+    // Projéteis de alcance limitado (ex.: o tiro curto do tank) somem ao
+    // ultrapassar a distância percorrida desde o disparo.
+    if (Number.isFinite(proj.range) &&
+      Math.hypot(proj.x - proj.startX, proj.y - proj.startY) > proj.range) {
       return false;
     }
 
     const target = players[proj.ownerIndex === 0 ? 1 : 0];
 
-    if (target.alive && target.shielding && target.shieldHits < SHIELD_MAX_HITS &&
-      circleHitsProjectile(target, proj, PLAYER_SIZE, SHIELD_RADIUS, PROJECTILE_SIZE)) {
+    if (target.alive && target.shielding && target.shieldHits < target.shieldMaxHits &&
+      circleHitsProjectile(target, proj, PLAYER_SIZE, SHIELD_RADIUS, size)) {
       target.shieldHits += 1;
-      if (target.shieldHits >= SHIELD_MAX_HITS) target.shielding = false;
+      if (target.shieldHits >= target.shieldMaxHits) target.shielding = false;
       return false;
     }
 
     if (target.alive && rectsIntersect(
-      proj.x - PROJECTILE_SIZE / 2, proj.y - PROJECTILE_SIZE / 2, PROJECTILE_SIZE, PROJECTILE_SIZE,
+      proj.x - size / 2, proj.y - size / 2, size, size,
       target.x, target.y, PLAYER_SIZE, PLAYER_SIZE
     )) {
-      target.lives -= 1;
-      if (target.lives <= 0) {
-        target.lives = 0;
-        target.alive = false;
-        if (onPlayerDown) onPlayerDown(proj.ownerIndex, target);
-      }
+      applyDamage(target, proj.damage ?? 1, proj.ownerIndex, onPlayerDown);
       return false;
     }
 
     return true;
   });
+}
+
+function applyDamage(target, amount, ownerIndex, onPlayerDown) {
+  target.lives -= amount;
+  if (target.lives <= 0) {
+    target.lives = 0;
+    target.alive = false;
+    if (onPlayerDown) onPlayerDown(ownerIndex, target);
+  }
 }

@@ -1,8 +1,8 @@
 import { state } from './state.js';
-import { SHIELD_RADIUS, SHIELD_MAX_HITS } from '../../shared/constants.js';
+import { SHIELD_RADIUS } from '../../shared/constants.js';
 import { canvas } from './dom.js';
 import { showWaitingOverlay, hideWaitingOverlay, showCountdown, hideCountdown } from './overlays.js';
-import { updateHud, isShieldAvailable } from './hud.js';
+import { updateHud, isShieldAvailable, initHearts } from './hud.js';
 import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
 import { reconcilePrediction } from './prediction.js';
@@ -19,7 +19,8 @@ function releaseExhaustedShield() {
 export function startOnline(onBackToMenu) {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const nickname = encodeURIComponent(state.nickname);
-  state.ws = new WebSocket(`${protocol}//${location.host}?nickname=${nickname}`);
+  const classId = encodeURIComponent(state.classId);
+  state.ws = new WebSocket(`${protocol}//${location.host}?nickname=${nickname}&classId=${classId}`);
 
   state.ws.onopen = () => {
     showWaitingOverlay();
@@ -52,12 +53,13 @@ function handleOnlineMessage(msg, onBackToMenu) {
       state.projectileSize = msg.projectileSize;
       state.colors = msg.colors;
       state.shieldRadius = msg.shieldRadius ?? SHIELD_RADIUS;
-      state.shieldMaxHits = msg.shieldMaxHits ?? SHIELD_MAX_HITS;
+      state.shieldMaxHits = msg.players.map((p) => p.shieldMaxHits ?? 1);
       canvas.width = state.arena.w;
       canvas.height = state.arena.h;
       state.gameOver = false;
       state.matchStarted = false;
       state.latestState = { players: msg.players, projectiles: [] };
+      initHearts(msg.players.map((p) => p.lives));
       updateHud();
       showCountdown(msg.countdownMs);
       break;

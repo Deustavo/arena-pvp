@@ -7,16 +7,30 @@
 </head>
 <body>
   <div id="menu">
-    <h1>Jogo do Ano</h1>
-    <div id="nicknameField">
-      <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
-      <div id="nicknameError">Digite um nickname para jogar</div>
+    <div id="menuBody">
+      <div id="menuLeft">
+        <h1>Jogo do Ano</h1>
+        <button id="btnOnline">Jogar Online</button>
+        <button id="btnBot">Jogar contra Bot</button>
+        <hr id="menuDivider">
+        <button id="btnHowToPlay">Como jogar</button>
+        <div id="onlineCount">● <span id="onlineCountValue">--</span> jogador(es) online</div>
+      </div>
+      <div id="menuRight">
+        <div id="nicknameField">
+          <label id="nicknameLabel" for="nicknameInput">Jogador</label>
+          <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
+          <div id="nicknameError">Digite um nickname para jogar</div>
+        </div>
+        <div id="classPanel">
+          <h2 id="classPanelTitle">Classe</h2>
+          <div id="classArea">
+            <div id="classList"></div>
+            <div id="classDetails"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <button id="btnOnline">Jogar Online</button>
-    <button id="btnBot">Jogar contra Bot</button>
-    <hr id="menuDivider">
-    <button id="btnHowToPlay">Como jogar</button>
-    <div id="onlineCount">● <span id="onlineCountValue">--</span> jogador(es) online</div>
   </div>
 
   <div id="howToPlayOverlay">

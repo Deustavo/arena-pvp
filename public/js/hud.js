@@ -2,7 +2,6 @@ import {
   livesP0El, livesP1El, nameP0El, nameP1El,
 } from './dom.js';
 import { state } from './state.js';
-import { MAX_LIVES } from '../../shared/constants.js';
 import { checkDeathExplosion } from './explosions.js';
 
 export const HEART_PIXELS = [
@@ -17,7 +16,7 @@ const HEART_PIXEL_SIZE = 3;
 const HIT_FLASH_DURATION = 400;
 
 let heartsEls = [[], []];
-let prevLives = [MAX_LIVES, MAX_LIVES];
+let prevLives = [0, 0];
 export let hitFlashUntil = [0, 0];
 
 function createHeartEl() {
@@ -44,10 +43,13 @@ function createHeartsRow(container, count) {
   return hearts;
 }
 
-export function initHearts() {
-  heartsEls[0] = createHeartsRow(livesP0El, MAX_LIVES);
-  heartsEls[1] = createHeartsRow(livesP1El, MAX_LIVES);
-  prevLives = [MAX_LIVES, MAX_LIVES];
+// `maxLives` são as vidas máximas de cada jogador, dependentes da classe
+// escolhida (ex.: atirador 10, mago 8, tank 12) — vêm do snapshot inicial da
+// partida, já que ambos os lados começam com vida cheia.
+export function initHearts(maxLives = [10, 10]) {
+  heartsEls[0] = createHeartsRow(livesP0El, maxLives[0]);
+  heartsEls[1] = createHeartsRow(livesP1El, maxLives[1]);
+  prevLives = [maxLives[0], maxLives[1]];
   hitFlashUntil = [0, 0];
 }
 
@@ -75,8 +77,9 @@ function updateHeartsRow(row, lives, rawIndex) {
 
 export function shieldCharges(index) {
   const p = state.latestState.players[index];
-  if (!p) return state.shieldMaxHits;
-  return state.shieldMaxHits - (p.shieldHits || 0);
+  const maxHits = p?.shieldMaxHits ?? state.shieldMaxHits[index];
+  if (!p) return maxHits;
+  return maxHits - (p.shieldHits || 0);
 }
 
 export function isShieldAvailable() {

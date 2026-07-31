@@ -1,13 +1,17 @@
-import { ARENA, PLAYER_SIZE, MAX_LIVES, PROJECTILE_SPEED } from './constants.js';
+import { ARENA, PLAYER_SIZE, PROJECTILE_SPEED, PROJECTILE_SIZE } from './constants.js';
+import { getClass, DEFAULT_CLASS_ID } from './classes.js';
 
 // Estado inicial de um jogador (posição inicial depende do lado da arena).
 // O chamador (servidor ou bot) acrescenta os campos que só fazem sentido no
 // seu contexto (ex.: `ws`/`color` no servidor).
-export function createPlayerState(index) {
+export function createPlayerState(index, classId = DEFAULT_CLASS_ID) {
+  const cls = getClass(classId);
   return {
     x: index === 0 ? 100 : ARENA.w - 100 - PLAYER_SIZE,
     y: ARENA.h / 2 - PLAYER_SIZE / 2,
-    lives: MAX_LIVES,
+    classId: cls.id,
+    lives: cls.maxLives,
+    shieldMaxHits: cls.shieldMaxHits,
     input: { up: false, down: false, left: false, right: false },
     lastShot: 0,
     alive: true,
@@ -16,7 +20,10 @@ export function createPlayerState(index) {
   };
 }
 
-export function createProjectile(id, cx, cy, targetX, targetY, ownerIndex, speed = PROJECTILE_SPEED) {
+export function createProjectile(
+  id, cx, cy, targetX, targetY, ownerIndex, speed = PROJECTILE_SPEED, damage = 1,
+  size = PROJECTILE_SIZE, range = Infinity
+) {
   let dx = targetX - cx;
   let dy = targetY - cy;
   const len = Math.hypot(dx, dy) || 1;
@@ -26,8 +33,35 @@ export function createProjectile(id, cx, cy, targetX, targetY, ownerIndex, speed
     id,
     x: cx,
     y: cy,
+    startX: cx,
+    startY: cy,
     vx: dx * speed,
     vy: dy * speed,
     ownerIndex,
+    damage,
+    size,
+    range,
   };
+}
+
+// Cria os projéteis de um disparo, considerando o padrão da classe do
+// atirador (tiro único, leque em cone como o do mago, ou o projétil maior e
+// de alcance menor do tank).
+export function createShotProjectiles(nextId, cx, cy, targetX, targetY, ownerIndex, classId) {
+  const cls = getClass(classId);
+  const count = Math.max(1, cls.projectileCount);
+  const baseAngle = Math.atan2(targetY - cy, targetX - cx);
+  const spreadRad = (cls.coneSpreadDeg * Math.PI) / 180;
+  const projectiles = [];
+  let id = nextId;
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0 : i / (count - 1) - 0.5;
+    const angle = baseAngle + t * spreadRad;
+    const tx = cx + Math.cos(angle) * 1000;
+    const ty = cy + Math.sin(angle) * 1000;
+    projectiles.push(createProjectile(
+      id++, cx, cy, tx, ty, ownerIndex, PROJECTILE_SPEED, cls.damage, cls.projectileSize, cls.range
+    ));
+  }
+  return { projectiles, nextId: id };
 }

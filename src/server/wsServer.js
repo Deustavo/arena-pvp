@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
-import { PROJECTILE_COOLDOWN_MS, PLAYER_SIZE, SHIELD_MAX_HITS } from '../../shared/constants.js';
-import { createProjectile } from '../../shared/entities.js';
+import { PLAYER_SIZE } from '../../shared/constants.js';
+import { createShotProjectiles } from '../../shared/entities.js';
+import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { sanitizeNickname } from '../../shared/nickname.js';
 import { handleConnection, handleLeaveQueue, handleDisconnect } from './matchmaking.js';
 
@@ -12,13 +13,19 @@ function nicknameFromRequest(req) {
   return nickname || 'Jogador';
 }
 
+function classIdFromRequest(req) {
+  const url = new URL(req.url, 'http://localhost');
+  const classId = url.searchParams.get('classId');
+  return CLASSES[classId] ? classId : DEFAULT_CLASS_ID;
+}
+
 export function createWsServer(httpServer) {
   wss = new WebSocketServer({ server: httpServer, perMessageDeflate: false });
 
   wss.on('connection', (ws, req) => {
     ws.on('message', (raw) => handleMessage(ws, raw));
     ws.on('close', () => handleDisconnect(ws));
-    handleConnection(ws, nicknameFromRequest(req));
+    handleConnection(ws, nicknameFromRequest(req), classIdFromRequest(req));
   });
 
   return wss;
@@ -48,7 +55,7 @@ function handleMessage(ws, raw) {
 function handleInput(ws, { up, down, left, right, shield }) {
   const player = ws.player;
   player.input = { up: !!up, down: !!down, left: !!left, right: !!right };
-  player.shielding = !!shield && player.shieldHits < SHIELD_MAX_HITS;
+  player.shielding = !!shield && player.shieldHits < player.shieldMaxHits;
 }
 
 function handleShoot(ws, msg) {
@@ -58,13 +65,17 @@ function handleShoot(ws, msg) {
   // Em modo de defesa o jogador não atira.
   if (player.shielding) return;
 
+  const cls = getClass(player.classId);
   const now = Date.now();
-  if (now - player.lastShot < PROJECTILE_COOLDOWN_MS) return;
+  if (now - player.lastShot < cls.shotCooldownMs) return;
   player.lastShot = now;
 
   const cx = player.x + PLAYER_SIZE / 2;
   const cy = player.y + PLAYER_SIZE / 2;
-  match.projectiles.push(
-    createProjectile(match.nextProjectileId++, cx, cy, msg.targetX ?? 0, msg.targetY ?? 0, player.index)
+
+  const { projectiles, nextId } = createShotProjectiles(
+    match.nextProjectileId, cx, cy, msg.targetX ?? 0, msg.targetY ?? 0, player.index, player.classId
   );
+  match.nextProjectileId = nextId;
+  match.projectiles.push(...projectiles);
 }

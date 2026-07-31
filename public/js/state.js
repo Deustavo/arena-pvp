@@ -4,8 +4,9 @@
 // respeito, mantém as coisas simples e fáceis de rastrear.
 
 import {
-  ARENA, PLAYER_SIZE, PROJECTILE_SIZE, COLORS, SHIELD_RADIUS, SHIELD_MAX_HITS,
+  ARENA, PLAYER_SIZE, PROJECTILE_SIZE, COLORS, SHIELD_RADIUS,
 } from '../../shared/constants.js';
+import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 
 export const state = {
   mode: null, // 'online' | 'bot'
@@ -13,6 +14,7 @@ export const state = {
   playerIndex: null,
   matchId: null,
   nickname: '',
+  classId: DEFAULT_CLASS_ID, // classe escolhida no menu para a próxima partida
 
   // Parâmetros da partida — os valores online vêm do servidor (mensagem
   // `init`) e podem, em tese, divergir das constantes locais.
@@ -21,7 +23,7 @@ export const state = {
   projectileSize: PROJECTILE_SIZE,
   colors: COLORS,
   shieldRadius: SHIELD_RADIUS,
-  shieldMaxHits: SHIELD_MAX_HITS,
+  shieldMaxHits: [1, 1], // cargas de escudo por jogador, dependem da classe
 
   latestState: { players: [], projectiles: [] },
   gameOver: false,
@@ -60,7 +62,7 @@ export function resetMatchState() {
   state.projectileSize = PROJECTILE_SIZE;
   state.colors = COLORS;
   state.shieldRadius = SHIELD_RADIUS;
-  state.shieldMaxHits = SHIELD_MAX_HITS;
+  state.shieldMaxHits = [1, 1];
   state.latestState = { players: [], projectiles: [] };
   state.stateBuffer = [];
   state.predicted = { x: 0, y: 0, initialized: false };

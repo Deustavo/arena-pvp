@@ -37,7 +37,8 @@ export function advancePrediction() {
   const me = state.latestState.players[state.playerIndex];
   if (!me || !me.alive) return;
   // Em modo de defesa o jogador não se move.
-  if (state.input.shield && me.shieldHits < state.shieldMaxHits) return;
+  const maxHits = me.shieldMaxHits ?? state.shieldMaxHits[state.playerIndex];
+  if (state.input.shield && me.shieldHits < maxHits) return;
 
   const { dx, dy } = movementDelta(state.input);
   const speedPerMs = PLAYER_SPEED / TICK_MS;
