@@ -5,7 +5,7 @@
 import { MAX_LIVES, COLORS } from '../../../shared/constants.js';
 import {
   TUT, lerp, seg, tutPlayer, tutProjectile, tutKeycap, tutCursor, tutHearts, tutLabel,
-  tutShield, tutSpark, tutExplosion, tutRoundRect, tutCtx,
+  tutShield, tutSpark, tutExplosion, tutCtx,
 } from './canvasHelpers.js';
 
 export const TUTORIAL_STEPS = [
@@ -114,53 +114,7 @@ export const TUTORIAL_STEPS = [
     },
   },
   {
-    title: '5. O escudo tem 3 cargas',
-    text: 'O campo de força aguenta <strong>3 tiros na partida inteira</strong> — cada arco do círculo é uma carga. Sem cargas ele não pode mais ser usado.',
-    loop: 5800,
-    draw(t) {
-      const me = { x: 60, y: 82 };
-      const foe = { x: 262, y: 82 };
-      const cx = me.x + TUT.player / 2;
-      const cy = me.y + TUT.player / 2;
-      const impactX = cx + TUT.shieldR + TUT.proj / 2;
-      const shots = [400, 1400, 2400];
-      const travel = 800;
-
-      let charges = 3;
-      for (const s of shots) if (t >= s + travel) charges -= 1;
-      const broken = charges <= 0;
-
-      tutPlayer(foe.x, foe.y, COLORS[1], false, false);
-
-      // Sem cargas o quarto tiro passa pelo escudo e acerta o jogador.
-      const lastShot = 4100;
-      const lastHit = lastShot + 900;
-      const hitMe = t >= lastHit;
-      const meFlicker = hitMe && t < lastHit + 400 && Math.floor((t - lastHit) / 90) % 2 === 0;
-      tutPlayer(me.x, me.y, COLORS[0], true, meFlicker);
-
-      if (!broken) {
-        tutShield(cx, cy, charges, t);
-        for (const s of shots) {
-          if (t >= s && t < s + travel) {
-            tutProjectile(lerp(foe.x, impactX, seg(t, s, s + travel)), cy, COLORS[1]);
-          }
-          tutSpark(impactX, cy, seg(t, s + travel, s + travel + 350));
-        }
-      } else {
-        tutLabel('escudo esgotado', cx, me.y - 26, '#e63946', 12);
-        if (t >= lastShot && t < lastHit) {
-          const k = seg(t, lastShot, lastHit);
-          tutProjectile(lerp(foe.x, me.x + TUT.player, k), cy, COLORS[1]);
-        }
-        if (hitMe) tutLabel('-1 vida', cx, cy + 34, '#e63946', 12);
-      }
-
-      tutLabel(`cargas restantes: ${Math.max(0, charges)}`, 170, 168, '#8a8aa0', 11);
-    },
-  },
-  {
-    title: '6. Vence quem zerar o oponente',
+    title: '5. Vence quem zerar o oponente',
     text: 'A partida termina quando um dos jogadores perde as <strong>3 vidas</strong>. Quem sobrar em pé ganha.',
     loop: 4200,
     draw(t) {
@@ -194,39 +148,6 @@ export const TUTORIAL_STEPS = [
         tutLabel('Você ganhou', TUT.w / 2, 160, '#4ade80', 20);
         tutCtx.restore();
       }
-    },
-  },
-  {
-    title: '7. Escolha o modo de jogo',
-    text: '<strong>Jogar Online</strong> te coloca na fila para um 1x1 contra outra pessoa. <strong>Jogar contra Bot</strong> é treino offline, começa na hora.',
-    loop: 3800,
-    draw(t) {
-      const btnW = 190;
-      const btnX = (TUT.w - btnW) / 2;
-      const onlineY = 46;
-      const botY = 104;
-      const overBot = t >= 1900;
-
-      const drawBtn = (y, label, base, hover, active) => {
-        tutRoundRect(btnX, y, btnW, 38, 8);
-        tutCtx.fillStyle = active ? hover : base;
-        tutCtx.fill();
-        tutLabel(label, TUT.w / 2, y + 19, '#fff', 14);
-      };
-
-      drawBtn(onlineY, 'Jogar Online', '#457b9d', '#5b96bb', !overBot);
-      drawBtn(botY, 'Jogar contra Bot', '#e63946', '#f0525e', overBot);
-
-      const curY = lerp(onlineY + 26, botY + 26, seg(t, 1600, 1900));
-      tutCursor(TUT.w / 2 + 40, curY, false);
-
-      tutLabel(
-        overBot ? 'treino offline, sem espera' : '1x1 contra outro jogador',
-        TUT.w / 2,
-        168,
-        '#8a8aa0',
-        11
-      );
     },
   },
 ];
