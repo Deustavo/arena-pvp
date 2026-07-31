@@ -1,8 +1,9 @@
 import { state } from './state.js';
-import { canvas } from './dom.js';
+import { canvas, escHintEl } from './dom.js';
 import { isShieldAvailable } from './hud.js';
 import { sendInput, sendShoot } from './network.js';
 import { botShoot } from './bot.js';
+import { backToMenu } from './menu.js';
 
 const keyMap = {
   KeyW: 'up', ArrowUp: 'up',
@@ -11,8 +12,41 @@ const keyMap = {
   KeyD: 'right', ArrowRight: 'right',
 };
 
+const ESC_CONFIRM_WINDOW_MS = 2000;
+const ESC_DEFAULT_TEXT = 'Aperte ESC 2 vezes para sair';
+const ESC_CONFIRM_TEXT = 'Aperte ESC novamente para sair';
+
+let escArmed = false;
+let escResetTimer = null;
+
+export function resetEscHint() {
+  escArmed = false;
+  clearTimeout(escResetTimer);
+  escResetTimer = null;
+  escHintEl.textContent = ESC_DEFAULT_TEXT;
+  escHintEl.classList.remove('armed');
+}
+
+function handleEscPress() {
+  if (!state.mode) return;
+  if (escArmed) {
+    resetEscHint();
+    backToMenu();
+    return;
+  }
+  escArmed = true;
+  escHintEl.textContent = ESC_CONFIRM_TEXT;
+  escHintEl.classList.add('armed');
+  clearTimeout(escResetTimer);
+  escResetTimer = setTimeout(resetEscHint, ESC_CONFIRM_WINDOW_MS);
+}
+
 export function initInput() {
   window.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape') {
+      handleEscPress();
+      return;
+    }
     if (!state.mode) return;
     if (e.code === 'Space') {
       e.preventDefault();

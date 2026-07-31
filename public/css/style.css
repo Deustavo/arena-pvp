@@ -216,6 +216,14 @@
   #canvas-wrap {
     position: relative;
   }
+  #escHint {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #777;
+  }
+  #escHint.armed {
+    color: #f4c542;
+  }
   #gameOverOverlay, #waitingOverlay, #countdownOverlay {
     display: none;
     position: absolute;

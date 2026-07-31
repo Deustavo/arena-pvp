@@ -17,6 +17,7 @@ export const cooldownP1El = document.getElementById('cooldownP1');
 
 export const menuEl = document.getElementById('menu');
 export const gameWrapEl = document.getElementById('game-wrap');
+export const escHintEl = document.getElementById('escHint');
 export const btnOnline = document.getElementById('btnOnline');
 export const btnBot = document.getElementById('btnBot');
 export const nicknameInput = document.getElementById('nicknameInput');

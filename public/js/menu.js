@@ -6,6 +6,7 @@ import { startOnlineCountPolling, stopOnlineCountPolling } from './onlineCount.j
 import { startOnline as connectOnline, closeConnection } from './network.js';
 import { startBot as startBotMatch, stopBot } from './bot.js';
 import { commitNickname } from './nickname.js';
+import { resetEscHint } from './input.js';
 
 export function showMenu() {
   menuEl.style.display = 'flex';
@@ -27,6 +28,7 @@ function prepareNewMatch() {
   hideGameOverOverlay();
   hideWaitingOverlay();
   hideCountdown();
+  resetEscHint();
 }
 
 export function startOnline() {
