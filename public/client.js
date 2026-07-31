@@ -15,8 +15,16 @@ const countdownOverlayEl = document.getElementById('countdownOverlay');
 const countdownNumberEl = document.getElementById('countdownNumber');
 const btnLeaveQueue = document.getElementById('btnLeaveQueue');
 const btnHowToPlay = document.getElementById('btnHowToPlay');
-const btnCloseHowToPlay = document.getElementById('btnCloseHowToPlay');
 const howToPlayOverlayEl = document.getElementById('howToPlayOverlay');
+const tutCanvas = document.getElementById('tutCanvas');
+const tutCtx = tutCanvas.getContext('2d');
+const tutTitleEl = document.getElementById('tutTitle');
+const tutTextEl = document.getElementById('tutText');
+const tutDotsEl = document.getElementById('tutDots');
+const tutStepCountEl = document.getElementById('tutStepCount');
+const btnTutPrev = document.getElementById('btnTutPrev');
+const btnTutNext = document.getElementById('btnTutNext');
+const btnTutClose = document.getElementById('btnTutClose');
 const onlineCountValueEl = document.getElementById('onlineCountValue');
 
 // Shared constants (must match server.js physics for online mode;
@@ -269,6 +277,484 @@ function updateHeartsRow(row, lives, rawIndex) {
   prevLives[row] = lives;
 }
 
+// ---------- Tutorial "Como jogar" ----------
+// Cada etapa da lista tem sua própria animação demonstrando a ação, desenhada
+// com as mesmas formas do jogo (quadrado, tiro, escudo, corações, explosão).
+
+const TUT = { w: 340, h: 190, player: 22, proj: 7, shieldR: 26, shieldMax: 3 };
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+// Progresso 0..1 de um trecho da animação (fora do trecho fica preso em 0 ou 1).
+function seg(t, from, to) {
+  return clamp((t - from) / (to - from), 0, 1);
+}
+
+function tutPlayer(x, y, color, isMe, flicker) {
+  tutCtx.fillStyle = flicker ? '#ffffff' : color;
+  tutCtx.fillRect(x, y, TUT.player, TUT.player);
+  if (isMe) {
+    tutCtx.strokeStyle = '#fff';
+    tutCtx.lineWidth = 2;
+    tutCtx.strokeRect(x, y, TUT.player, TUT.player);
+  }
+}
+
+function tutProjectile(x, y, color) {
+  tutCtx.fillStyle = color;
+  tutCtx.beginPath();
+  tutCtx.arc(x, y, TUT.proj / 2, 0, Math.PI * 2);
+  tutCtx.fill();
+}
+
+function tutRoundRect(x, y, w, h, r) {
+  tutCtx.beginPath();
+  tutCtx.moveTo(x + r, y);
+  tutCtx.arcTo(x + w, y, x + w, y + h, r);
+  tutCtx.arcTo(x + w, y + h, x, y + h, r);
+  tutCtx.arcTo(x, y + h, x, y, r);
+  tutCtx.arcTo(x, y, x + w, y, r);
+  tutCtx.closePath();
+}
+
+function tutKeycap(x, y, label, active, w = 24) {
+  tutRoundRect(x, y, w, 24, 4);
+  tutCtx.fillStyle = active ? '#7dd3fc' : '#3a3a4d';
+  tutCtx.fill();
+  tutCtx.strokeStyle = active ? '#bae6fd' : '#55556b';
+  tutCtx.lineWidth = 1.5;
+  tutCtx.stroke();
+  tutCtx.fillStyle = active ? '#12222c' : '#9a9ab0';
+  tutCtx.font = 'bold 11px sans-serif';
+  tutCtx.textAlign = 'center';
+  tutCtx.textBaseline = 'middle';
+  tutCtx.fillText(label, x + w / 2, y + 13);
+}
+
+// Ponteiro de mouse clássico; (x, y) é a ponta da seta.
+const CURSOR_SHAPE = [
+  [0, 0], [0, 17], [4.4, 12.8], [7.3, 18.6], [10, 17.4], [7.1, 11.7], [12, 11.7],
+];
+const CURSOR_SCALE = 1.3;
+
+function tutCursor(x, y, clicking) {
+  if (clicking) {
+    tutCtx.save();
+    tutCtx.strokeStyle = '#fde68a';
+    tutCtx.lineWidth = 2;
+    tutCtx.beginPath();
+    tutCtx.arc(x + 8, y + 12, 17, 0, Math.PI * 2);
+    tutCtx.stroke();
+    tutCtx.restore();
+  }
+  tutCtx.save();
+  tutCtx.translate(x, y);
+  tutCtx.scale(CURSOR_SCALE, CURSOR_SCALE);
+  tutCtx.beginPath();
+  for (const [dx, dy] of CURSOR_SHAPE) {
+    tutCtx.lineTo(dx, dy);
+  }
+  tutCtx.closePath();
+  // O contorno vai ANTES do preenchimento: a seta é pequena e a cauda tem
+  // poucos pixels de largura, então traçar por cima comeria o branco.
+  tutCtx.strokeStyle = '#1a1a22';
+  tutCtx.lineWidth = 2;
+  tutCtx.lineJoin = 'round';
+  tutCtx.stroke();
+  tutCtx.fillStyle = '#fff';
+  tutCtx.fill();
+  tutCtx.restore();
+}
+
+function tutHeart(x, y, lost, dim) {
+  tutCtx.globalAlpha = dim ? 0.25 : 1;
+  tutCtx.fillStyle = lost ? '#555' : '#e63946';
+  for (const [row, col] of HEART_PIXELS) {
+    tutCtx.fillRect(x + col * 2, y + row * 2, 2, 2);
+  }
+  tutCtx.globalAlpha = 1;
+}
+
+function tutHearts(x, y, lives, blinkLost) {
+  for (let i = 0; i < MAX_LIVES; i++) {
+    tutHeart(x + i * 16, y, i >= lives, blinkLost && i === lives);
+  }
+}
+
+function tutLabel(text, x, y, color, size = 12, align = 'center') {
+  tutCtx.fillStyle = color;
+  tutCtx.font = `${size}px sans-serif`;
+  tutCtx.textAlign = align;
+  tutCtx.textBaseline = 'middle';
+  tutCtx.fillText(text, x, y);
+}
+
+function tutShield(cx, cy, charges, t) {
+  if (charges <= 0) return;
+  const r = TUT.shieldR * (1 + Math.sin(t / 120) * 0.04);
+  tutCtx.save();
+  tutCtx.globalAlpha = 0.18;
+  tutCtx.fillStyle = '#7dd3fc';
+  tutCtx.beginPath();
+  tutCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  tutCtx.fill();
+  tutCtx.globalAlpha = 0.9;
+  tutCtx.strokeStyle = '#7dd3fc';
+  tutCtx.lineWidth = 3;
+  const gap = 0.18;
+  const step = (Math.PI * 2) / TUT.shieldMax;
+  for (let i = 0; i < charges; i++) {
+    const start = -Math.PI / 2 + i * step + gap / 2;
+    tutCtx.beginPath();
+    tutCtx.arc(cx, cy, r, start, start + step - gap);
+    tutCtx.stroke();
+  }
+  tutCtx.restore();
+}
+
+// Faísca no ponto em que o tiro é absorvido pelo escudo.
+function tutSpark(cx, cy, progress) {
+  if (progress <= 0 || progress >= 1) return;
+  tutCtx.save();
+  tutCtx.globalAlpha = 1 - progress;
+  tutCtx.strokeStyle = '#bae6fd';
+  tutCtx.lineWidth = 2;
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const r0 = 4 + progress * 8;
+    const r1 = r0 + 6;
+    tutCtx.beginPath();
+    tutCtx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0);
+    tutCtx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+    tutCtx.stroke();
+  }
+  tutCtx.restore();
+}
+
+// Partículas fixas (não aleatórias) para a explosão do passo de vitória ficar
+// idêntica em cada repetição do loop.
+const TUT_EXPLOSION = Array.from({ length: 24 }, (_, i) => {
+  const angle = (i / 24) * Math.PI * 2 + (i % 3) * 0.25;
+  const speed = 0.5 + ((i * 7) % 10) / 10 * 1.6;
+  return {
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    size: 2 + ((i * 5) % 7) / 2,
+  };
+});
+
+function tutExplosion(cx, cy, elapsed, duration, color) {
+  if (elapsed <= 0) return;
+  const t = clamp(elapsed / duration, 0, 1);
+  if (t >= 1) return;
+  tutCtx.save();
+  tutCtx.globalAlpha = 1 - t;
+  for (const p of TUT_EXPLOSION) {
+    const d = elapsed * 0.06;
+    tutCtx.fillStyle = t < 0.4 ? '#ffffff' : color;
+    tutCtx.fillRect(cx + p.vx * d - p.size / 2, cy + p.vy * d - p.size / 2, p.size, p.size);
+  }
+  tutCtx.restore();
+}
+
+const TUTORIAL_STEPS = [
+  {
+    title: '1. Mover o boneco',
+    text: 'Use <strong>W A S D</strong> ou as <strong>setas</strong> do teclado. As teclas podem ser combinadas para andar na diagonal.',
+    loop: 4400,
+    draw(t) {
+      const path = [[52, 70], [130, 70], [130, 122], [52, 122]];
+      const legMs = 1100;
+      const leg = Math.min(3, Math.floor(t / legMs));
+      const k = seg(t, leg * legMs, (leg + 1) * legMs);
+      const from = path[leg];
+      const to = path[(leg + 1) % 4];
+      const x = lerp(from[0], to[0], k);
+      const y = lerp(from[1], to[1], k);
+      const active = ['right', 'down', 'left', 'up'][leg];
+
+      tutPlayer(x, y, colors[0], true, false);
+      tutKeycap(248, 52, 'W', active === 'up');
+      tutKeycap(220, 80, 'A', active === 'left');
+      tutKeycap(248, 80, 'S', active === 'down');
+      tutKeycap(276, 80, 'D', active === 'right');
+      tutLabel('ou as setas ↑ ↓ ← →', 262, 124, '#8a8aa0', 11);
+    },
+  },
+  {
+    title: '2. Atirar no oponente',
+    text: 'Clique em qualquer ponto da arena: o tiro sai do seu quadrado na direção do cursor. Há um pequeno intervalo entre um tiro e outro.',
+    loop: 2600,
+    draw(t) {
+      const target = { x: 268, y: 46 };
+      const start = { x: 46, y: 118 };
+      const cx = start.x + TUT.player / 2;
+      const cy = start.y + TUT.player / 2;
+      const tcx = target.x + TUT.player / 2;
+      const tcy = target.y + TUT.player / 2;
+
+      const move = seg(t, 0, 900);
+      // O cursor para na borda do alvo para não cobrir o quadrado do oponente.
+      const curX = lerp(120, tcx - 20, move);
+      const curY = lerp(150, tcy - 16, move);
+
+      tutPlayer(start.x, start.y, colors[0], true, false);
+      tutPlayer(target.x, target.y, colors[1], false, false);
+
+      if (t >= 1000) {
+        const k = seg(t, 1000, 1900);
+        tutProjectile(lerp(cx, tcx, k), lerp(cy, tcy, k), colors[0]);
+      }
+      tutCursor(curX, curY, t >= 900 && t < 1150);
+      tutLabel('clique', curX - 12, curY + 2, '#fde68a', 11, 'right');
+    },
+  },
+  {
+    title: '3. Três vidas por jogador',
+    text: 'Cada jogador começa com <strong>3 vidas</strong>. Todo tiro que acerta tira uma vida do adversário — os corações no topo da tela mostram quanto resta.',
+    loop: 3400,
+    draw(t) {
+      const me = { x: 40, y: 96 };
+      const foe = { x: 272, y: 96 };
+      const hit = t >= 1400;
+      const k = seg(t, 400, 1400);
+
+      tutLabel('Você', 24, 32, '#9a9ab0', 11, 'left');
+      tutHearts(24, 44, MAX_LIVES, false);
+      tutLabel('Oponente', 316, 32, '#9a9ab0', 11, 'right');
+      const blink = hit && t < 2100 && Math.floor((t - 1400) / 180) % 2 === 0;
+      tutHearts(268, 44, hit ? 2 : 3, blink);
+
+      tutPlayer(me.x, me.y, colors[0], true, false);
+      const foeFlicker = hit && t < 1800 && Math.floor((t - 1400) / 90) % 2 === 0;
+      tutPlayer(foe.x, foe.y, colors[1], false, foeFlicker);
+
+      if (!hit) {
+        tutProjectile(lerp(me.x + TUT.player, foe.x, k), me.y + TUT.player / 2, colors[0]);
+      } else if (t < 2100) {
+        tutLabel('-1 vida', foe.x + TUT.player / 2, foe.y - 18, '#e63946', 12);
+      }
+    },
+  },
+  {
+    title: '4. Campo de força',
+    text: 'Segure <strong>Espaço</strong> para erguer o campo de força e absorver os tiros. Enquanto defende você fica <strong>imóvel e sem atirar</strong>.',
+    loop: 3400,
+    draw(t) {
+      const me = { x: 60, y: 82 };
+      const foe = { x: 262, y: 82 };
+      const cx = me.x + TUT.player / 2;
+      const cy = me.y + TUT.player / 2;
+      const absorbAt = 1500;
+      const k = seg(t, 500, absorbAt);
+      const impactX = cx + TUT.shieldR + TUT.proj / 2;
+
+      tutPlayer(foe.x, foe.y, colors[1], false, false);
+      tutPlayer(me.x, me.y, colors[0], true, false);
+      tutShield(cx, cy, 3, t);
+
+      if (t >= 500 && t < absorbAt) {
+        tutProjectile(lerp(foe.x, impactX, k), cy, colors[1]);
+      }
+      tutSpark(impactX, cy, seg(t, absorbAt, absorbAt + 400));
+
+      tutKeycap(28, 152, 'ESPAÇO', true, 74);
+      tutLabel('✕ não move    ✕ não atira', 226, 164, '#e6a3a8', 11);
+    },
+  },
+  {
+    title: '5. O escudo tem 3 cargas',
+    text: 'O campo de força aguenta <strong>3 tiros na partida inteira</strong> — cada arco do círculo é uma carga. Sem cargas ele não pode mais ser usado.',
+    loop: 5800,
+    draw(t) {
+      const me = { x: 60, y: 82 };
+      const foe = { x: 262, y: 82 };
+      const cx = me.x + TUT.player / 2;
+      const cy = me.y + TUT.player / 2;
+      const impactX = cx + TUT.shieldR + TUT.proj / 2;
+      const shots = [400, 1400, 2400];
+      const travel = 800;
+
+      let charges = 3;
+      for (const s of shots) if (t >= s + travel) charges -= 1;
+      const broken = charges <= 0;
+
+      tutPlayer(foe.x, foe.y, colors[1], false, false);
+
+      // Sem cargas o quarto tiro passa pelo escudo e acerta o jogador.
+      const lastShot = 4100;
+      const lastHit = lastShot + 900;
+      const hitMe = t >= lastHit;
+      const meFlicker = hitMe && t < lastHit + 400 && Math.floor((t - lastHit) / 90) % 2 === 0;
+      tutPlayer(me.x, me.y, colors[0], true, meFlicker);
+
+      if (!broken) {
+        tutShield(cx, cy, charges, t);
+        for (const s of shots) {
+          if (t >= s && t < s + travel) {
+            tutProjectile(lerp(foe.x, impactX, seg(t, s, s + travel)), cy, colors[1]);
+          }
+          tutSpark(impactX, cy, seg(t, s + travel, s + travel + 350));
+        }
+      } else {
+        tutLabel('escudo esgotado', cx, me.y - 26, '#e63946', 12);
+        if (t >= lastShot && t < lastHit) {
+          const k = seg(t, lastShot, lastHit);
+          tutProjectile(lerp(foe.x, me.x + TUT.player, k), cy, colors[1]);
+        }
+        if (hitMe) tutLabel('-1 vida', cx, cy + 34, '#e63946', 12);
+      }
+
+      tutLabel(`cargas restantes: ${Math.max(0, charges)}`, 170, 168, '#8a8aa0', 11);
+    },
+  },
+  {
+    title: '6. Vence quem zerar o oponente',
+    text: 'A partida termina quando um dos jogadores perde as <strong>3 vidas</strong>. Quem sobrar em pé ganha.',
+    loop: 4200,
+    draw(t) {
+      const me = { x: 40, y: 96 };
+      const foe = { x: 272, y: 96 };
+      const hitAt = 1300;
+      const dead = t >= hitAt;
+
+      tutLabel('Você', 24, 32, '#9a9ab0', 11, 'left');
+      tutHearts(24, 44, 2, false);
+      tutLabel('Oponente', 316, 32, '#9a9ab0', 11, 'right');
+      const blink = dead && t < 2000 && Math.floor((t - hitAt) / 180) % 2 === 0;
+      tutHearts(268, 44, dead ? 0 : 1, blink);
+
+      tutPlayer(me.x, me.y, colors[0], true, false);
+
+      if (!dead) {
+        tutPlayer(foe.x, foe.y, colors[1], false, false);
+        tutProjectile(
+          lerp(me.x + TUT.player, foe.x, seg(t, 300, hitAt)),
+          me.y + TUT.player / 2,
+          colors[0]
+        );
+      } else {
+        tutExplosion(foe.x + TUT.player / 2, foe.y + TUT.player / 2, t - hitAt, 900, colors[1]);
+      }
+
+      if (t >= 2000) {
+        tutCtx.save();
+        tutCtx.globalAlpha = seg(t, 2000, 2300);
+        tutLabel('Você ganhou', TUT.w / 2, 160, '#4ade80', 20);
+        tutCtx.restore();
+      }
+    },
+  },
+  {
+    title: '7. Escolha o modo de jogo',
+    text: '<strong>Jogar Online</strong> te coloca na fila para um 1x1 contra outra pessoa. <strong>Jogar contra Bot</strong> é treino offline, começa na hora.',
+    loop: 3800,
+    draw(t) {
+      const btnW = 190;
+      const btnX = (TUT.w - btnW) / 2;
+      const onlineY = 46;
+      const botY = 104;
+      const overBot = t >= 1900;
+
+      const drawBtn = (y, label, base, hover, active) => {
+        tutRoundRect(btnX, y, btnW, 38, 8);
+        tutCtx.fillStyle = active ? hover : base;
+        tutCtx.fill();
+        tutLabel(label, TUT.w / 2, y + 19, '#fff', 14);
+      };
+
+      drawBtn(onlineY, 'Jogar Online', '#457b9d', '#5b96bb', !overBot);
+      drawBtn(botY, 'Jogar contra Bot', '#e63946', '#f0525e', overBot);
+
+      const curY = lerp(onlineY + 26, botY + 26, seg(t, 1600, 1900));
+      tutCursor(TUT.w / 2 + 40, curY, false);
+
+      tutLabel(
+        overBot ? 'treino offline, sem espera' : '1x1 contra outro jogador',
+        TUT.w / 2,
+        168,
+        '#8a8aa0',
+        11
+      );
+    },
+  },
+];
+
+let tutStep = 0;
+let tutRaf = null;
+let tutStepStart = 0;
+
+function buildTutorialDots() {
+  tutDotsEl.innerHTML = '';
+  TUTORIAL_STEPS.forEach((step, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'tut-dot';
+    dot.title = step.title;
+    dot.addEventListener('click', () => setTutorialStep(i));
+    tutDotsEl.appendChild(dot);
+  });
+}
+
+function setTutorialStep(index) {
+  tutStep = clamp(index, 0, TUTORIAL_STEPS.length - 1);
+  const step = TUTORIAL_STEPS[tutStep];
+  tutTitleEl.textContent = step.title;
+  tutTextEl.innerHTML = step.text;
+  tutStepCountEl.textContent = `${tutStep + 1} / ${TUTORIAL_STEPS.length}`;
+  btnTutPrev.disabled = tutStep === 0;
+  btnTutNext.textContent = tutStep === TUTORIAL_STEPS.length - 1 ? 'Entendi' : 'Próximo';
+  for (let i = 0; i < tutDotsEl.children.length; i++) {
+    tutDotsEl.children[i].classList.toggle('active', i === tutStep);
+  }
+  tutStepStart = performance.now();
+}
+
+function tutorialFrame() {
+  const step = TUTORIAL_STEPS[tutStep];
+  const t = (performance.now() - tutStepStart) % step.loop;
+  tutCtx.clearRect(0, 0, TUT.w, TUT.h);
+  step.draw(t);
+  tutRaf = requestAnimationFrame(tutorialFrame);
+}
+
+function openTutorial() {
+  howToPlayOverlayEl.style.display = 'flex';
+  setTutorialStep(0);
+  if (tutRaf === null) tutRaf = requestAnimationFrame(tutorialFrame);
+}
+
+function closeTutorial() {
+  howToPlayOverlayEl.style.display = 'none';
+  if (tutRaf !== null) {
+    cancelAnimationFrame(tutRaf);
+    tutRaf = null;
+  }
+}
+
+function isTutorialOpen() {
+  return howToPlayOverlayEl.style.display === 'flex';
+}
+
+buildTutorialDots();
+
+btnTutClose.addEventListener('click', () => closeTutorial());
+btnTutPrev.addEventListener('click', () => setTutorialStep(tutStep - 1));
+btnTutNext.addEventListener('click', () => {
+  if (tutStep === TUTORIAL_STEPS.length - 1) closeTutorial();
+  else setTutorialStep(tutStep + 1);
+});
+howToPlayOverlayEl.addEventListener('click', (e) => {
+  if (e.target === howToPlayOverlayEl) closeTutorial();
+});
+window.addEventListener('keydown', (e) => {
+  if (!isTutorialOpen()) return;
+  if (e.key === 'Escape') closeTutorial();
+  else if (e.key === 'ArrowRight') setTutorialStep(tutStep + 1);
+  else if (e.key === 'ArrowLeft') setTutorialStep(tutStep - 1);
+});
+
 const input = { up: false, down: false, left: false, right: false, shield: false };
 const keyMap = {
   KeyW: 'up', ArrowUp: 'up',
@@ -281,12 +767,7 @@ const keyMap = {
 
 btnOnline.addEventListener('click', () => startOnline());
 btnBot.addEventListener('click', () => startBot());
-btnHowToPlay.addEventListener('click', () => {
-  howToPlayOverlayEl.style.display = 'flex';
-});
-btnCloseHowToPlay.addEventListener('click', () => {
-  howToPlayOverlayEl.style.display = 'none';
-});
+btnHowToPlay.addEventListener('click', () => openTutorial());
 btnLeaveQueue.addEventListener('click', () => leaveQueue());
 btnPlayAgain.addEventListener('click', () => {
   if (mode === 'online') startOnline();
