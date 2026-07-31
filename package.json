@@ -2,9 +2,10 @@
   "name": "jogo-do-ano",
   "version": "1.0.0",
   "description": "Jogo 1x1 online 2D - base",
-  "main": "server.js",
+  "type": "module",
+  "main": "src/server/index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server/index.js"
   },
   "dependencies": {
     "ws": "^8.18.0"
