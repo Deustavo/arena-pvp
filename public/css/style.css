@@ -100,7 +100,9 @@
   #hud {
     margin-bottom: 8px;
     display: flex;
-    gap: 40px;
+    justify-content: space-between;
+    width: 800px;
+    max-width: 100%;
     font-size: 18px;
   }
   .hud-row {
@@ -108,12 +110,14 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
-    width: 150px;
+  }
+  .hud-row-right {
+    align-items: flex-end;
   }
   .hud-name-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
   .hud-name {
     font-size: 14px;
@@ -121,9 +125,9 @@
   }
   .hud-class-icon {
     flex: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -132,8 +136,8 @@
     color: #7dd3fc;
   }
   .hud-class-icon svg {
-    width: 12px;
-    height: 12px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -143,7 +147,12 @@
   .hearts {
     display: flex;
     gap: 4px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+  }
+  .shields {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
   }
   .cooldown-bar {
     width: 100%;
@@ -183,6 +192,21 @@
   @keyframes heartBlink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.15; }
+  }
+  .shield {
+    position: relative;
+    width: 21px;
+    height: 24px;
+    color: #4aa8ff;
+  }
+  .shield.lost {
+    color: #555;
+  }
+  .shield-pixel {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: currentColor;
   }
   canvas {
     background: #2b2b3d;

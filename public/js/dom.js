@@ -6,6 +6,8 @@ export const ctx = canvas.getContext('2d');
 
 export const livesP0El = document.getElementById('livesP0');
 export const livesP1El = document.getElementById('livesP1');
+export const shieldsP0El = document.getElementById('shieldsP0');
+export const shieldsP1El = document.getElementById('shieldsP1');
 export const nameP0El = document.getElementById('nameP0');
 export const nameP1El = document.getElementById('nameP1');
 export const classIconP0El = document.getElementById('classIconP0');

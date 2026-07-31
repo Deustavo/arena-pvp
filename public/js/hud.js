@@ -1,5 +1,5 @@
 import {
-  livesP0El, livesP1El, nameP0El, nameP1El, cooldownP0El, cooldownP1El,
+  livesP0El, livesP1El, shieldsP0El, shieldsP1El, nameP0El, nameP1El, cooldownP0El, cooldownP1El,
   classIconP0El, classIconP1El,
 } from './dom.js';
 import { state } from './state.js';
@@ -17,10 +17,23 @@ export const HEART_PIXELS = [
 const HEART_PIXEL_SIZE = 3;
 const HIT_FLASH_DURATION = 400;
 
+export const SHIELD_PIXELS = [
+  [0, 2], [0, 3], [0, 4],
+  [1, 1], [1, 2], [1, 3], [1, 4], [1, 5],
+  [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [2, 6],
+  [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [3, 6],
+  [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], [4, 5], [4, 6],
+  [5, 1], [5, 2], [5, 3], [5, 4], [5, 5],
+  [6, 2], [6, 3], [6, 4],
+  [7, 3],
+];
+const SHIELD_PIXEL_SIZE = 3;
+
 let heartsEls = [[], []];
 let prevLives = [0, 0];
 export let hitFlashUntil = [0, 0];
 let prevClassIds = [null, null];
+let shieldsEls = [[], []];
 
 function updateClassIcon(el, row, classId) {
   if (!el || classId === prevClassIds[row]) return;
@@ -52,6 +65,30 @@ function createHeartsRow(container, count) {
   return hearts;
 }
 
+function createShieldEl() {
+  const shield = document.createElement('div');
+  shield.className = 'shield';
+  for (const [row, col] of SHIELD_PIXELS) {
+    const px = document.createElement('div');
+    px.className = 'shield-pixel';
+    px.style.left = `${col * SHIELD_PIXEL_SIZE}px`;
+    px.style.top = `${row * SHIELD_PIXEL_SIZE}px`;
+    shield.appendChild(px);
+  }
+  return shield;
+}
+
+function createShieldsRow(container, count) {
+  container.innerHTML = '';
+  const shields = [];
+  for (let i = 0; i < count; i++) {
+    const shield = createShieldEl();
+    container.appendChild(shield);
+    shields.push(shield);
+  }
+  return shields;
+}
+
 // `maxLives` são as vidas máximas de cada jogador, dependentes da classe
 // escolhida (ex.: atirador 10, mago 8, tank 12) — vêm do snapshot inicial da
 // partida, já que ambos os lados começam com vida cheia.
@@ -60,6 +97,9 @@ export function initHearts(maxLives = [10, 10]) {
   heartsEls[1] = createHeartsRow(livesP1El, maxLives[1]);
   prevLives = [maxLives[0], maxLives[1]];
   hitFlashUntil = [0, 0];
+  const maxShields = state.shieldMaxHits;
+  shieldsEls[0] = createShieldsRow(shieldsP0El, maxShields[0]);
+  shieldsEls[1] = createShieldsRow(shieldsP1El, maxShields[1]);
 }
 
 function triggerHeartBlink(heartEl) {
@@ -82,6 +122,14 @@ function updateHeartsRow(row, lives, rawIndex) {
     hitFlashUntil[rawIndex] = Date.now() + HIT_FLASH_DURATION;
   }
   prevLives[row] = lives;
+}
+
+function updateShieldsRow(row, charges) {
+  const shields = shieldsEls[row];
+  if (!shields.length) return;
+  for (let i = 0; i < shields.length; i++) {
+    shields[i].classList.toggle('lost', i >= charges);
+  }
 }
 
 export function shieldCharges(index) {
@@ -119,12 +167,14 @@ export function updateHud() {
     nameP0El.textContent = me.name || 'Você';
     updateClassIcon(classIconP0El, 0, me.classId);
     updateHeartsRow(0, me.lives, state.playerIndex);
+    updateShieldsRow(0, shieldCharges(state.playerIndex));
     checkDeathExplosion(state.playerIndex, me);
   }
   if (opp) {
     nameP1El.textContent = opp.name || 'Oponente';
     updateClassIcon(classIconP1El, 1, opp.classId);
     updateHeartsRow(1, opp.lives, oppIndex);
+    updateShieldsRow(1, shieldCharges(oppIndex));
     checkDeathExplosion(oppIndex, opp);
   }
 }
