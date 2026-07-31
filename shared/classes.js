@@ -2,16 +2,17 @@
 // estatísticas de cada classe — usada pelo servidor (partidas online), pela
 // simulação local do bot e pelo menu (cliente) para exibir as características.
 
-import { PROJECTILE_SIZE } from './constants.js';
+import { PROJECTILE_SIZE, PLAYER_SPEED } from './constants.js';
 
 export const CLASSES = {
   atirador: {
     id: 'atirador',
     name: 'Atirador',
-    shotCooldownMs: 1000,
+    shotCooldownMs: 750,
     damage: 4,
     shieldMaxHits: 1,
     maxLives: 10,
+    speed: PLAYER_SPEED,
     projectileCount: 1,
     coneSpreadDeg: 0,
     projectileSize: PROJECTILE_SIZE,
@@ -24,9 +25,10 @@ export const CLASSES = {
     id: 'mago',
     name: 'Mago',
     shotCooldownMs: 2000,
-    damage: 3,
+    damage: 2,
     shieldMaxHits: 3,
     maxLives: 8,
+    speed: PLAYER_SPEED,
     projectileCount: 3,
     coneSpreadDeg: 18,
     projectileSize: PROJECTILE_SIZE,
@@ -42,11 +44,12 @@ export const CLASSES = {
     damage: 3,
     shieldMaxHits: 6,
     maxLives: 12,
+    speed: PLAYER_SPEED * 1.1,
     projectileCount: 1,
     coneSpreadDeg: 0,
     projectileSize: PROJECTILE_SIZE * 2,
     range: 260,
-    traits: ['Projétil maior', 'Alcance menor no tiro'],
+    traits: ['Projétil maior', 'Alcance menor no tiro', '10% mais rápido'],
     // Escudo.
     icon: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
   },

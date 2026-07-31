@@ -1,15 +1,18 @@
 import { CLASSES, DEFAULT_CLASS_ID } from '../../shared/classes.js';
+import { PLAYER_SPEED } from '../../shared/constants.js';
 import { state } from './state.js';
 import { classListEl, classDetailsEl } from './dom.js';
 
 function statLines(cls) {
   const seconds = cls.shotCooldownMs / 1000;
   const secondsLabel = Number.isInteger(seconds) ? `${seconds}` : seconds.toFixed(1);
+  const speedPct = Math.round((cls.speed / PLAYER_SPEED) * 100);
   return [
     `Tempo do tiro: ${secondsLabel}s`,
     `Dano: ${cls.damage} ${cls.damage === 1 ? 'coração' : 'corações'}`,
     `Escudo: ${cls.shieldMaxHits}`,
     `Vidas: ${cls.maxLives}`,
+    `Velocidade: ${speedPct}%`,
   ];
 }
 

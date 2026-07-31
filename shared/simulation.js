@@ -14,8 +14,9 @@ export function stepPlayers(players, arena) {
     // Em modo de defesa o jogador fica imóvel.
     if (p.shielding) continue;
     const { dx, dy } = movementDelta(p.input);
-    p.x = clamp(p.x + dx * PLAYER_SPEED, 0, arena.w - PLAYER_SIZE);
-    p.y = clamp(p.y + dy * PLAYER_SPEED, 0, arena.h - PLAYER_SIZE);
+    const speed = p.speed ?? PLAYER_SPEED;
+    p.x = clamp(p.x + dx * speed, 0, arena.w - PLAYER_SIZE);
+    p.y = clamp(p.y + dy * speed, 0, arena.h - PLAYER_SIZE);
   }
 }
 

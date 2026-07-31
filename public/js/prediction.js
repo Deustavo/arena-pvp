@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { clamp, movementDelta } from '../../shared/physics.js';
 import { PLAYER_SPEED, TICK_MS } from '../../shared/constants.js';
+import { getClass } from '../../shared/classes.js';
 
 const RECONCILE_LERP = 0.2;
 const RECONCILE_SNAP_DIST = 40;
@@ -41,7 +42,8 @@ export function advancePrediction() {
   if (state.input.shield && me.shieldHits < maxHits) return;
 
   const { dx, dy } = movementDelta(state.input);
-  const speedPerMs = PLAYER_SPEED / TICK_MS;
+  const speed = me.speed ?? getClass(me.classId).speed ?? PLAYER_SPEED;
+  const speedPerMs = speed / TICK_MS;
   state.predicted.x = clamp(state.predicted.x + dx * speedPerMs * dt, 0, state.arena.w - state.playerSize);
   state.predicted.y = clamp(state.predicted.y + dy * speedPerMs * dt, 0, state.arena.h - state.playerSize);
 }

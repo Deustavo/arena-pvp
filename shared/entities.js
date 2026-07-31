@@ -12,6 +12,7 @@ export function createPlayerState(index, classId = DEFAULT_CLASS_ID) {
     classId: cls.id,
     lives: cls.maxLives,
     shieldMaxHits: cls.shieldMaxHits,
+    speed: cls.speed,
     input: { up: false, down: false, left: false, right: false },
     lastShot: 0,
     alive: true,
