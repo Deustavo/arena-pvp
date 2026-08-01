@@ -2,15 +2,43 @@
 // desenhada com as mesmas formas do jogo (quadrado, tiro, escudo, corações,
 // explosão) em miniatura no canvas do tutorial.
 
-import { MAX_LIVES, COLORS } from '../../../shared/constants.js';
+import { COLORS } from '../../../shared/constants.js';
+import { CLASSES } from '../../../shared/classes.js';
 import {
   TUT, lerp, seg, tutPlayer, tutProjectile, tutKeycap, tutCursor, tutHearts, tutLabel,
   tutShield, tutSpark, tutExplosion, tutCtx,
 } from './canvasHelpers.js';
 
+// Vidas de exemplo usadas só para ilustrar os passos de vidas/vitória — os
+// valores reais dependem da classe escolhida (ver shared/classes.js).
+const DEMO_LIVES = 5;
+
+const CLASS_LIST = [CLASSES.atirador, CLASSES.mago, CLASSES.tank];
+
 export const TUTORIAL_STEPS = [
   {
-    title: '1. Mover o boneco',
+    title: '1. Escolha sua classe',
+    text: 'Antes de cada partida você escolhe entre <strong>Atirador</strong>, <strong>Mago</strong> e <strong>Tank</strong>. Cada uma tem vidas, dano, escudo e alcance de tiro diferentes.',
+    loop: 3600,
+    draw(t) {
+      const slot = Math.floor(t / 1200) % CLASS_LIST.length;
+      const xs = [56, 152, 248];
+      const y = 70;
+
+      CLASS_LIST.forEach((cls, i) => {
+        tutPlayer(xs[i], y, COLORS[0], i === slot, false);
+        tutLabel(cls.name, xs[i] + TUT.player / 2, y + 38, i === slot ? '#fff' : '#9a9ab0', 12);
+      });
+
+      const cls = CLASS_LIST[slot];
+      tutLabel(
+        `${cls.maxLives} vidas · dano ${cls.damage} · escudo ${cls.shieldMaxHits}`,
+        TUT.w / 2, 150, '#7dd3fc', 12
+      );
+    },
+  },
+  {
+    title: '2. Mover o boneco',
     text: 'Use <strong>W A S D</strong> ou as <strong>setas</strong> do teclado. As teclas podem ser combinadas para andar na diagonal.',
     loop: 4400,
     draw(t) {
@@ -33,8 +61,8 @@ export const TUTORIAL_STEPS = [
     },
   },
   {
-    title: '2. Atirar no oponente',
-    text: 'Clique em qualquer ponto da arena: o tiro sai do seu quadrado na direção do cursor. Há um pequeno intervalo entre um tiro e outro.',
+    title: '3. Atirar no oponente',
+    text: 'Clique em qualquer ponto da arena: o tiro sai do seu quadrado na direção do cursor. O intervalo entre tiros, o alcance e o formato do disparo (o Mago, por exemplo, atira 3 projéteis em leque) dependem da classe escolhida.',
     loop: 2600,
     draw(t) {
       const target = { x: 268, y: 46 };
@@ -61,8 +89,8 @@ export const TUTORIAL_STEPS = [
     },
   },
   {
-    title: '3. Três vidas por jogador',
-    text: 'Cada jogador começa com <strong>3 vidas</strong>. Todo tiro que acerta tira uma vida do adversário — os corações no topo da tela mostram quanto resta.',
+    title: '4. Vidas por classe',
+    text: 'A quantidade de vidas depende da classe escolhida (o Atirador tem menos, o Tank tem mais). Todo tiro que acerta tira uma vida do adversário — os corações no topo da tela mostram quanto resta.',
     loop: 3400,
     draw(t) {
       const me = { x: 40, y: 96 };
@@ -71,10 +99,10 @@ export const TUTORIAL_STEPS = [
       const k = seg(t, 400, 1400);
 
       tutLabel('Você', 24, 32, '#9a9ab0', 11, 'left');
-      tutHearts(24, 44, MAX_LIVES, false, MAX_LIVES);
+      tutHearts(24, 44, DEMO_LIVES, false, DEMO_LIVES);
       tutLabel('Oponente', 316, 32, '#9a9ab0', 11, 'right');
       const blink = hit && t < 2100 && Math.floor((t - 1400) / 180) % 2 === 0;
-      tutHearts(268, 44, hit ? 2 : 3, blink, MAX_LIVES);
+      tutHearts(268, 44, hit ? DEMO_LIVES - 1 : DEMO_LIVES, blink, DEMO_LIVES);
 
       tutPlayer(me.x, me.y, COLORS[0], true, false);
       const foeFlicker = hit && t < 1800 && Math.floor((t - 1400) / 90) % 2 === 0;
@@ -88,8 +116,8 @@ export const TUTORIAL_STEPS = [
     },
   },
   {
-    title: '4. Campo de força',
-    text: 'Segure <strong>Espaço</strong> para erguer o campo de força e absorver os tiros. Enquanto defende você fica <strong>imóvel e sem atirar</strong>.',
+    title: '5. Campo de força',
+    text: 'Segure <strong>Espaço</strong> para erguer o campo de força e absorver tiros até esgotar suas cargas — o número de cargas depende da classe. Enquanto defende você fica <strong>imóvel e sem atirar</strong>.',
     loop: 3400,
     draw(t) {
       const me = { x: 60, y: 82 };
@@ -114,8 +142,8 @@ export const TUTORIAL_STEPS = [
     },
   },
   {
-    title: '5. Vence quem zerar o oponente',
-    text: 'A partida termina quando um dos jogadores perde as <strong>3 vidas</strong>. Quem sobrar em pé ganha.',
+    title: '6. Vence quem zerar o oponente',
+    text: 'A partida termina quando um dos jogadores perde todas as vidas. Quem sobrar em pé ganha.',
     loop: 4200,
     draw(t) {
       const me = { x: 40, y: 96 };
@@ -124,10 +152,10 @@ export const TUTORIAL_STEPS = [
       const dead = t >= hitAt;
 
       tutLabel('Você', 24, 32, '#9a9ab0', 11, 'left');
-      tutHearts(24, 44, 2, false, MAX_LIVES);
+      tutHearts(24, 44, 2, false, DEMO_LIVES);
       tutLabel('Oponente', 316, 32, '#9a9ab0', 11, 'right');
       const blink = dead && t < 2000 && Math.floor((t - hitAt) / 180) % 2 === 0;
-      tutHearts(268, 44, dead ? 0 : 1, blink, MAX_LIVES);
+      tutHearts(268, 44, dead ? 0 : 1, blink, DEMO_LIVES);
 
       tutPlayer(me.x, me.y, COLORS[0], true, false);
 
