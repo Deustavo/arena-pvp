@@ -6,6 +6,7 @@ import { updateHud, isShieldAvailable, initHearts } from './hud.js';
 import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
 import { reconcilePrediction } from './prediction.js';
+import { BACKEND_HOST } from './config.js';
 
 // Chamado após qualquer atualização de estado que possa esgotar o escudo:
 // se o servidor sinalizar que as cargas acabaram, solta a tecla localmente.
@@ -17,10 +18,9 @@ function releaseExhaustedShield() {
 }
 
 export function startOnline(onBackToMenu) {
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const nickname = encodeURIComponent(state.nickname);
   const classId = encodeURIComponent(state.classId);
-  state.ws = new WebSocket(`${protocol}//${location.host}?nickname=${nickname}&classId=${classId}`);
+  state.ws = new WebSocket(`wss://${BACKEND_HOST}?nickname=${nickname}&classId=${classId}`);
 
   state.ws.onopen = () => {
     showWaitingOverlay();

@@ -1,11 +1,12 @@
 import { onlineCountValueEl } from './dom.js';
+import { BACKEND_HOST } from './config.js';
 
 const ONLINE_COUNT_POLL_MS = 5000;
 let onlineCountInterval = null;
 
 async function fetchOnlineCount() {
   try {
-    const res = await fetch('/api/online-count');
+    const res = await fetch(`https://${BACKEND_HOST}/api/online-count`);
     const data = await res.json();
     onlineCountValueEl.textContent = data.count;
   } catch {

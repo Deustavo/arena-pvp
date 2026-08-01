@@ -15,9 +15,13 @@ const MIME = {
   '.css': 'text/css',
 };
 
+// Origem do front na Vercel, liberada para o fetch cross-origin de /api/online-count.
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://playarenapvp.vercel.app';
+
 export function createHttpServer() {
   return http.createServer((req, res) => {
     if (req.url === '/api/online-count') {
+      res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ count: getOnlineCount() }));
       return;

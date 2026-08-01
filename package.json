@@ -6,7 +6,8 @@
   "main": "src/server/index.js",
   "scripts": {
     "start": "node src/server/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "build:front": "node scripts/copy-shared.mjs"
   },
   "dependencies": {
     "ws": "^8.18.0"
