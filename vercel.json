@@ -1,4 +1,5 @@
 {
   "outputDirectory": "public",
-  "buildCommand": "npm run build:front"
+  "buildCommand": "npm run build:front",
+  "ignoreCommand": "exit 0"
 }
