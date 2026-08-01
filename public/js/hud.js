@@ -102,6 +102,31 @@ export function initHearts(maxLives = [10, 10]) {
   shieldsEls[1] = createShieldsRow(shieldsP1El, maxShields[1]);
 }
 
+// Limpa tudo que o HUD acumulou da partida anterior (corações, escudos, nomes,
+// ícones de classe e barras de cooldown). Sem isso, ao clicar em "jogar
+// novamente" o HUD continua mostrando as vidas/nome do jogo que acabou até a
+// nova partida enviar o primeiro estado — no modo online isso pode demorar
+// vários segundos, enquanto o jogador espera na fila.
+export function resetHud() {
+  heartsEls = [[], []];
+  shieldsEls = [[], []];
+  prevLives = [0, 0];
+  prevClassIds = [null, null];
+  hitFlashUntil = [0, 0];
+  livesP0El.innerHTML = '';
+  livesP1El.innerHTML = '';
+  shieldsP0El.innerHTML = '';
+  shieldsP1El.innerHTML = '';
+  nameP0El.textContent = 'Você';
+  nameP1El.textContent = 'Oponente';
+  classIconP0El.innerHTML = '';
+  classIconP1El.innerHTML = '';
+  for (const el of [cooldownP0El, cooldownP1El]) {
+    el.style.width = '0%';
+    el.classList.remove('ready');
+  }
+}
+
 function triggerHeartBlink(heartEl) {
   heartEl.classList.remove('blink');
   void heartEl.offsetWidth; // force reflow to restart the animation

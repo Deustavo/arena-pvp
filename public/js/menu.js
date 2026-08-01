@@ -7,6 +7,7 @@ import { startOnline as connectOnline, closeConnection } from './network.js';
 import { startBot as startBotMatch, stopBot } from './bot.js';
 import { commitNickname } from './nickname.js';
 import { resetEscHint } from './input.js';
+import { resetHud } from './hud.js';
 
 export function showMenu() {
   menuEl.style.display = 'flex';
@@ -21,13 +22,19 @@ export function showGame() {
   stopOnlineCountPolling();
 }
 
+// Ponto único de limpeza entre partidas: encerra o que sobrou da partida
+// anterior (loop do bot, conexão online, contagem regressiva pendente) e zera
+// estado e HUD antes de começar a próxima.
 function prepareNewMatch() {
+  stopBot();
+  closeConnection();
   resetMatchState();
   canvas.width = state.arena.w;
   canvas.height = state.arena.h;
   hideGameOverOverlay();
   hideWaitingOverlay();
   hideCountdown();
+  resetHud();
   resetEscHint();
 }
 
@@ -47,8 +54,6 @@ export function startBot() {
 }
 
 export function backToMenu() {
-  stopBot();
-  closeConnection();
   state.mode = null;
   prepareNewMatch();
   showMenu();
