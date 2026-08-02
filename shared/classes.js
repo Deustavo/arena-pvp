@@ -53,6 +53,38 @@ export const CLASSES = {
     // Escudo.
     icon: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
   },
+  assassino: {
+    id: 'assassino',
+    name: 'Assassino',
+    shotCooldownMs: 2500,
+    damage: 7,
+    shieldMaxHits: 1,
+    maxLives: 6,
+    speed: PLAYER_SPEED * 1.1,
+    projectileCount: 1,
+    coneSpreadDeg: 0,
+    projectileSize: PROJECTILE_SIZE,
+    range: Infinity,
+    traits: ['Dano altíssimo', 'Poucas vidas', '10% mais rápido'],
+    // Adaga.
+    icon: '<svg viewBox="0 0 24 24"><path d="M12 2v13"/><path d="M8 6l4-4 4 4-4 4-4-4z"/><path d="M9 15h6l-1.5 5-1.5 2-1.5-2z"/></svg>',
+  },
+  duelista: {
+    id: 'duelista',
+    name: 'Duelista',
+    shotCooldownMs: 400,
+    damage: 2,
+    shieldMaxHits: 2,
+    maxLives: 9,
+    speed: PLAYER_SPEED * 1.3,
+    projectileCount: 1,
+    coneSpreadDeg: 0,
+    projectileSize: PROJECTILE_SIZE * 0.75,
+    range: 400,
+    traits: ['Cadência de tiro altíssima', '30% mais rápido', 'Alcance médio'],
+    // Espadas cruzadas.
+    icon: '<svg viewBox="0 0 24 24"><path d="M4 4l16 16"/><path d="M4 20L20 4"/><path d="M4 4l3 0M4 4l0 3"/><path d="M20 4l-3 0M20 4l0 3"/><path d="M4 20l3 0M4 20l0-3"/><path d="M20 20l-3 0M20 20l0-3"/></svg>',
+  },
 };
 
 export const DEFAULT_CLASS_ID = 'atirador';

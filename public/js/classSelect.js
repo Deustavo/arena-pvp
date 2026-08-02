@@ -117,6 +117,21 @@ export function createClassPicker({
     renderClassDetails(detailsEl, cls);
   }
 
+  // Fixa a altura do painel de detalhes na maior necessária entre as classes,
+  // para trocar de classe não redimensionar o painel e deslocar o menu.
+  function lockDetailsHeight() {
+    if (!detailsEl) return;
+    detailsEl.style.minHeight = '';
+    let max = 0;
+    for (const cls of Object.values(CLASSES)) {
+      renderClassDetails(detailsEl, cls);
+      // offsetHeight (não scrollHeight) para bater com o box model de
+      // min-height em box-sizing: border-box (inclui borda + padding).
+      max = Math.max(max, detailsEl.offsetHeight);
+    }
+    detailsEl.style.minHeight = `${max}px`;
+  }
+
   function selectClass(classId) {
     const cls = getClass(classId);
     setSelectedId(cls.id);
@@ -138,6 +153,7 @@ export function createClassPicker({
   }
 
   function refresh() {
+    lockDetailsHeight();
     selectClass(getSelectedId() || defaultId);
   }
   refresh();
