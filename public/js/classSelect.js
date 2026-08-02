@@ -9,7 +9,7 @@ const STAT_ICONS = {
   cooldown: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
   damage: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>',
   shield: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
-  life: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.8C.8 8.6 2.4 5 6 5c2 0 3.3 1.1 4 2.2C10.7 6.1 12 5 14 5c3.6 0 5.2 3.6 3.5 7.2C19 16.65 12 21 12 21z"/></svg>',
+  life: '<svg viewBox="0 0 24 24"><path d="M12 21s-8-4.8-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.2-8 11-8 11z"/></svg>',
   speed: '<svg viewBox="0 0 24 24"><path d="M4 17l6-3-6-3M13 20l6-3-6-3"/></svg>',
 };
 
@@ -18,7 +18,7 @@ export function statLines(cls) {
   const secondsLabel = Number.isInteger(seconds) ? `${seconds}` : seconds.toFixed(1);
   const speedPct = Math.round((cls.speed / PLAYER_SPEED) * 100);
   return [
-    { icon: STAT_ICONS.cooldown, label: 'Cadência', value: `${secondsLabel}s` },
+    { icon: STAT_ICONS.cooldown, label: 'Tiros a cada', value: `${secondsLabel}s` },
     { icon: STAT_ICONS.damage, label: 'Dano', value: `${cls.damage} ${cls.damage === 1 ? 'coração' : 'corações'}` },
     { icon: STAT_ICONS.shield, label: 'Escudo', value: `${cls.shieldMaxHits} ${cls.shieldMaxHits === 1 ? 'hit' : 'hits'}` },
     { icon: STAT_ICONS.life, label: 'Vidas', value: `${cls.maxLives}` },
