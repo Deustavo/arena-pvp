@@ -792,7 +792,8 @@
   }
   #tutText {
     margin: 0;
-    min-height: 62px;
+    height: 100px;
+    overflow-y: auto;
     font-size: 14px;
     line-height: 1.55;
     color: #ddd;

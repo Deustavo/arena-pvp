@@ -62,7 +62,7 @@ export const TUTORIAL_STEPS = [
   },
   {
     title: '3. Atirar no oponente',
-    text: 'Clique em qualquer ponto da arena: o tiro sai do seu quadrado na direção do cursor. O intervalo entre tiros, o alcance e o formato do disparo (o Mago, por exemplo, atira 3 projéteis em leque) dependem da classe escolhida.',
+    text: 'Clique em qualquer ponto da arena: o tiro sai do seu quadrado na direção do cursor. O intervalo entre tiros, o alcance e o formato do disparo dependem da classe escolhida.',
     loop: 2600,
     draw(t) {
       const target = { x: 268, y: 46 };
@@ -90,7 +90,7 @@ export const TUTORIAL_STEPS = [
   },
   {
     title: '4. Vidas por classe',
-    text: 'A quantidade de vidas depende da classe escolhida (o Atirador tem menos, o Tank tem mais). Todo tiro que acerta tira uma vida do adversário — os corações no topo da tela mostram quanto resta.',
+    text: 'A quantidade de vidas depende da classe escolhida. Todo tiro que acerta tira uma vida do adversário — os corações no topo da tela mostram quanto resta.',
     loop: 3400,
     draw(t) {
       const me = { x: 40, y: 96 };
@@ -102,7 +102,7 @@ export const TUTORIAL_STEPS = [
       tutHearts(24, 44, DEMO_LIVES, false, DEMO_LIVES);
       tutLabel('Oponente', 316, 32, '#9a9ab0', 11, 'right');
       const blink = hit && t < 2100 && Math.floor((t - 1400) / 180) % 2 === 0;
-      tutHearts(268, 44, hit ? DEMO_LIVES - 1 : DEMO_LIVES, blink, DEMO_LIVES);
+      tutHearts(238, 44, hit ? DEMO_LIVES - 1 : DEMO_LIVES, blink, DEMO_LIVES);
 
       tutPlayer(me.x, me.y, COLORS[0], true, false);
       const foeFlicker = hit && t < 1800 && Math.floor((t - 1400) / 90) % 2 === 0;
@@ -155,7 +155,7 @@ export const TUTORIAL_STEPS = [
       tutHearts(24, 44, 2, false, DEMO_LIVES);
       tutLabel('Oponente', 316, 32, '#9a9ab0', 11, 'right');
       const blink = dead && t < 2000 && Math.floor((t - hitAt) / 180) % 2 === 0;
-      tutHearts(268, 44, dead ? 0 : 1, blink, DEMO_LIVES);
+      tutHearts(238, 44, dead ? 0 : 1, blink, DEMO_LIVES);
 
       tutPlayer(me.x, me.y, COLORS[0], true, false);
 
