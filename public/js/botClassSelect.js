@@ -7,6 +7,7 @@ import {
 } from './dom.js';
 import { createClassPicker } from './classSelect.js';
 import { BOT_DIFFICULTIES, DEFAULT_BOT_DIFFICULTY } from '../../shared/botDifficulty.js';
+import { positionDropdownMenu, resetDropdownMenu } from './dropdownPosition.js';
 
 let onConfirm = null;
 let playerPicker = null;
@@ -32,11 +33,13 @@ function initBotDifficultyPicker() {
   function openDropdown() {
     botDifficultyDropdownEl.classList.add('open');
     botDifficultyToggleEl.setAttribute('aria-expanded', 'true');
+    positionDropdownMenu(botDifficultyToggleEl, botDifficultyListEl);
   }
 
   function closeDropdown() {
     botDifficultyDropdownEl.classList.remove('open');
     botDifficultyToggleEl.setAttribute('aria-expanded', 'false');
+    resetDropdownMenu(botDifficultyListEl);
   }
 
   function toggleDropdown() {

@@ -10,6 +10,29 @@
     color: #eee;
     overflow-x: hidden;
   }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #52527a #1d1d2b00;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #52527a;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #6b6b9c;
+  }
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
   body.game-active {
     overflow: hidden;
   }
@@ -795,6 +818,8 @@
     transform: translateY(-6px);
     pointer-events: none;
     transition: opacity 0.12s ease, transform 0.12s ease;
+    max-height: 280px;
+    overflow-y: auto;
   }
   .dropdown.open .dropdown-menu {
     opacity: 1;

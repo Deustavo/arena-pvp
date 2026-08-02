@@ -1,5 +1,6 @@
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { PLAYER_SPEED } from '../../shared/constants.js';
+import { positionDropdownMenu, resetDropdownMenu } from './dropdownPosition.js';
 
 // Ícones em linha (mesmo estilo dos ícones de classe) para cada estatística,
 // usados para tornar o painel de detalhes mais fácil de escanear visualmente.
@@ -222,11 +223,13 @@ export function createClassPicker({
   function openMenu() {
     listEl.classList.add('open');
     toggle.setAttribute('aria-expanded', 'true');
+    positionDropdownMenu(toggle, menu);
   }
 
   function closeMenu() {
     listEl.classList.remove('open');
     toggle.setAttribute('aria-expanded', 'false');
+    resetDropdownMenu(menu);
     renderDetails(currentClass());
   }
 
