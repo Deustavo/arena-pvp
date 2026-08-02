@@ -26,7 +26,7 @@ export function statLines(cls) {
   ];
 }
 
-export function createClassCard(cls) {
+function createClassCard(cls) {
   const card = document.createElement('button');
   card.type = 'button';
   card.className = 'class-card';
@@ -43,6 +43,25 @@ export function createClassCard(cls) {
   card.appendChild(title);
 
   return card;
+}
+
+function createClassDropdownItem(cls) {
+  const item = document.createElement('li');
+  item.className = 'dropdown-item class-dropdown-item';
+  item.dataset.classId = cls.id;
+  item.setAttribute('role', 'option');
+
+  const icon = document.createElement('div');
+  icon.className = 'class-icon';
+  icon.innerHTML = cls.icon || '';
+  item.appendChild(icon);
+
+  const title = document.createElement('span');
+  title.className = 'class-name';
+  title.textContent = cls.name;
+  item.appendChild(title);
+
+  return item;
 }
 
 export function renderClassDetails(target, cls) {
@@ -100,12 +119,12 @@ export function renderClassDetails(target, cls) {
   target.appendChild(info);
 }
 
-// Monta um seletor de classe reutilizável: uma lista de cartões que escreve
-// a escolha via `setSelectedId` e mostra detalhes em `detailsEl`. Usado tanto
-// pelo painel de classe do jogador (menu principal) quanto pelos dois
-// seletores (jogador/bot) da modal do modo treino.
+// Monta um seletor de classe reutilizável: escreve a escolha via
+// `setSelectedId` e mostra detalhes em `detailsEl`. No menu principal usa uma
+// grade de cartões; na modal do modo treino (`dropdown: true`) usa um
+// dropdown compacto para caber duas colunas (jogador/bot) lado a lado.
 export function createClassPicker({
-  listEl, detailsEl, getSelectedId, setSelectedId, defaultId = DEFAULT_CLASS_ID,
+  listEl, detailsEl, getSelectedId, setSelectedId, defaultId = DEFAULT_CLASS_ID, dropdown = false,
 }) {
   if (!listEl) return { refresh() {} };
 
@@ -132,28 +151,122 @@ export function createClassPicker({
     detailsEl.style.minHeight = `${max}px`;
   }
 
+  if (!dropdown) {
+    function selectClass(classId) {
+      const cls = getClass(classId);
+      setSelectedId(cls.id);
+      for (const card of listEl.children) {
+        card.classList.toggle('selected', card.dataset.classId === cls.id);
+      }
+      renderDetails(cls);
+    }
+
+    listEl.innerHTML = '';
+    for (const cls of Object.values(CLASSES)) {
+      const card = createClassCard(cls);
+      card.addEventListener('click', () => selectClass(cls.id));
+      card.addEventListener('mouseenter', () => renderDetails(cls));
+      card.addEventListener('focus', () => renderDetails(cls));
+      card.addEventListener('mouseleave', () => renderDetails(currentClass()));
+      card.addEventListener('blur', () => renderDetails(currentClass()));
+      listEl.appendChild(card);
+    }
+
+    function refresh() {
+      lockDetailsHeight();
+      selectClass(getSelectedId() || defaultId);
+    }
+    refresh();
+
+    return { refresh };
+  }
+
+  listEl.innerHTML = '';
+  listEl.classList.add('dropdown', 'class-dropdown');
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'dropdown-toggle class-dropdown-toggle';
+  toggle.setAttribute('aria-haspopup', 'listbox');
+  toggle.setAttribute('aria-expanded', 'false');
+
+  const toggleIcon = document.createElement('div');
+  toggleIcon.className = 'class-icon';
+  toggle.appendChild(toggleIcon);
+
+  const toggleName = document.createElement('span');
+  toggleName.className = 'class-name';
+  toggle.appendChild(toggleName);
+
+  const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  arrow.setAttribute('class', 'dropdown-arrow');
+  arrow.setAttribute('width', '12');
+  arrow.setAttribute('height', '8');
+  arrow.setAttribute('viewBox', '0 0 12 8');
+  arrow.setAttribute('fill', 'none');
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.innerHTML = '<path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+  toggle.appendChild(arrow);
+
+  const menu = document.createElement('ul');
+  menu.className = 'dropdown-menu class-dropdown-menu';
+  menu.setAttribute('role', 'listbox');
+  menu.tabIndex = -1;
+
+  listEl.appendChild(toggle);
+  listEl.appendChild(menu);
+
+  function openMenu() {
+    listEl.classList.add('open');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeMenu() {
+    listEl.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    renderDetails(currentClass());
+  }
+
+  function toggleMenu() {
+    if (listEl.classList.contains('open')) closeMenu();
+    else openMenu();
+  }
+
+  toggle.addEventListener('click', toggleMenu);
+  document.addEventListener('click', (e) => {
+    if (listEl.classList.contains('open') && !listEl.contains(e.target)) closeMenu();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && listEl.classList.contains('open')) closeMenu();
+  });
+
   function selectClass(classId) {
     const cls = getClass(classId);
     setSelectedId(cls.id);
-    for (const card of listEl.children) {
-      card.classList.toggle('selected', card.dataset.classId === cls.id);
+    toggleIcon.innerHTML = cls.icon || '';
+    toggleName.textContent = cls.name;
+    for (const item of menu.children) {
+      const selected = item.dataset.classId === cls.id;
+      item.classList.toggle('selected', selected);
+      item.setAttribute('aria-selected', selected ? 'true' : 'false');
     }
     renderDetails(cls);
   }
 
-  listEl.innerHTML = '';
   for (const cls of Object.values(CLASSES)) {
-    const card = createClassCard(cls);
-    card.addEventListener('click', () => selectClass(cls.id));
-    card.addEventListener('mouseenter', () => renderDetails(cls));
-    card.addEventListener('focus', () => renderDetails(cls));
-    card.addEventListener('mouseleave', () => renderDetails(currentClass()));
-    card.addEventListener('blur', () => renderDetails(currentClass()));
-    listEl.appendChild(card);
+    const item = createClassDropdownItem(cls);
+    item.addEventListener('click', () => {
+      selectClass(cls.id);
+      closeMenu();
+    });
+    item.addEventListener('mouseenter', () => renderDetails(cls));
+    item.addEventListener('mouseleave', () => renderDetails(currentClass()));
+    menu.appendChild(item);
   }
 
   function refresh() {
     lockDetailsHeight();
+    closeMenu();
     selectClass(getSelectedId() || defaultId);
   }
   refresh();

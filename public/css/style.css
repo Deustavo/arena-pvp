@@ -402,6 +402,22 @@
   .class-card .class-name {
     font-size: 15px;
   }
+  .class-dropdown-toggle {
+    gap: 10px;
+  }
+  .class-dropdown-toggle .class-name {
+    flex: 1;
+    text-align: left;
+    font-size: 15px;
+  }
+  .class-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .class-dropdown-item.selected {
+    box-shadow: inset 0 0 0 1px #4ade80;
+  }
   .class-icon {
     flex: none;
     width: 32px;
@@ -593,25 +609,82 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  #botDifficultyList {
-    display: flex;
-    gap: 8px;
+  .dropdown {
+    position: relative;
   }
-  .difficulty-btn {
-    flex: 1;
-    padding: 10px 8px;
+  .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
     border-radius: 8px;
     border: 2px solid #444;
     background: #23233a;
+    color: #eee;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .dropdown-toggle:hover {
+    background: #2f2f4a;
+  }
+  .dropdown-toggle:focus-visible {
+    outline: none;
+    border-color: #457b9d;
+  }
+  .dropdown-arrow {
+    color: #9a9ab0;
+    flex: none;
+    margin-left: 10px;
+    transition: transform 0.15s;
+  }
+  .dropdown.open .dropdown-toggle {
+    border-color: #457b9d;
+    background: #2f2f4a;
+  }
+  .dropdown.open .dropdown-arrow {
+    transform: rotate(180deg);
+  }
+  .dropdown-menu {
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #2b2b3d;
+    border: 2px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+  .dropdown.open .dropdown-menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .dropdown-item {
+    padding: 9px 10px;
+    border-radius: 6px;
     color: #cfcfe0;
     font-size: 14px;
     cursor: pointer;
   }
-  .difficulty-btn:hover {
-    background: #2f2f4a;
+  .dropdown-item:hover {
+    background: #3d3d52;
+    color: #fff;
   }
-  .difficulty-btn.selected {
-    border-color: #457b9d;
+  .dropdown-item.selected {
     background: #35506b;
     color: #fff;
   }
