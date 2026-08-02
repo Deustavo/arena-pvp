@@ -11,6 +11,7 @@ import { resetHud } from './hud.js';
 import { openBotClassSelect } from './botClassSelect.js';
 import { comTutorialNaPrimeiraVez } from './tutorial/tutorial.js';
 import { updateGameScale } from './gameScale.js';
+import { startMenuBackground, stopMenuBackground } from './menuBackground.js';
 
 export function showMenu() {
   menuEl.style.display = 'flex';
@@ -18,6 +19,7 @@ export function showMenu() {
   document.body.classList.remove('game-active');
   hideWaitingOverlay();
   startOnlineCountPolling();
+  startMenuBackground();
 }
 
 export function showGame() {
@@ -25,6 +27,7 @@ export function showGame() {
   gameWrapEl.style.display = 'flex';
   document.body.classList.add('game-active');
   stopOnlineCountPolling();
+  stopMenuBackground();
   updateGameScale();
 }
 
