@@ -123,6 +123,7 @@ export function renderClassDetails(target, cls) {
 // dropdown compacto para caber duas colunas (jogador/bot) lado a lado.
 export function createClassPicker({
   listEl, detailsEl, getSelectedId, setSelectedId, defaultId = DEFAULT_CLASS_ID, dropdown = false,
+  onPreview,
 }) {
   if (!listEl) return { refresh() {} };
 
@@ -132,6 +133,7 @@ export function createClassPicker({
 
   function renderDetails(cls) {
     renderClassDetails(detailsEl, cls);
+    if (onPreview) onPreview(cls);
   }
 
   // Fixa a altura do painel de detalhes na maior necessária entre as classes,

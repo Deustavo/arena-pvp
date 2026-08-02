@@ -54,6 +54,7 @@ export const btnTutClose = document.getElementById('btnTutClose');
 export const onlineCountValueEl = document.getElementById('onlineCountValue');
 
 export const classListEl = document.getElementById('classList');
+export const classPreviewEl = document.getElementById('classPreview');
 export const classDetailsEl = document.getElementById('classDetails');
 
 export const botClassOverlayEl = document.getElementById('botClassOverlay');

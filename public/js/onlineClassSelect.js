@@ -1,20 +1,26 @@
 import { state } from './state.js';
 import {
-  onlineClassOverlayEl, classListEl, classDetailsEl, btnOnlineClassClose, btnOnlineClassConfirm,
+  onlineClassOverlayEl, classListEl, classPreviewEl, classDetailsEl,
+  btnOnlineClassClose, btnOnlineClassConfirm,
 } from './dom.js';
 import { createClassPicker } from './classSelect.js';
+import { createClassPreview } from './classPreview.js';
 
 let onConfirm = null;
 let playerPicker = null;
+let preview = null;
 
 export function initOnlineClassSelect() {
   if (!onlineClassOverlayEl) return;
+
+  preview = createClassPreview(classPreviewEl);
 
   playerPicker = createClassPicker({
     listEl: classListEl,
     detailsEl: classDetailsEl,
     getSelectedId: () => state.classId,
     setSelectedId: (id) => { state.classId = id; },
+    onPreview: (cls) => preview.setClass(cls.id),
   });
 
   btnOnlineClassClose.addEventListener('click', closeOnlineClassSelect);
@@ -38,6 +44,7 @@ export function openOnlineClassSelect(confirmCallback) {
 
 export function closeOnlineClassSelect() {
   onlineClassOverlayEl.style.display = 'none';
+  preview.stop();
 }
 
 export function isOnlineClassSelectOpen() {

@@ -43,48 +43,59 @@ function updateClassIcon(el, nameEl, row, classId) {
   if (nameEl) nameEl.textContent = cls.name || '';
 }
 
-function createHeartEl() {
+// `pixelSize` é opcional (padrão = tamanho do HUD real) para permitir reusar
+// os mesmos corações/escudos pixel-art em miniatura, como no preview de
+// classe da modal de seleção online.
+export function createHeartEl(pixelSize = HEART_PIXEL_SIZE) {
   const heart = document.createElement('div');
   heart.className = 'heart';
+  heart.style.width = `${7 * pixelSize}px`;
+  heart.style.height = `${6 * pixelSize}px`;
   for (const [row, col] of HEART_PIXELS) {
     const px = document.createElement('div');
     px.className = 'heart-pixel';
-    px.style.left = `${col * HEART_PIXEL_SIZE}px`;
-    px.style.top = `${row * HEART_PIXEL_SIZE}px`;
+    px.style.width = `${pixelSize}px`;
+    px.style.height = `${pixelSize}px`;
+    px.style.left = `${col * pixelSize}px`;
+    px.style.top = `${row * pixelSize}px`;
     heart.appendChild(px);
   }
   return heart;
 }
 
-function createHeartsRow(container, count) {
+export function createHeartsRow(container, count, pixelSize = HEART_PIXEL_SIZE) {
   container.innerHTML = '';
   const hearts = [];
   for (let i = 0; i < count; i++) {
-    const heart = createHeartEl();
+    const heart = createHeartEl(pixelSize);
     container.appendChild(heart);
     hearts.push(heart);
   }
   return hearts;
 }
 
-function createShieldEl() {
+export function createShieldEl(pixelSize = SHIELD_PIXEL_SIZE) {
   const shield = document.createElement('div');
   shield.className = 'shield';
+  shield.style.width = `${7 * pixelSize}px`;
+  shield.style.height = `${8 * pixelSize}px`;
   for (const [row, col] of SHIELD_PIXELS) {
     const px = document.createElement('div');
     px.className = 'shield-pixel';
-    px.style.left = `${col * SHIELD_PIXEL_SIZE}px`;
-    px.style.top = `${row * SHIELD_PIXEL_SIZE}px`;
+    px.style.width = `${pixelSize}px`;
+    px.style.height = `${pixelSize}px`;
+    px.style.left = `${col * pixelSize}px`;
+    px.style.top = `${row * pixelSize}px`;
     shield.appendChild(px);
   }
   return shield;
 }
 
-function createShieldsRow(container, count) {
+export function createShieldsRow(container, count, pixelSize = SHIELD_PIXEL_SIZE) {
   container.innerHTML = '';
   const shields = [];
   for (let i = 0; i < count; i++) {
-    const shield = createShieldEl();
+    const shield = createShieldEl(pixelSize);
     container.appendChild(shield);
     shields.push(shield);
   }

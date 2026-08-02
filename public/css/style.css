@@ -383,14 +383,21 @@
   }
   #classArea {
     display: flex;
-    flex-direction: column;
+    align-items: stretch;
     gap: 14px;
   }
   #classList {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 150px;
     gap: 8px;
-    width: 100%;
+  }
+  #classRight {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 10px;
   }
   .class-card {
     display: flex;
@@ -415,7 +422,10 @@
     box-shadow: 0 0 0 1px #4ade80;
   }
   .class-card .class-name {
-    font-size: 15px;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .class-dropdown-toggle {
     gap: 10px;
@@ -531,6 +541,109 @@
   }
   #classDetails .class-traits li {
     margin-bottom: 2px;
+  }
+  #classPreview {
+    position: relative;
+    flex: 1;
+    min-height: 92px;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: #22222f;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 8px 0 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .class-preview-hearts {
+    padding: 0 10px;
+    flex-wrap: wrap;
+  }
+  .class-preview-shields {
+    padding: 3px 10px 0;
+    flex-wrap: wrap;
+  }
+  .class-preview-character {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .class-preview-square {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    border: 2px solid #facc15;
+    box-sizing: border-box;
+  }
+  .class-preview-spacer {
+    flex: none;
+  }
+  .class-preview-shot {
+    --shot-dx: 0px;
+    --shot-dy: 0px;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    border-radius: 50%;
+    transform: translate(0, -50%);
+    opacity: 0;
+  }
+  .class-preview-shot.shooting {
+    animation-name: classPreviewShot;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+  @keyframes classPreviewShot {
+    0% { transform: translate(0, -50%); opacity: 0; }
+    8% { opacity: 1; }
+    88% { opacity: 1; }
+    100% { transform: translate(var(--shot-dx), calc(-50% + var(--shot-dy))); opacity: 0; }
+  }
+  .class-preview-dummy {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #4a4a5e;
+    border: 2px solid #8a8aa0;
+    border-radius: 4px;
+    color: #cfcfe0;
+  }
+  .class-preview-dummy svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+  .class-preview-dummy.hit {
+    animation: classPreviewDummyHit 0.3s ease-out;
+  }
+  @keyframes classPreviewDummyHit {
+    0% { background: #fff; border-color: #fff; transform: scale(1.18); }
+    100% { background: #4a4a5e; border-color: #8a8aa0; transform: scale(1); }
+  }
+  .class-preview-damage {
+    position: absolute;
+    top: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ff6b6b;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    white-space: nowrap;
+    animation: classPreviewDamageFloat 0.9s ease-out forwards;
+  }
+  @keyframes classPreviewDamageFloat {
+    0% { opacity: 0; transform: translate(-50%, -22px); }
+    15% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -38px); }
   }
   #menuDivider {
     width: 100%;
@@ -729,7 +842,7 @@
     border: 2px solid #555;
     border-radius: 10px;
     padding: 20px 24px;
-    width: 420px;
+    width: 540px;
     max-width: calc(100vw - 32px);
     box-sizing: border-box;
     display: flex;
@@ -920,5 +1033,16 @@
     }
     .hud-name {
       font-size: 12px;
+    }
+    #classArea {
+      flex-direction: column;
+    }
+    #classList {
+      flex: none;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    #classList .class-card {
+      flex: 1 1 45%;
     }
   }
