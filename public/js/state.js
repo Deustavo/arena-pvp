@@ -12,6 +12,7 @@ import { DEFAULT_BOT_DIFFICULTY } from '../../shared/botDifficulty.js';
 export const state = {
   mode: null, // 'online' | 'bot'
   ws: null,
+  pendingTrainingRedirect: false, // true quando o jogador clicou em "Modo treino" a partir do aviso de poucos jogadores online
   playerIndex: null,
   matchId: null,
   nickname: '',

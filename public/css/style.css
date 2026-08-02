@@ -250,6 +250,14 @@
   #waitingOverlay h2 {
     animation: blink 1.2s ease-in-out infinite;
   }
+  #noOpponentsMessage {
+    display: none;
+    margin: 0;
+    max-width: 320px;
+    text-align: center;
+    color: #ccc;
+    font-size: 15px;
+  }
   #waitingOverlay .loader {
     --color-1: #fff;
     --color-2: #4ade80;
@@ -325,6 +333,9 @@
   }
   #gameOverOverlay button#btnBackToMenu:hover, #waitingOverlay button#btnLeaveQueue:hover {
     background: #444;
+  }
+  #waitingOverlay button#btnTryTrainingMode {
+    display: none;
   }
   #gameOverOverlay button#btnSwapClasses {
     display: none;

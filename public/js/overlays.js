@@ -1,4 +1,7 @@
-import { waitingOverlayEl, countdownOverlayEl, countdownNumberEl } from './dom.js';
+import {
+  waitingOverlayEl, countdownOverlayEl, countdownNumberEl,
+  waitingLoaderEl, noOpponentsMessageEl, btnTryTrainingMode,
+} from './dom.js';
 import { state } from './state.js';
 
 export function showWaitingOverlay() {
@@ -7,6 +10,22 @@ export function showWaitingOverlay() {
 
 export function hideWaitingOverlay() {
   waitingOverlayEl.style.display = 'none';
+  hideNoOpponentsMessage();
+}
+
+// Exibido quando o servidor avisa que ninguém entrou na fila a tempo: pausa
+// a animação de "aguardando" e sugere o modo treino em vez de jogar o
+// jogador direto numa partida contra bot sem que ele peça.
+export function showNoOpponentsMessage() {
+  waitingLoaderEl.style.display = 'none';
+  noOpponentsMessageEl.style.display = 'block';
+  btnTryTrainingMode.style.display = 'inline-block';
+}
+
+export function hideNoOpponentsMessage() {
+  waitingLoaderEl.style.display = '';
+  noOpponentsMessageEl.style.display = 'none';
+  btnTryTrainingMode.style.display = 'none';
 }
 
 export function showCountdown(ms, onDone) {

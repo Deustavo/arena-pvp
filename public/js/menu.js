@@ -8,6 +8,8 @@ import { startBot as startBotMatch, stopBot } from './bot.js';
 import { commitNickname } from './nickname.js';
 import { resetEscHint } from './input.js';
 import { resetHud } from './hud.js';
+import { openBotClassSelect } from './botClassSelect.js';
+import { comTutorialNaPrimeiraVez } from './tutorial/tutorial.js';
 
 export function showMenu() {
   menuEl.style.display = 'flex';
@@ -57,4 +59,8 @@ export function backToMenu() {
   state.mode = null;
   prepareNewMatch();
   showMenu();
+  if (state.pendingTrainingRedirect) {
+    state.pendingTrainingRedirect = false;
+    openBotClassSelect(() => comTutorialNaPrimeiraVez(startBot));
+  }
 }

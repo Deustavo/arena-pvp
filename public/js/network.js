@@ -1,7 +1,9 @@
 import { state } from './state.js';
 import { SHIELD_RADIUS } from '../../shared/constants.js';
 import { canvas } from './dom.js';
-import { showWaitingOverlay, hideWaitingOverlay, showCountdown, hideCountdown } from './overlays.js';
+import {
+  showWaitingOverlay, hideWaitingOverlay, showCountdown, hideCountdown, showNoOpponentsMessage,
+} from './overlays.js';
 import { updateHud, isShieldAvailable, initHearts } from './hud.js';
 import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
@@ -41,6 +43,9 @@ function handleOnlineMessage(msg, onBackToMenu) {
   switch (msg.type) {
     case 'waiting':
       showWaitingOverlay();
+      break;
+    case 'noOpponents':
+      showNoOpponentsMessage();
       break;
     case 'left':
       onBackToMenu();

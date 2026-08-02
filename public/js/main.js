@@ -1,5 +1,5 @@
 import {
-  btnOnline, btnBot, btnHowToPlay, btnLeaveQueue, btnPlayAgain, btnBackToMenu, btnSwapClasses,
+  btnOnline, btnBot, btnHowToPlay, btnLeaveQueue, btnTryTrainingMode, btnPlayAgain, btnBackToMenu, btnSwapClasses,
 } from './dom.js';
 import { state } from './state.js';
 import { initTutorialUI, comTutorialNaPrimeiraVez, openHowToPlay } from './tutorial/tutorial.js';
@@ -21,6 +21,10 @@ btnOnline.addEventListener('click', () => comTutorialNaPrimeiraVez(startOnline))
 btnBot.addEventListener('click', () => openBotClassSelect(() => comTutorialNaPrimeiraVez(startBot)));
 btnHowToPlay.addEventListener('click', openHowToPlay);
 btnLeaveQueue.addEventListener('click', () => leaveNetworkQueue(backToMenu));
+btnTryTrainingMode.addEventListener('click', () => {
+  state.pendingTrainingRedirect = true;
+  leaveNetworkQueue(backToMenu);
+});
 btnPlayAgain.addEventListener('click', () => {
   if (state.mode === 'online') startOnline();
   else if (state.mode === 'bot') startBot();

@@ -121,20 +121,18 @@ describe('matchmaking', () => {
     assert.equal(wsNext.sent[0].type, 'waiting');
   });
 
-  test('jogador sem oponente após 5s entra em partida contra um bot', () => {
+  test('jogador sem oponente após 5s recebe aviso de poucos jogadores, sem partida contra bot', () => {
     const ws = makeFakeWs();
     matchmaking.handleConnection(ws, 'Alice');
 
     mock.timers.tick(5000);
 
-    assert.equal(matchmaking.activeMatchCount(), 1);
-    const init = ws.sent.find((m) => m.type === 'init');
-    assert.ok(init);
-    assert.equal(init.players[0].name, 'Alice');
-    assert.match(init.players[1].name, /^\[BOT\] /);
+    assert.equal(matchmaking.activeMatchCount(), 0);
+    const noOpponents = ws.sent.find((m) => m.type === 'noOpponents');
+    assert.ok(noOpponents);
   });
 
-  test('jogador real que entra antes dos 5s cancela a partida contra o bot', () => {
+  test('jogador real que entra antes dos 5s cancela o aviso de poucos jogadores', () => {
     const wsA = makeFakeWs();
     const wsB = makeFakeWs();
     matchmaking.handleConnection(wsA);
@@ -146,9 +144,10 @@ describe('matchmaking', () => {
     assert.equal(matchmaking.activeMatchCount(), 1);
     const initA = wsA.sent.find((m) => m.type === 'init');
     assert.equal(initA.players[1].name, 'Jogador');
+    assert.ok(!wsA.sent.find((m) => m.type === 'noOpponents'));
   });
 
-  test('handleLeaveQueue cancela o timer da partida contra o bot', () => {
+  test('handleLeaveQueue cancela o timer de aviso de poucos jogadores', () => {
     const ws = makeFakeWs();
     matchmaking.handleConnection(ws);
     matchmaking.handleLeaveQueue(ws);
@@ -156,6 +155,7 @@ describe('matchmaking', () => {
     mock.timers.tick(5000);
 
     assert.equal(matchmaking.activeMatchCount(), 0);
+    assert.ok(!ws.sent.find((m) => m.type === 'noOpponents'));
   });
 
   test('handleDisconnect durante partida ativa encerra a partida e declara o oponente vencedor', () => {

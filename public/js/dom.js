@@ -31,6 +31,9 @@ export const btnSwapClasses = document.getElementById('btnSwapClasses');
 
 export const waitingOverlayEl = document.getElementById('waitingOverlay');
 export const btnLeaveQueue = document.getElementById('btnLeaveQueue');
+export const waitingLoaderEl = document.getElementById('waitingLoader');
+export const noOpponentsMessageEl = document.getElementById('noOpponentsMessage');
+export const btnTryTrainingMode = document.getElementById('btnTryTrainingMode');
 
 export const countdownOverlayEl = document.getElementById('countdownOverlay');
 export const countdownNumberEl = document.getElementById('countdownNumber');
