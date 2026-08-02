@@ -3,16 +3,26 @@ import { PLAYER_SPEED } from '../../shared/constants.js';
 import { state } from './state.js';
 import { classListEl, classDetailsEl } from './dom.js';
 
+// Ícones em linha (mesmo estilo dos ícones de classe) para cada estatística,
+// usados para tornar o painel de detalhes mais fácil de escanear visualmente.
+const STAT_ICONS = {
+  cooldown: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+  damage: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>',
+  shield: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
+  life: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.8C.8 8.6 2.4 5 6 5c2 0 3.3 1.1 4 2.2C10.7 6.1 12 5 14 5c3.6 0 5.2 3.6 3.5 7.2C19 16.65 12 21 12 21z"/></svg>',
+  speed: '<svg viewBox="0 0 24 24"><path d="M4 17l6-3-6-3M13 20l6-3-6-3"/></svg>',
+};
+
 export function statLines(cls) {
   const seconds = cls.shotCooldownMs / 1000;
   const secondsLabel = Number.isInteger(seconds) ? `${seconds}` : seconds.toFixed(1);
   const speedPct = Math.round((cls.speed / PLAYER_SPEED) * 100);
   return [
-    `Tempo do tiro: ${secondsLabel}s`,
-    `Dano: ${cls.damage} ${cls.damage === 1 ? 'coração' : 'corações'}`,
-    `Escudo: ${cls.shieldMaxHits}`,
-    `Vidas: ${cls.maxLives}`,
-    `Velocidade: ${speedPct}%`,
+    { icon: STAT_ICONS.cooldown, label: 'Cadência', value: `${secondsLabel}s` },
+    { icon: STAT_ICONS.damage, label: 'Dano', value: `${cls.damage} ${cls.damage === 1 ? 'coração' : 'corações'}` },
+    { icon: STAT_ICONS.shield, label: 'Escudo', value: `${cls.shieldMaxHits} ${cls.shieldMaxHits === 1 ? 'hit' : 'hits'}` },
+    { icon: STAT_ICONS.life, label: 'Vidas', value: `${cls.maxLives}` },
+    { icon: STAT_ICONS.speed, label: 'Velocidade', value: `${speedPct}%` },
   ];
 }
 
@@ -53,10 +63,25 @@ export function renderClassDetails(target, cls) {
 
   const stats = document.createElement('div');
   stats.className = 'class-stats';
-  for (const line of statLines(cls)) {
+  for (const stat of statLines(cls)) {
     const row = document.createElement('div');
     row.className = 'stat-row';
-    row.textContent = line;
+
+    const icon = document.createElement('span');
+    icon.className = 'stat-icon';
+    icon.innerHTML = stat.icon;
+    row.appendChild(icon);
+
+    const label = document.createElement('span');
+    label.className = 'stat-label';
+    label.textContent = stat.label;
+    row.appendChild(label);
+
+    const value = document.createElement('span');
+    value.className = 'stat-value';
+    value.textContent = stat.value;
+    row.appendChild(value);
+
     stats.appendChild(row);
   }
   info.appendChild(stats);
