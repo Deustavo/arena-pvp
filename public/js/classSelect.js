@@ -29,6 +29,7 @@ function createClassCard(cls) {
   card.type = 'button';
   card.className = 'class-card';
   card.dataset.classId = cls.id;
+  card.style.setProperty('--class-color', cls.color);
 
   const icon = document.createElement('div');
   icon.className = 'class-icon';
@@ -48,6 +49,7 @@ function createClassDropdownItem(cls) {
   item.className = 'dropdown-item class-dropdown-item';
   item.dataset.classId = cls.id;
   item.setAttribute('role', 'option');
+  item.style.setProperty('--class-color', cls.color);
 
   const icon = document.createElement('div');
   icon.className = 'class-icon';
@@ -69,6 +71,7 @@ export function renderClassDetails(target, cls) {
   const icon = document.createElement('div');
   icon.className = 'class-icon';
   icon.innerHTML = cls.icon || '';
+  icon.style.setProperty('--class-color', cls.color);
   target.appendChild(icon);
 
   const info = document.createElement('div');
@@ -244,6 +247,7 @@ export function createClassPicker({
     const cls = getClass(classId);
     setSelectedId(cls.id);
     toggleIcon.innerHTML = cls.icon || '';
+    toggle.style.setProperty('--class-color', cls.color);
     toggleName.textContent = cls.name;
     for (const item of menu.children) {
       const selected = item.dataset.classId === cls.id;

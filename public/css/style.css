@@ -452,8 +452,8 @@
     align-items: center;
     justify-content: center;
     background: #22222f;
-    border: 1px solid #444;
-    color: #7dd3fc;
+    border: 1px solid var(--class-color, #444);
+    color: var(--class-color, #7dd3fc);
   }
   .class-icon svg {
     width: 18px;
