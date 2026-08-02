@@ -1,7 +1,5 @@
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { PLAYER_SPEED } from '../../shared/constants.js';
-import { state } from './state.js';
-import { classListEl, classDetailsEl } from './dom.js';
 
 // Ícones em linha (mesmo estilo dos ícones de classe) para cada estatística,
 // usados para tornar o painel de detalhes mais fácil de escanear visualmente.
@@ -272,13 +270,4 @@ export function createClassPicker({
   refresh();
 
   return { refresh };
-}
-
-export function initClassSelect() {
-  createClassPicker({
-    listEl: classListEl,
-    detailsEl: classDetailsEl,
-    getSelectedId: () => state.classId,
-    setSelectedId: (id) => { state.classId = id; },
-  });
 }

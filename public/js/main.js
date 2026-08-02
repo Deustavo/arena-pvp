@@ -7,17 +7,20 @@ import { initInput } from './input.js';
 import { leaveQueue as leaveNetworkQueue } from './network.js';
 import { showMenu, startOnline, startBot, backToMenu } from './menu.js';
 import { render } from './render.js';
-import { initNicknameInput } from './nickname.js';
-import { initClassSelect } from './classSelect.js';
+import { initNicknameInput, commitNickname } from './nickname.js';
+import { initOnlineClassSelect, openOnlineClassSelect } from './onlineClassSelect.js';
 import { initBotClassSelect, openBotClassSelect } from './botClassSelect.js';
 
 initTutorialUI();
 initInput();
 initNicknameInput();
-initClassSelect();
+initOnlineClassSelect();
 initBotClassSelect();
 
-btnOnline.addEventListener('click', () => comTutorialNaPrimeiraVez(startOnline));
+btnOnline.addEventListener('click', () => {
+  if (!commitNickname()) return;
+  openOnlineClassSelect(() => comTutorialNaPrimeiraVez(startOnline));
+});
 btnBot.addEventListener('click', () => openBotClassSelect(() => comTutorialNaPrimeiraVez(startBot)));
 btnHowToPlay.addEventListener('click', openHowToPlay);
 btnLeaveQueue.addEventListener('click', () => leaveNetworkQueue(backToMenu));

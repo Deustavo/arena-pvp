@@ -24,26 +24,14 @@
   }
   #menuBody {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 64px;
-    max-width: 100%;
-    box-sizing: border-box;
-    padding: 0 16px;
-  }
-  #menuLeft {
-    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 16px;
-  }
-  #menuRight {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 420px;
+    width: 340px;
     max-width: 100%;
+    box-sizing: border-box;
+    padding: 0 16px;
   }
   #menu button:not(.class-card) {
     font-size: 20px;
@@ -53,7 +41,8 @@
     cursor: pointer;
     background: #457b9d;
     color: #fff;
-    min-width: 260px;
+    width: 100%;
+    box-sizing: border-box;
   }
   #menu button:not(.class-card):hover {
     background: #3a6a89;
@@ -87,12 +76,13 @@
     border-color: #457b9d;
   }
   #nicknameError {
-    display: none;
+    visibility: hidden;
     color: #e63946;
     font-size: 13px;
+    line-height: 16px;
   }
   #nicknameError.visible {
-    display: block;
+    visibility: visible;
   }
   #menu button#btnOnline {
     background: #2a9d5c;
@@ -376,19 +366,6 @@
     margin-top: 4px;
     font-size: 14px;
     color: #4ade80;
-  }
-  #classPanel {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-  #classPanelTitle {
-    margin: 0 0 2px 0;
-    font-size: 16px;
-    color: #9a9ab0;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
   }
   #classArea {
     display: flex;
@@ -724,6 +701,65 @@
   #btnBotClassConfirm:hover {
     background: #3a6a89;
   }
+  #onlineClassOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #onlineClassOverlay .modal {
+    background: #2b2b3d;
+    border: 2px solid #555;
+    border-radius: 10px;
+    padding: 20px 24px;
+    width: 420px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #onlineClassHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  #onlineClassHeader h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  #btnOnlineClassClose {
+    width: 26px;
+    height: 26px;
+    min-width: 0;
+    padding: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #9a9ab0;
+    font-size: 15px;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+  }
+  #btnOnlineClassClose:hover {
+    background: #3d3d52;
+    color: #fff;
+  }
+  #btnOnlineClassConfirm {
+    font-size: 16px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #457b9d;
+    color: #fff;
+  }
+  #btnOnlineClassConfirm:hover {
+    background: #3a6a89;
+  }
   #howToPlayOverlay {
     display: none;
     position: fixed;
@@ -854,13 +890,6 @@
     box-sizing: border-box;
   }
   @media (max-width: 700px) {
-    #menuBody {
-      flex-direction: column;
-      gap: 24px;
-    }
-    #menuRight {
-      width: 100%;
-    }
     #menu button:not(.class-card) {
       min-width: 0;
       width: 100%;

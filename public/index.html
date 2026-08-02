@@ -8,28 +8,31 @@
 <body>
   <div id="menu">
     <div id="menuBody">
-      <div id="menuLeft">
-        <h1>Arena PVP</h1>
-        <button id="btnOnline">Jogar Online</button>
-        <button id="btnBot">Modo treino</button>
-        <hr id="menuDivider">
-        <button id="btnHowToPlay">Como jogar</button>
-        <div id="onlineCount">● <span id="onlineCountValue">--</span> jogador(es) online</div>
+      <h1>Arena PVP</h1>
+      <div id="nicknameField">
+        <label id="nicknameLabel" for="nicknameInput">Jogador</label>
+        <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
+        <div id="nicknameError">Digite um nickname para jogar</div>
       </div>
-      <div id="menuRight">
-        <div id="nicknameField">
-          <label id="nicknameLabel" for="nicknameInput">Jogador</label>
-          <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
-          <div id="nicknameError">Digite um nickname para jogar</div>
-        </div>
-        <div id="classPanel">
-          <h2 id="classPanelTitle">Classe</h2>
-          <div id="classArea">
-            <div id="classList"></div>
-            <div id="classDetails"></div>
-          </div>
-        </div>
+      <button id="btnOnline">Jogar Online</button>
+      <button id="btnBot">Modo treino</button>
+      <hr id="menuDivider">
+      <button id="btnHowToPlay">Como jogar</button>
+      <div id="onlineCount">● <span id="onlineCountValue">--</span> jogador(es) online</div>
+    </div>
+  </div>
+
+  <div id="onlineClassOverlay">
+    <div class="modal">
+      <div id="onlineClassHeader">
+        <h2>Escolha sua classe</h2>
+        <button id="btnOnlineClassClose" type="button" title="Fechar (Esc)" aria-label="Fechar">✕</button>
       </div>
+      <div id="classArea">
+        <div id="classList"></div>
+        <div id="classDetails"></div>
+      </div>
+      <button id="btnOnlineClassConfirm">Jogar</button>
     </div>
   </div>
 

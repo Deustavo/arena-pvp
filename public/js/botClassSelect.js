@@ -108,10 +108,10 @@ export function initBotClassSelect() {
 
 export function openBotClassSelect(confirmCallback) {
   onConfirm = confirmCallback;
+  botClassOverlayEl.style.display = 'flex';
   playerPicker.refresh();
   botPicker.refresh();
   difficultyPicker.refresh();
-  botClassOverlayEl.style.display = 'flex';
 }
 
 export function closeBotClassSelect() {

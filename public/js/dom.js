@@ -65,3 +65,7 @@ export const botDifficultyValueEl = document.getElementById('botDifficultyValue'
 export const botDifficultyListEl = document.getElementById('botDifficultyList');
 export const btnBotClassClose = document.getElementById('btnBotClassClose');
 export const btnBotClassConfirm = document.getElementById('btnBotClassConfirm');
+
+export const onlineClassOverlayEl = document.getElementById('onlineClassOverlay');
+export const btnOnlineClassClose = document.getElementById('btnOnlineClassClose');
+export const btnOnlineClassConfirm = document.getElementById('btnOnlineClassConfirm');
