@@ -9,6 +9,8 @@ import { getClass } from '../../shared/classes.js';
 const GAMEOVER_OVERLAY_DELAY = 2000;
 const HIT_FLASH_DURATION = 400;
 const OWN_PLAYER_BORDER_COLOR = '#facc15';
+const OWN_SHOT_COLOR = '#facc15';
+const AIM_PREVIEW_COLOR = '#9ca3af';
 
 function drawShield(cx, cy, charges, maxHits, now) {
   if (charges <= 0) return;
@@ -44,7 +46,7 @@ const INFINITE_PREVIEW_LENGTH = 2000;
 // Desenha exatamente a trajetória que createShotProjectiles vai gerar ao
 // clicar na posição atual do mouse: mesma direção base, mesmo leque em cone
 // e mesmo alcance da classe do jogador.
-function drawShotPreview(cx, cy, classId, color) {
+function drawShotPreview(cx, cy, classId) {
   const cls = getClass(classId);
   const dx = state.mouse.x - cx;
   const dy = state.mouse.y - cy;
@@ -55,7 +57,7 @@ function drawShotPreview(cx, cy, classId, color) {
 
   ctx.save();
   ctx.globalAlpha = 0.45;
-  ctx.strokeStyle = color;
+  ctx.strokeStyle = AIM_PREVIEW_COLOR;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([6, 6]);
   for (let i = 0; i < count; i++) {
@@ -106,7 +108,7 @@ function drawPlayers(renderState, now) {
     const classColor = getClass(p.classId).color;
 
     if (i === state.playerIndex && state.matchStarted && !state.input.shield) {
-      drawShotPreview(p.x + state.playerSize / 2, p.y + state.playerSize / 2, p.classId, classColor);
+      drawShotPreview(p.x + state.playerSize / 2, p.y + state.playerSize / 2, p.classId);
     }
 
     const flashRemaining = hitFlashUntil[i] - now;
@@ -147,7 +149,11 @@ function drawProjectiles(renderState) {
   for (const proj of renderState.projectiles) {
     const size = proj.size ?? state.projectileSize;
     const owner = renderState.players[proj.ownerIndex];
-    ctx.fillStyle = owner ? getClass(owner.classId).color : '#ffffff';
+    if (proj.ownerIndex === state.playerIndex) {
+      ctx.fillStyle = OWN_SHOT_COLOR;
+    } else {
+      ctx.fillStyle = owner ? getClass(owner.classId).color : '#ffffff';
+    }
     ctx.beginPath();
     ctx.arc(proj.x, proj.y, size / 2, 0, Math.PI * 2);
     ctx.fill();
