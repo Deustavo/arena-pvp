@@ -1,6 +1,6 @@
 import {
   livesP0El, livesP1El, shieldsP0El, shieldsP1El, nameP0El, nameP1El, cooldownP0El, cooldownP1El,
-  classIconP0El, classIconP1El,
+  classIconP0El, classIconP1El, classNameP0El, classNameP1El,
 } from './dom.js';
 import { state } from './state.js';
 import { checkDeathExplosion } from './explosions.js';
@@ -35,10 +35,12 @@ export let hitFlashUntil = [0, 0];
 let prevClassIds = [null, null];
 let shieldsEls = [[], []];
 
-function updateClassIcon(el, row, classId) {
+function updateClassIcon(el, nameEl, row, classId) {
   if (!el || classId === prevClassIds[row]) return;
   prevClassIds[row] = classId;
-  el.innerHTML = getClass(classId).icon || '';
+  const cls = getClass(classId);
+  el.innerHTML = cls.icon || '';
+  if (nameEl) nameEl.textContent = cls.name || '';
 }
 
 function createHeartEl() {
@@ -121,6 +123,8 @@ export function resetHud() {
   nameP1El.textContent = 'Oponente';
   classIconP0El.innerHTML = '';
   classIconP1El.innerHTML = '';
+  classNameP0El.textContent = '';
+  classNameP1El.textContent = '';
   for (const el of [cooldownP0El, cooldownP1El]) {
     el.style.width = '0%';
     el.classList.remove('ready');
@@ -190,14 +194,14 @@ export function updateHud() {
   const opp = state.latestState.players[oppIndex];
   if (me) {
     nameP0El.textContent = me.name || 'Você';
-    updateClassIcon(classIconP0El, 0, me.classId);
+    updateClassIcon(classIconP0El, classNameP0El, 0, me.classId);
     updateHeartsRow(0, me.lives, state.playerIndex);
     updateShieldsRow(0, shieldCharges(state.playerIndex));
     checkDeathExplosion(state.playerIndex, me);
   }
   if (opp) {
     nameP1El.textContent = opp.name || 'Oponente';
-    updateClassIcon(classIconP1El, 1, opp.classId);
+    updateClassIcon(classIconP1El, classNameP1El, 1, opp.classId);
     updateHeartsRow(1, opp.lives, oppIndex);
     updateShieldsRow(1, shieldCharges(oppIndex));
     checkDeathExplosion(oppIndex, opp);

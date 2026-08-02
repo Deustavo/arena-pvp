@@ -90,6 +90,23 @@ export const CLASSES = {
     // Espadas cruzadas.
     icon: '<svg viewBox="0 0 24 24"><path d="M4 4l16 16"/><path d="M4 20L20 4"/><path d="M4 4l3 0M4 4l0 3"/><path d="M20 4l-3 0M20 4l0 3"/><path d="M4 20l3 0M4 20l0-3"/><path d="M20 20l-3 0M20 20l0-3"/></svg>',
   },
+  sniper: {
+    id: 'sniper',
+    name: 'Sniper',
+    shotCooldownMs: 3500,
+    damage: 9,
+    shieldMaxHits: 1,
+    maxLives: 5,
+    speed: PLAYER_SPEED,
+    projectileCount: 1,
+    coneSpreadDeg: 0,
+    projectileSize: PROJECTILE_SIZE * 0.6,
+    range: Infinity,
+    traits: ['Dano altíssimo', 'Cadência de tiro muito baixa', 'Poucas vidas'],
+    color: '#c9c9c9',
+    // Mira telescópica.
+    icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg>',
+  },
 };
 
 export const DEFAULT_CLASS_ID = 'atirador';

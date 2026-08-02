@@ -8,6 +8,10 @@
     flex-direction: column;
     font-family: sans-serif;
     color: #eee;
+    overflow-x: hidden;
+  }
+  body.game-active {
+    overflow: hidden;
   }
   #menu {
     display: flex;
@@ -23,6 +27,9 @@
     align-items: center;
     justify-content: center;
     gap: 64px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0 16px;
   }
   #menuLeft {
     display: flex;
@@ -36,6 +43,7 @@
     flex-direction: column;
     gap: 20px;
     width: 420px;
+    max-width: 100%;
   }
   #menu button:not(.class-card) {
     font-size: 20px;
@@ -96,13 +104,15 @@
     display: none;
     flex-direction: column;
     align-items: center;
+    width: 800px;
+    box-sizing: border-box;
+    transform-origin: center center;
   }
   #hud {
     margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
-    width: 800px;
-    max-width: 100%;
+    width: 100%;
     font-size: 18px;
   }
   .hud-row {
@@ -119,9 +129,22 @@
     align-items: center;
     gap: 8px;
   }
+  .hud-name-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hud-name-col-right {
+    align-items: flex-end;
+  }
   .hud-name {
     font-size: 14px;
     color: #ccc;
+  }
+  .hud-class-name {
+    font-size: 11px;
+    color: #7dd3fc;
+    opacity: 0.8;
   }
   .hud-class-icon {
     flex: none;
@@ -215,6 +238,7 @@
   }
   #canvas-wrap {
     position: relative;
+    width: 100%;
   }
   #escHint {
     margin-top: 8px;
@@ -823,4 +847,34 @@
     background: #333340;
     color: #666;
     cursor: default;
+  }
+  #botClassOverlay .modal, #howToPlayOverlay .modal {
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+  }
+  @media (max-width: 700px) {
+    #menuBody {
+      flex-direction: column;
+      gap: 24px;
+    }
+    #menuRight {
+      width: 100%;
+    }
+    #menu button:not(.class-card) {
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #botClassColumns {
+      flex-direction: column;
+    }
+  }
+  @media (max-width: 420px) {
+    .heart, .shield {
+      transform: scale(0.85);
+      transform-origin: left center;
+    }
+    .hud-name {
+      font-size: 12px;
+    }
   }

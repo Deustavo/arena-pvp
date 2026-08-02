@@ -1,4 +1,4 @@
-import { createMatch as createMatchState, endMatch } from './Match.js';
+import { createMatch as createMatchState, disconnectPlayer } from './Match.js';
 
 // Sala de espera: no máximo uma partida se forma por vez, o suficiente para
 // o escopo atual do jogo (1x1 simples).
@@ -69,7 +69,6 @@ export function handleDisconnect(ws) {
   }
   const match = ws.match;
   if (match && match.running) {
-    const remaining = match.players.find((p) => p.ws !== ws);
-    endMatch(match, remaining ? remaining.index : null);
+    disconnectPlayer(match, ws);
   }
 }

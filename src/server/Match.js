@@ -109,3 +109,19 @@ export function endMatch(match, winnerIndex) {
   for (const p of match.players) send(p.ws, { type: 'gameover', winnerIndex });
   if (match.onEnd) match.onEnd(match, winnerIndex);
 }
+
+// Quando um jogador some (fecha a aba, cai a conexão), fazemos o personagem
+// dele "morrer" (broadcast de um último state com alive: false) antes do
+// gameover, para que o adversário veja a explosão em vez do jogo simplesmente
+// parar.
+export function disconnectPlayer(match, ws) {
+  if (!match.running) return;
+  const disconnected = match.players.find((p) => p.ws === ws);
+  const remaining = match.players.find((p) => p.ws !== ws);
+  if (disconnected && disconnected.alive) {
+    disconnected.alive = false;
+    disconnected.lives = 0;
+    broadcastState(match);
+  }
+  endMatch(match, remaining ? remaining.index : null);
+}

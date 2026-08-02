@@ -10,7 +10,7 @@ const STAT_ICONS = {
   damage: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>',
   shield: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
   life: '<svg viewBox="0 0 24 24"><path d="M12 21s-8-4.8-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.2-8 11-8 11z"/></svg>',
-  speed: '<svg viewBox="0 0 24 24"><path d="M4 17l6-3-6-3M13 20l6-3-6-3"/></svg>',
+  speed: '<svg viewBox="0 0 24 24"><path d="M4 6l6 6-6 6M13 6l6 6-6 6"/></svg>',
 };
 
 export function statLines(cls) {

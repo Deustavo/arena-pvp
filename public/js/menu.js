@@ -10,10 +10,12 @@ import { resetEscHint } from './input.js';
 import { resetHud } from './hud.js';
 import { openBotClassSelect } from './botClassSelect.js';
 import { comTutorialNaPrimeiraVez } from './tutorial/tutorial.js';
+import { updateGameScale } from './gameScale.js';
 
 export function showMenu() {
   menuEl.style.display = 'flex';
   gameWrapEl.style.display = 'none';
+  document.body.classList.remove('game-active');
   hideWaitingOverlay();
   startOnlineCountPolling();
 }
@@ -21,7 +23,9 @@ export function showMenu() {
 export function showGame() {
   menuEl.style.display = 'none';
   gameWrapEl.style.display = 'flex';
+  document.body.classList.add('game-active');
   stopOnlineCountPolling();
+  updateGameScale();
 }
 
 // Ponto único de limpeza entre partidas: encerra o que sobrou da partida

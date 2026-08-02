@@ -84,8 +84,10 @@ export function initInput() {
 
   canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
-    state.mouse.x = e.clientX - rect.left;
-    state.mouse.y = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    state.mouse.x = (e.clientX - rect.left) * scaleX;
+    state.mouse.y = (e.clientY - rect.top) * scaleY;
   });
 
   canvas.addEventListener('click', (e) => {
@@ -93,8 +95,10 @@ export function initInput() {
     // Em modo de defesa o jogador não atira.
     if (state.input.shield && isShieldAvailable()) return;
     const rect = canvas.getBoundingClientRect();
-    const targetX = e.clientX - rect.left;
-    const targetY = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const targetX = (e.clientX - rect.left) * scaleX;
+    const targetY = (e.clientY - rect.top) * scaleY;
 
     if (state.mode === 'online') {
       sendShoot(targetX, targetY);
