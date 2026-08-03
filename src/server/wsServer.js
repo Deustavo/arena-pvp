@@ -2,30 +2,41 @@ import { WebSocketServer } from 'ws';
 import { PLAYER_SIZE } from '../../shared/constants.js';
 import { createShotProjectiles } from '../../shared/entities.js';
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
-import { sanitizeNickname } from '../../shared/nickname.js';
 import { handleConnection, handleLeaveQueue, handleDisconnect } from './matchmaking.js';
+import { parseConnectionParams, resolvePlayerIdentity } from './wsIdentity.js';
+import { auth } from './auth.js';
 
 let wss = null;
 
-function nicknameFromRequest(req) {
-  const url = new URL(req.url, 'http://localhost');
-  const nickname = sanitizeNickname(url.searchParams.get('nickname'));
-  return nickname || 'Jogador';
+function classIdFromRequest(req) {
+  const { classId } = parseConnectionParams(req.url);
+  return CLASSES[classId] ? classId : DEFAULT_CLASS_ID;
 }
 
-function classIdFromRequest(req) {
-  const url = new URL(req.url, 'http://localhost');
-  const classId = url.searchParams.get('classId');
-  return CLASSES[classId] ? classId : DEFAULT_CLASS_ID;
+function getSessionByToken(token) {
+  return auth.api.getSession({
+    headers: new Headers({ authorization: `Bearer ${token}` }),
+  });
 }
 
 export function createWsServer(httpServer) {
   wss = new WebSocketServer({ server: httpServer, perMessageDeflate: false });
 
-  wss.on('connection', (ws, req) => {
+  wss.on('connection', async (ws, req) => {
     ws.on('message', (raw) => handleMessage(ws, raw));
     ws.on('close', () => handleDisconnect(ws));
-    handleConnection(ws, nicknameFromRequest(req), classIdFromRequest(req));
+
+    // Validar a sessão é assíncrono (bate no banco). As mensagens que chegarem
+    // nesse meio-tempo são ignoradas com segurança, porque handleMessage exige
+    // `ws.player`, que só existe depois que a partida começa.
+    const { nickname, userId } = await resolvePlayerIdentity(req.url, getSessionByToken);
+
+    // O jogador pode ter desistido enquanto a sessão era resolvida — entrar na
+    // fila com um socket já fechado deixaria lixo no matchmaking.
+    if (ws.readyState !== ws.OPEN) return;
+
+    ws.userId = userId;
+    handleConnection(ws, nickname, classIdFromRequest(req));
   });
 
   return wss;

@@ -26,6 +26,12 @@ function showNicknameError() {
 // Valida o nickname digitado e, se ok, salva em `state`/localStorage.
 // Retorna true quando a partida pode prosseguir.
 export function commitNickname() {
+  // Com conta logada o nome vem dela, não do campo do menu (que fica escondido).
+  if (state.user) {
+    state.nickname = state.user.name;
+    return true;
+  }
+
   const nickname = sanitizeNickname(nicknameInput.value);
   if (!isValidNickname(nickname)) {
     showNicknameError();

@@ -5,11 +5,20 @@
   "type": "module",
   "main": "src/server/index.js",
   "scripts": {
-    "start": "node src/server/index.js",
+    "start": "node --env-file-if-exists=.env src/server/index.js",
     "test": "node --test",
-    "build:front": "node scripts/copy-shared.mjs"
+    "build:front": "node scripts/copy-shared.mjs",
+    "db:migrate:auth": "node --env-file-if-exists=.env node_modules/@better-auth/cli/dist/index.mjs migrate --config src/server/auth.js -y",
+    "db:migrate": "npm run db:migrate:auth && node --env-file-if-exists=.env scripts/migrate.mjs"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
+    "@libsql/kysely-libsql": "^0.4.1",
+    "better-auth": "^1.6.25",
+    "nodemailer": "^9.0.3",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "^1.4.21"
   }
 }

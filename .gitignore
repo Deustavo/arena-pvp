@@ -1,3 +1,6 @@
 node_modules/
 public/shared/
 .vercel
+.env
+.env.production
+data/

@@ -10,8 +10,22 @@
   <div id="menu">
     <div id="menuBody">
       <h1>Arena PVP</h1>
+      <div id="accountBar">
+        <div id="accountLoggedIn">
+          <span id="accountGreeting">Jogando como <strong id="accountName"></strong></span>
+          <div id="accountActions">
+            <button type="button" id="btnProfile" class="link-button">Histórico</button>
+            <button type="button" id="btnLogout" class="link-button">Sair</button>
+          </div>
+        </div>
+        <div id="accountLoggedOut">
+          <button type="button" id="btnLogin" class="link-button">Entrar</button>
+          <span class="account-sep">ou</span>
+          <button type="button" id="btnSignup" class="link-button">criar conta</button>
+        </div>
+      </div>
       <div id="nicknameField">
-        <label id="nicknameLabel" for="nicknameInput">Jogador</label>
+        <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
         <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
         <div id="nicknameError">Digite um nickname para jogar</div>
       </div>
@@ -20,6 +34,46 @@
       <hr id="menuDivider">
       <button id="btnHowToPlay">Como jogar</button>
       <div id="onlineCount">● <span id="onlineCountValue">--</span> jogador(es) online</div>
+    </div>
+  </div>
+
+  <div id="authOverlay">
+    <div class="modal">
+      <div id="authHeader">
+        <h2 id="authTitle">Entrar</h2>
+        <button id="btnAuthClose" type="button" title="Fechar (Esc)" aria-label="Fechar">✕</button>
+      </div>
+      <form id="authForm" novalidate>
+        <div class="auth-field" id="authFieldName">
+          <label for="authName">Nome do jogador</label>
+          <input type="text" id="authName" maxlength="20" autocomplete="nickname" placeholder="Como você aparece na arena">
+        </div>
+        <div class="auth-field" id="authFieldEmail">
+          <label for="authEmail">E-mail</label>
+          <input type="email" id="authEmail" autocomplete="email" placeholder="voce@exemplo.com">
+        </div>
+        <div class="auth-field" id="authFieldPassword">
+          <label for="authPassword">Senha</label>
+          <input type="password" id="authPassword" autocomplete="current-password" placeholder="Mínimo de 8 caracteres">
+        </div>
+        <button type="submit" id="btnAuthSubmit">Entrar</button>
+      </form>
+      <div id="authFeedback"></div>
+      <div id="authLinks">
+        <button type="button" id="btnAuthForgot" class="link-button">Esqueci minha senha</button>
+        <button type="button" id="btnAuthSwitch" class="link-button">Criar conta</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="profileOverlay">
+    <div class="modal">
+      <div id="profileHeader">
+        <h2>Suas partidas</h2>
+        <button id="btnProfileClose" type="button" title="Fechar (Esc)" aria-label="Fechar">✕</button>
+      </div>
+      <div id="profileSummary"></div>
+      <div id="profileBody"></div>
     </div>
   </div>
 

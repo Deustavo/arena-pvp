@@ -10,12 +10,21 @@ import { render } from './render.js';
 import { initNicknameInput, commitNickname } from './nickname.js';
 import { initOnlineClassSelect, openOnlineClassSelect } from './onlineClassSelect.js';
 import { initBotClassSelect, openBotClassSelect } from './botClassSelect.js';
+import { initAuthScreens, atualizarBarraDeConta } from './authScreens.js';
+import { initProfile } from './profile.js';
+import { loadSession } from './auth.js';
 
 initTutorialUI();
 initInput();
 initNicknameInput();
 initOnlineClassSelect();
 initBotClassSelect();
+initAuthScreens();
+initProfile();
+
+// Restaura a sessão do token guardado. Não bloqueia a tela: o menu já aparece
+// como convidado e troca para o estado logado quando a resposta chega.
+loadSession().then(atualizarBarraDeConta);
 
 btnOnline.addEventListener('click', () => {
   if (!commitNickname()) return;

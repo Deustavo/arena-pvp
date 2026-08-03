@@ -1080,6 +1080,354 @@
     max-width: calc(100vw - 32px);
     box-sizing: border-box;
   }
+
+  /* ----- Conta: barra do menu e modal de entrar/criar conta ----- */
+  #accountBar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    min-height: 20px;
+  }
+  #accountLoggedIn, #accountLoggedOut {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+    color: #9a9ab0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  /* Logado: o nome fica numa linha e as ações na linha de baixo. */
+  #accountLoggedIn {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  #accountActions {
+    display: flex;
+    gap: 12px;
+  }
+  #accountName {
+    color: #eee;
+  }
+  .account-sep {
+    color: #6b6b80;
+  }
+  #menu button.link-button, .link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    width: auto;
+    font-size: 14px;
+    color: #7fb2d0;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  #menu button.link-button:hover, .link-button:hover {
+    background: none;
+    color: #a9d2e8;
+  }
+  #authOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #authOverlay.visible {
+    display: flex;
+  }
+  #authOverlay .modal {
+    background: #2b2b3d;
+    border: 2px solid #555;
+    border-radius: 10px;
+    padding: 20px 24px;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #authHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  #authHeader h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  #btnAuthClose {
+    width: 26px;
+    height: 26px;
+    min-width: 0;
+    padding: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #9a9ab0;
+    font-size: 15px;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+  }
+  #btnAuthClose:hover {
+    background: #3d3d52;
+    color: #fff;
+  }
+  #authForm {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .auth-field label {
+    font-size: 13px;
+    color: #9a9ab0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .auth-field input {
+    font-size: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 2px solid #444;
+    background: #22222f;
+    color: #eee;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .auth-field input:focus {
+    outline: none;
+    border-color: #457b9d;
+  }
+  .auth-field input:disabled {
+    opacity: 0.5;
+  }
+  #authFeedback, #resetFeedback {
+    display: none;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+  #authFeedback.visible, #resetFeedback.visible {
+    display: block;
+  }
+  #authFeedback.erro, #resetFeedback.erro {
+    background: rgba(230, 57, 70, 0.15);
+    color: #ff8b93;
+  }
+  #authFeedback.sucesso, #resetFeedback.sucesso {
+    background: rgba(42, 157, 92, 0.15);
+    color: #7fd8a4;
+  }
+  #btnAuthSubmit, #btnResetSubmit {
+    font-size: 18px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #2a9d5c;
+    color: #fff;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #btnAuthSubmit:hover, #btnResetSubmit:hover {
+    background: #23854e;
+  }
+  #btnAuthSubmit:disabled, #btnResetSubmit:disabled {
+    background: #3d5a49;
+    color: #9a9ab0;
+    cursor: default;
+  }
+  #authLinks {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ----- Histórico de partidas ----- */
+  #profileOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #profileOverlay.visible {
+    display: flex;
+  }
+  #profileOverlay .modal {
+    background: #2b2b3d;
+    border: 2px solid #555;
+    border-radius: 10px;
+    padding: 20px 24px;
+    width: 460px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #profileHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  #profileHeader h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  #btnProfileClose {
+    width: 26px;
+    height: 26px;
+    min-width: 0;
+    padding: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #9a9ab0;
+    font-size: 15px;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+  }
+  #btnProfileClose:hover {
+    background: #3d3d52;
+    color: #fff;
+  }
+  #profileSummary {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  #profileSummary:empty {
+    display: none;
+  }
+  .resumo-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+    min-width: 60px;
+  }
+  .resumo-item strong {
+    font-size: 20px;
+  }
+  .resumo-item span {
+    font-size: 11px;
+    color: #9a9ab0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .resultado-vitoria { color: #7fd8a4; }
+  .resultado-derrota { color: #ff8b93; }
+  .resultado-empate  { color: #d0c07f; }
+  #profileBody {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .lista-partidas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .partida {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "resultado oponente data"
+      "resultado classes  data";
+    column-gap: 10px;
+    align-items: center;
+    background: #22222f;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .partida-resultado {
+    grid-area: resultado;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  .partida-oponente {
+    grid-area: oponente;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+  .partida-classes {
+    grid-area: classes;
+    font-size: 11px;
+    color: #9a9ab0;
+  }
+  .partida-data {
+    grid-area: data;
+    font-size: 11px;
+    color: #9a9ab0;
+    white-space: nowrap;
+  }
+  .profile-vazio {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #9a9ab0;
+    text-align: center;
+  }
+
+  /* ----- Página isolada (redefinição de senha) ----- */
+  body.standalone-page {
+    justify-content: flex-start;
+    padding: 48px 16px;
+    box-sizing: border-box;
+  }
+  .standalone-card {
+    width: 360px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: #2b2b3d;
+    border: 2px solid #555;
+    border-radius: 12px;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  .standalone-card h1 {
+    margin: 0;
+    font-size: 24px;
+    text-align: center;
+  }
+  .standalone-card h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #9a9ab0;
+    text-align: center;
+    font-weight: normal;
+  }
+  .standalone-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #resetBackLink {
+    text-align: center;
+    font-size: 14px;
+    color: #7fb2d0;
+  }
+
   @media (max-width: 700px) {
     #menu button:not(.class-card) {
       min-width: 0;
