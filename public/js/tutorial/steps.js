@@ -18,7 +18,7 @@ const CLASS_LIST = [CLASSES.atirador, CLASSES.mago, CLASSES.tank];
 export const TUTORIAL_STEPS = [
   {
     title: '1. Escolha sua classe',
-    text: 'Antes de cada partida você escolhe entre <strong>Atirador</strong>, <strong>Mago</strong> e <strong>Tank</strong>. Cada uma tem vidas, dano, escudo e alcance de tiro diferentes.',
+    text: 'Cada uma tem vidas, dano, escudo e alcance de tiro diferentes.',
     loop: 3600,
     draw(t) {
       const slot = Math.floor(t / 1200) % CLASS_LIST.length;
@@ -38,8 +38,8 @@ export const TUTORIAL_STEPS = [
     },
   },
   {
-    title: '2. Mover o boneco',
-    text: 'Use <strong>W A S D</strong> ou as <strong>setas</strong> do teclado. As teclas podem ser combinadas para andar na diagonal.',
+    title: '2. Mover o personagem',
+    text: 'Use <strong>W A S D</strong> ou as <strong>setas</strong> do teclado.',
     loop: 4400,
     draw(t) {
       const path = [[52, 70], [130, 70], [130, 122], [52, 122]];
@@ -62,7 +62,7 @@ export const TUTORIAL_STEPS = [
   },
   {
     title: '3. Atirar no oponente',
-    text: 'Clique em qualquer ponto da arena: o tiro sai do seu quadrado na direção do cursor. O intervalo entre tiros, o alcance e o formato do disparo dependem da classe escolhida.',
+    text: 'Clique em qualquer ponto da arena para disparar um projetil.',
     loop: 2600,
     draw(t) {
       const target = { x: 268, y: 46 };
@@ -90,7 +90,7 @@ export const TUTORIAL_STEPS = [
   },
   {
     title: '4. Vidas por classe',
-    text: 'A quantidade de vidas depende da classe escolhida. Todo tiro que acerta tira uma vida do adversário — os corações no topo da tela mostram quanto resta.',
+    text: 'A quantidade de vidas depende da classe escolhida.',
     loop: 3400,
     draw(t) {
       const me = { x: 40, y: 96 };
@@ -117,7 +117,7 @@ export const TUTORIAL_STEPS = [
   },
   {
     title: '5. Campo de força',
-    text: 'Segure <strong>Espaço</strong> para erguer o campo de força e absorver tiros até esgotar suas cargas — o número de cargas depende da classe. Enquanto defende você fica <strong>imóvel e sem atirar</strong>.',
+    text: 'Segure <strong>Espaço</strong> para erguer o campo de força e absorver tiros até esgotar suas cargas.',
     loop: 3400,
     draw(t) {
       const me = { x: 60, y: 82 };

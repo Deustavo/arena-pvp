@@ -1019,7 +1019,7 @@
   }
   #tutText {
     margin: 0;
-    height: 100px;
+    height: 56px;
     overflow-y: auto;
     font-size: 14px;
     line-height: 1.55;
@@ -1066,15 +1066,27 @@
     flex: 1;
   }
   #btnTutPrev {
-    background: #444;
+    background: #555;
   }
   #btnTutPrev:hover {
-    background: #383846;
+    background: #444;
   }
   #btnTutPrev:disabled {
     background: #333340;
     color: #666;
     cursor: default;
+  }
+  #howToPlayOverlay #btnTutSkip {
+    width: 100%;
+    margin-top: 4px;
+    padding: 4px;
+    background: transparent;
+    color: #9a9ab0;
+    text-decoration: underline;
+  }
+  #howToPlayOverlay #btnTutSkip:hover {
+    background: transparent;
+    color: #fff;
   }
   #botClassOverlay .modal, #howToPlayOverlay .modal {
     max-width: calc(100vw - 32px);

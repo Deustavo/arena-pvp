@@ -79,6 +79,7 @@ export const tutTitleEl = document.getElementById('tutTitle');
 export const tutTextEl = document.getElementById('tutText');
 export const tutDotsEl = document.getElementById('tutDots');
 export const tutStepCountEl = document.getElementById('tutStepCount');
+export const btnTutSkip = document.getElementById('btnTutSkip');
 export const btnTutPrev = document.getElementById('btnTutPrev');
 export const btnTutNext = document.getElementById('btnTutNext');
 export const btnTutClose = document.getElementById('btnTutClose');
