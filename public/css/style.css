@@ -236,6 +236,9 @@
     height: 3px;
     background: currentColor;
   }
+  .heart.half .heart-pixel-right {
+    color: #555;
+  }
   .heart.blink {
     animation: heartBlink 0.4s steps(1, start) 3;
   }

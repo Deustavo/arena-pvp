@@ -53,7 +53,9 @@ export function createHeartEl(pixelSize = HEART_PIXEL_SIZE) {
   heart.style.height = `${6 * pixelSize}px`;
   for (const [row, col] of HEART_PIXELS) {
     const px = document.createElement('div');
-    px.className = 'heart-pixel';
+    // Metade esquerda/direita separadas para permitir colorir só a metade
+    // direita em cinza quando o jogador perde meio coração (dano fracionário).
+    px.className = col <= 3 ? 'heart-pixel heart-pixel-left' : 'heart-pixel heart-pixel-right';
     px.style.width = `${pixelSize}px`;
     px.style.height = `${pixelSize}px`;
     px.style.left = `${col * pixelSize}px`;
@@ -152,11 +154,19 @@ function updateHeartsRow(row, lives, rawIndex) {
   const hearts = heartsEls[row];
   if (!hearts.length) return;
   const prev = prevLives[row];
+  const wholeLives = Math.floor(lives);
+  // Dano fracionário (ex.: duelista tira meio coração por tiro) deixa `lives`
+  // com resto 0.5 — nesse caso o coração no índice `wholeLives` fica "half"
+  // em vez de cheio ou totalmente perdido.
+  const hasHalf = lives - wholeLives >= 0.5;
   for (let i = 0; i < hearts.length; i++) {
-    hearts[i].classList.toggle('lost', i >= lives);
+    const lost = i >= wholeLives + (hasHalf ? 1 : 0);
+    const half = hasHalf && i === wholeLives;
+    hearts[i].classList.toggle('lost', lost);
+    hearts[i].classList.toggle('half', half);
   }
   if (lives < prev) {
-    for (let i = lives; i < prev; i++) {
+    for (let i = wholeLives; i < Math.ceil(prev); i++) {
       if (hearts[i]) triggerHeartBlink(hearts[i]);
     }
     hitFlashUntil[rawIndex] = Date.now() + HIT_FLASH_DURATION;
