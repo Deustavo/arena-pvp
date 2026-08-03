@@ -68,6 +68,28 @@ export function screenXToWorld(x) {
   return state.viewFlipped ? state.arena.w - x : x;
 }
 
+// Decide, uma única vez no início da partida, se a cena deve ser espelhada
+// para o jogador local sempre começar do lado esquerdo da tela. Chamado só
+// ao iniciar a partida (não a cada frame) para o espelhamento não ficar indo
+// e voltando conforme os jogadores se cruzam durante o jogo.
+export function computeInitialViewFlip(players, playerIndex) {
+  if (playerIndex === null) return false;
+  const opp = players[playerIndex === 0 ? 1 : 0];
+  const me = players[playerIndex];
+  if (!me || !opp) return false;
+  return me.x > opp.x;
+}
+
+// `state.input.left`/`right` refletem as teclas físicas (A/D, setas) tal
+// como o jogador as vê na tela. Quando a cena está espelhada (viewFlipped),
+// "esquerda na tela" corresponde a "direita no mundo" — então a física
+// (local e do servidor) precisa receber left/right trocados, senão os
+// controles horizontais saem invertidos para quem começou do lado direito.
+export function getWorldInput() {
+  if (!state.viewFlipped) return state.input;
+  return { ...state.input, left: state.input.right, right: state.input.left };
+}
+
 // Reseta os campos de uma sessão de partida (chamado ao entrar em uma nova
 // partida ou voltar ao menu). Efeitos colaterais de DOM ficam por conta de
 // quem chama.

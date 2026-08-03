@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, computeInitialViewFlip, getWorldInput } from './state.js';
 import {
   ARENA, PLAYER_SIZE, TICK_MS, PROJECTILE_SPEED, SHIELD_RADIUS, PROJECTILE_SIZE,
 } from '../../shared/constants.js';
@@ -58,6 +58,7 @@ export function startBot() {
   };
 
   state.latestState = { players: snapshotPlayers(state.bot.players), projectiles: [] };
+  state.viewFlipped = computeInitialViewFlip(state.bot.players, state.playerIndex);
   state.shieldMaxHits = state.bot.players.map((p) => p.shieldMaxHits);
   initHearts(state.bot.players.map((p) => p.lives));
   updateHud();
@@ -188,7 +189,7 @@ function botTick() {
   if (state.gameOver || !state.bot) return;
   const bot = state.bot;
 
-  bot.players[0].input = { ...state.input };
+  bot.players[0].input = getWorldInput();
   bot.players[0].shielding = state.input.shield && bot.players[0].shieldHits < bot.players[0].shieldMaxHits;
   updateBotAI();
 

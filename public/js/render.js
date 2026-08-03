@@ -145,18 +145,6 @@ function drawPlayers(renderState, now) {
   }
 }
 
-// Decide se a cena deve ser espelhada nesta frame: verdadeiro quando o
-// jogador local está fisicamente à direita do adversário na arena.
-function computeViewFlip(renderState) {
-  if (state.playerIndex === null) return false;
-  const oppIndex = state.playerIndex === 0 ? 1 : 0;
-  let me = renderState.players[state.playerIndex];
-  const opp = renderState.players[oppIndex];
-  if (!me || !opp) return false;
-  if (state.mode === 'online' && state.predicted.initialized) me = { ...me, x: state.predicted.x };
-  return me.x > opp.x;
-}
-
 function drawProjectiles(renderState) {
   for (const proj of renderState.projectiles) {
     const size = proj.size ?? state.projectileSize;
@@ -185,8 +173,11 @@ export function render() {
     } else {
       if (state.mode === 'online') advancePrediction();
       const renderState = getRenderState();
-      state.viewFlipped = computeViewFlip(renderState);
 
+      // state.viewFlipped é decidido uma única vez no início da partida (ver
+      // network.js/bot.js) com base na posição inicial dos jogadores — não é
+      // recalculado a cada frame, senão a tela inverteria toda vez que os
+      // jogadores se cruzassem, o que é muito confuso.
       ctx.save();
       if (state.viewFlipped) {
         ctx.translate(canvas.width, 0);

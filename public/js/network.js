@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, computeInitialViewFlip, getWorldInput } from './state.js';
 import { SHIELD_RADIUS } from '../../shared/constants.js';
 import { canvas } from './dom.js';
 import {
@@ -65,6 +65,7 @@ function handleOnlineMessage(msg, onBackToMenu) {
       state.gameOver = false;
       state.matchStarted = false;
       state.latestState = { players: msg.players, projectiles: [] };
+      state.viewFlipped = computeInitialViewFlip(msg.players, state.playerIndex);
       initHearts(msg.players.map((p) => p.lives));
       updateHud();
       updateGameScale();
@@ -100,7 +101,7 @@ function handleOnlineMessage(msg, onBackToMenu) {
 
 export function sendInput() {
   if (state.mode === 'online' && state.ws && state.ws.readyState === WebSocket.OPEN && state.playerIndex !== null) {
-    state.ws.send(JSON.stringify({ type: 'input', ...state.input }));
+    state.ws.send(JSON.stringify({ type: 'input', ...getWorldInput() }));
   }
 }
 

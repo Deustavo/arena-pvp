@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, getWorldInput } from './state.js';
 import { clamp, movementDelta } from '../../shared/physics.js';
 import { PLAYER_SPEED, TICK_MS } from '../../shared/constants.js';
 import { getClass } from '../../shared/classes.js';
@@ -41,7 +41,7 @@ export function advancePrediction() {
   const maxHits = me.shieldMaxHits ?? state.shieldMaxHits[state.playerIndex];
   if (state.input.shield && me.shieldHits < maxHits) return;
 
-  const { dx, dy } = movementDelta(state.input);
+  const { dx, dy } = movementDelta(getWorldInput());
   const speed = me.speed ?? getClass(me.classId).speed ?? PLAYER_SPEED;
   const speedPerMs = speed / TICK_MS;
   state.predicted.x = clamp(state.predicted.x + dx * speedPerMs * dt, 0, state.arena.w - state.playerSize);
