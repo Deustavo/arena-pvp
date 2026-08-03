@@ -4,6 +4,7 @@ import { isShieldAvailable } from './hud.js';
 import { sendInput, sendShoot } from './network.js';
 import { botShoot } from './bot.js';
 import { backToMenu } from './menu.js';
+import { rerollWinnerEmoji } from './gameOver.js';
 
 const keyMap = {
   KeyW: 'up', ArrowUp: 'up',
@@ -91,7 +92,12 @@ export function initInput() {
   });
 
   canvas.addEventListener('click', (e) => {
-    if (!state.mode || state.gameOver || !state.matchStarted) return;
+    if (!state.mode) return;
+    if (state.gameOver) {
+      rerollWinnerEmoji();
+      return;
+    }
+    if (!state.matchStarted) return;
     // Em modo de defesa o jogador não atira.
     if (state.input.shield && isShieldAvailable()) return;
     const rect = canvas.getBoundingClientRect();

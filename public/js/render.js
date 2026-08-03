@@ -97,6 +97,19 @@ function drawPlayerIndicatorArrow(cx, topY, now) {
   ctx.restore();
 }
 
+// O canvas pode estar espelhado (state.viewFlipped) por causa da rotação da
+// cena — sem desfazer isso localmente, o emoji sairia invertido.
+function drawWinnerEmoji(cx, topY) {
+  ctx.save();
+  ctx.translate(cx, topY);
+  if (state.viewFlipped) ctx.scale(-1, 1);
+  ctx.font = '28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(state.winnerEmoji, 0, 0);
+  ctx.restore();
+}
+
 function drawPlayers(renderState, now) {
   for (let i = 0; i < renderState.players.length; i++) {
     let p = renderState.players[i];
@@ -125,6 +138,9 @@ function drawPlayers(renderState, now) {
       ctx.fillStyle = classColor;
     }
     ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
+    if (state.gameOver && state.winnerEmoji && i === state.winnerIndex) {
+      drawWinnerEmoji(p.x + ox + state.playerSize / 2, p.y + oy - 6);
+    }
     if (i === state.playerIndex) {
       ctx.strokeStyle = OWN_PLAYER_BORDER_COLOR;
       ctx.lineWidth = 2;

@@ -412,25 +412,31 @@
   #gameOverOverlay button:hover, #waitingOverlay button:hover {
     background: #3a6a89;
   }
-  #gameOverOverlay button#btnBackToMenu, #waitingOverlay button#btnLeaveQueue {
+  #waitingOverlay button#btnLeaveQueue {
     background: #555;
   }
-  #gameOverOverlay button#btnBackToMenu:hover, #waitingOverlay button#btnLeaveQueue:hover {
+  #waitingOverlay button#btnLeaveQueue:hover {
     background: #444;
+  }
+  #gameOverOverlay button#btnBackToMenu {
+    background: transparent;
+    border: 2px solid #555;
+    font-size: 14px;
+    padding: 8px 18px;
+  }
+  #gameOverOverlay button#btnBackToMenu:hover {
+    background: #3d3d52;
+    border-color: #777;
   }
   #waitingOverlay button#btnTryTrainingMode {
     display: none;
   }
   #gameOverOverlay button#btnSwapClasses {
     display: none;
-    background: transparent;
-    border: 2px solid #555;
-    font-size: 14px;
-    padding: 8px 18px;
+    background: #555;
   }
   #gameOverOverlay button#btnSwapClasses:hover {
-    background: #3d3d52;
-    border-color: #777;
+    background: #444;
   }
   #onlineCount {
     margin-top: 4px;

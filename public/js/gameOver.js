@@ -1,11 +1,32 @@
 import { gameOverOverlayEl, gameOverMessageEl, btnSwapClasses } from './dom.js';
 import { state } from './state.js';
 
+const WINNER_EMOJIS = ['😆', '🤣', '😂', '😅', '😘', '😜', '🤪', '😢', '🤫', '😹', '👻', '🤡', '👀'];
+
+function randomWinnerEmoji() {
+  return WINNER_EMOJIS[Math.floor(Math.random() * WINNER_EMOJIS.length)];
+}
+
+// Troca o emoji exibido sobre o vencedor por outro aleatório — chamado a
+// cada clique na tela enquanto o overlay de fim de jogo estiver ativo.
+export function rerollWinnerEmoji() {
+  if (state.winnerIndex === null) return;
+  state.winnerEmoji = randomWinnerEmoji();
+}
+
 export function recordGameOver(result) {
   state.gameOver = true;
   state.gameOverAt = Date.now();
   state.overlayShown = false;
   state.lastResult = result;
+  if (result === 'win') {
+    state.winnerIndex = state.playerIndex;
+  } else if (result === 'lose') {
+    state.winnerIndex = state.playerIndex === 0 ? 1 : 0;
+  } else {
+    state.winnerIndex = null;
+  }
+  state.winnerEmoji = state.winnerIndex !== null ? randomWinnerEmoji() : null;
 }
 
 export function showGameOverOverlay() {
