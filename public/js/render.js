@@ -1,5 +1,5 @@
 import { ctx, canvas } from './dom.js';
-import { state } from './state.js';
+import { state, screenXToWorld } from './state.js';
 import { isShieldAvailable, hitFlashUntil, updateCooldownBars } from './hud.js';
 import { advancePrediction, getRenderState } from './prediction.js';
 import { updateAndDrawExplosions } from './explosions.js';
@@ -48,7 +48,7 @@ const INFINITE_PREVIEW_LENGTH = 2000;
 // e mesmo alcance da classe do jogador.
 function drawShotPreview(cx, cy, classId) {
   const cls = getClass(classId);
-  const dx = state.mouse.x - cx;
+  const dx = screenXToWorld(state.mouse.x) - cx;
   const dy = state.mouse.y - cy;
   const baseAngle = Math.atan2(dy, dx);
   const count = Math.max(1, cls.projectileCount);
@@ -145,6 +145,18 @@ function drawPlayers(renderState, now) {
   }
 }
 
+// Decide se a cena deve ser espelhada nesta frame: verdadeiro quando o
+// jogador local está fisicamente à direita do adversário na arena.
+function computeViewFlip(renderState) {
+  if (state.playerIndex === null) return false;
+  const oppIndex = state.playerIndex === 0 ? 1 : 0;
+  let me = renderState.players[state.playerIndex];
+  const opp = renderState.players[oppIndex];
+  if (!me || !opp) return false;
+  if (state.mode === 'online' && state.predicted.initialized) me = { ...me, x: state.predicted.x };
+  return me.x > opp.x;
+}
+
 function drawProjectiles(renderState) {
   for (const proj of renderState.projectiles) {
     const size = proj.size ?? state.projectileSize;
@@ -173,9 +185,18 @@ export function render() {
     } else {
       if (state.mode === 'online') advancePrediction();
       const renderState = getRenderState();
+      state.viewFlipped = computeViewFlip(renderState);
+
+      ctx.save();
+      if (state.viewFlipped) {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
       drawPlayers(renderState, now);
       drawProjectiles(renderState);
       updateAndDrawExplosions(now);
+      ctx.restore();
+
       updateCooldownBars(now);
     }
   }

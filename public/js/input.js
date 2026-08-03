@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, screenXToWorld } from './state.js';
 import { canvas, escHintEl } from './dom.js';
 import { isShieldAvailable } from './hud.js';
 import { sendInput, sendShoot } from './network.js';
@@ -97,7 +97,7 @@ export function initInput() {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const targetX = (e.clientX - rect.left) * scaleX;
+    const targetX = screenXToWorld((e.clientX - rect.left) * scaleX);
     const targetY = (e.clientY - rect.top) * scaleY;
 
     if (state.mode === 'online') {

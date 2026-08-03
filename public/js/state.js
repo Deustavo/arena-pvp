@@ -54,7 +54,19 @@ export const state = {
 
   input: { up: false, down: false, left: false, right: false, shield: false },
   mouse: { x: 0, y: 0 },
+
+  // Se o jogador local está do lado direito do adversário, a cena inteira é
+  // espelhada horizontalmente na renderização para que ele sempre apareça à
+  // esquerda na tela (ver render.js). A posição/física reais não mudam.
+  viewFlipped: false,
 };
+
+// Converte uma coordenada X de tela/canvas (ex: posição do mouse) para o
+// espaço de mundo usado pela simulação, desfazendo o espelhamento aplicado
+// na renderização quando `viewFlipped` está ativo.
+export function screenXToWorld(x) {
+  return state.viewFlipped ? state.arena.w - x : x;
+}
 
 // Reseta os campos de uma sessão de partida (chamado ao entrar em uma nova
 // partida ou voltar ao menu). Efeitos colaterais de DOM ficam por conta de
@@ -80,4 +92,5 @@ export function resetMatchState() {
   state.lastResult = null;
   state.prevAlive = [true, true];
   state.explosionParticles = [];
+  state.viewFlipped = false;
 }
