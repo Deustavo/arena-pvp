@@ -22,7 +22,7 @@ export function showGameOverOverlay() {
     text = 'Partida encerrada';
   }
   gameOverMessageEl.textContent = text;
-  btnSwapClasses.style.display = state.mode === 'bot' ? 'block' : 'none';
+  btnSwapClasses.style.display = (state.mode === 'bot' || state.mode === 'online') ? 'block' : 'none';
   gameOverOverlayEl.style.display = 'flex';
 }
 

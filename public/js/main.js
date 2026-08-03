@@ -33,7 +33,10 @@ btnPlayAgain.addEventListener('click', () => {
   else if (state.mode === 'bot') startBot();
 });
 btnBackToMenu.addEventListener('click', () => backToMenu());
-btnSwapClasses.addEventListener('click', () => openBotClassSelect(startBot));
+btnSwapClasses.addEventListener('click', () => {
+  if (state.mode === 'online') openOnlineClassSelect(startOnline);
+  else openBotClassSelect(startBot);
+});
 
 showMenu();
 requestAnimationFrame(render);
