@@ -105,6 +105,36 @@ conecta event listeners de UI aos módulos.
 - `tutorial/` — tutorial interativo desenhado em canvas próprio (`canvasHelpers.js`,
   `steps.js`, `tutorial.js`).
 
+### Espelhamento de visão (jogador sempre à esquerda)
+
+O jogador local sempre vê a si mesmo do lado esquerdo da tela, mesmo quando a posição
+inicial dele na arena (mundo) é do lado direito. Isso é puramente visual: a física e as
+posições reais em `shared/` nunca são espelhadas, só a renderização e a interpretação
+do input/mouse do jogador local.
+
+- `state.viewFlipped` (`public/js/state.js`) é decidido **uma única vez**, no início da
+  partida (`network.js` no `case 'init'`, ou `bot.js` em `startBot`), comparando a
+  posição X inicial do jogador local com a do oponente via `computeInitialViewFlip`.
+  Ele **não** é recalculado a cada frame — se fosse, a tela inverteria toda vez que os
+  jogadores se cruzassem em X durante a partida, o que é muito confuso para quem está
+  jogando.
+- `render.js` aplica `ctx.translate`/`ctx.scale(-1, 1)` em volta de todo o desenho do
+  mundo (jogadores, projéteis, escudo, explosões, prévia de mira) quando `viewFlipped`
+  é `true`. HUD (nomes, vidas, cooldown) fica fora do canvas e nunca é afetado — o slot
+  "P0" do HUD é sempre o jogador local, independente do `playerIndex` real.
+- `screenXToWorld` (`state.js`) desfaz o espelhamento para converter posição de
+  tela/mouse em coordenada de mundo — usado na prévia de mira e no clique de tiro
+  (`input.js`), já que o alvo do tiro precisa ser enviado em coordenadas de mundo.
+- `getWorldInput` (`state.js`) troca `left`/`right` do input antes de alimentar a
+  física, sempre que `viewFlipped` está ativo. `state.input.left/right` refletem a
+  tecla física como o jogador vê na tela (A/D, setas); sem essa troca, quem começa do
+  lado direito da arena teria os controles horizontais invertidos. É usado nos três
+  lugares que alimentam movimento com o input do jogador local: `prediction.js`
+  (predição local, modo online), `network.js` (`sendInput`, o que vai pro servidor) e
+  `bot.js` (simulação local do modo bot).
+- Testes em `test/state.test.js` cobrem `computeInitialViewFlip`, `screenXToWorld` e
+  `getWorldInput`.
+
 ### Convenção de nomes e comentários
 
 O código e os comentários existentes estão em português — siga essa convenção ao
