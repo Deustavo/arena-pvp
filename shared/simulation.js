@@ -55,7 +55,14 @@ export function stepProjectiles(projectiles, players, arena, onPlayerDown) {
       proj.x - size / 2, proj.y - size / 2, size, size,
       target.x, target.y, PLAYER_SIZE, PLAYER_SIZE
     )) {
-      applyDamage(target, proj.damage ?? 1, proj.ownerIndex, onPlayerDown);
+      // Tiro do sniper: dano maior se o projétil percorreu uma distância
+      // longa desde o disparo até acertar o alvo.
+      let damage = proj.damage ?? 1;
+      if (proj.longRangeDistance != null &&
+        Math.hypot(proj.x - proj.startX, proj.y - proj.startY) >= proj.longRangeDistance) {
+        damage = proj.longRangeDamage;
+      }
+      applyDamage(target, damage, proj.ownerIndex, onPlayerDown);
       return false;
     }
 

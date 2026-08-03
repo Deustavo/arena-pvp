@@ -23,7 +23,7 @@ export function createPlayerState(index, classId = DEFAULT_CLASS_ID) {
 
 export function createProjectile(
   id, cx, cy, targetX, targetY, ownerIndex, speed = PROJECTILE_SPEED, damage = 1,
-  size = PROJECTILE_SIZE, range = Infinity
+  size = PROJECTILE_SIZE, range = Infinity, longRangeDistance = null, longRangeDamage = null
 ) {
   let dx = targetX - cx;
   let dy = targetY - cy;
@@ -42,6 +42,9 @@ export function createProjectile(
     damage,
     size,
     range,
+    // Tiro do sniper: dano maior se atingir o alvo longe do ponto de disparo.
+    longRangeDistance,
+    longRangeDamage,
   };
 }
 
@@ -61,7 +64,8 @@ export function createShotProjectiles(nextId, cx, cy, targetX, targetY, ownerInd
     const tx = cx + Math.cos(angle) * 1000;
     const ty = cy + Math.sin(angle) * 1000;
     projectiles.push(createProjectile(
-      id++, cx, cy, tx, ty, ownerIndex, PROJECTILE_SPEED, cls.damage, cls.projectileSize, cls.range
+      id++, cx, cy, tx, ty, ownerIndex, PROJECTILE_SPEED, cls.damage, cls.projectileSize, cls.range,
+      cls.longRangeDistance ?? null, cls.longRangeDamage ?? null
     ));
   }
   return { projectiles, nextId: id };

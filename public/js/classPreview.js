@@ -25,9 +25,9 @@ const WORLD_SPEED_PX_MS = PROJECTILE_SPEED / TICK_MS;
 // varia entre elas.
 const FULL_WIDTH_FLIGHT_MS = ARENA.w / WORLD_SPEED_PX_MS;
 // Distância (em px de mundo) do boneco de treino até o atirador. Fica abaixo
-// do menor alcance entre as classes (mago 320, tank 300) para que o boneco
-// sempre seja alcançado, não importa a classe selecionada.
-const DUMMY_WORLD_DISTANCE = 260;
+// do menor alcance entre as classes (assassino 240, tank 300, mago 320) para
+// que o boneco sempre seja alcançado, não importa a classe selecionada.
+const DUMMY_WORLD_DISTANCE = 220;
 
 const TARGET_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg>';
 
