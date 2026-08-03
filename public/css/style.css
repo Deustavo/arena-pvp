@@ -9,6 +9,12 @@
     font-family: sans-serif;
     color: #eee;
     overflow-x: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
   }
   * {
     scrollbar-width: thin;
