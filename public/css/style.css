@@ -297,7 +297,28 @@
   #countdownOverlay {
     background: rgba(43, 43, 61, 0.85);
   }
+  #countdownOverlay h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #bbb;
+  }
+  #countdownMatchup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-size: 72px;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+  }
+  #countdownVs {
+    font-size: 32px;
+    font-weight: normal;
+    color: #999;
+  }
   #countdownNumber {
+    font-family: 'Courier New', 'Consolas', monospace;
     font-size: 120px;
     font-weight: bold;
     color: #4ade80;

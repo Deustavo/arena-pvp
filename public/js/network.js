@@ -68,7 +68,7 @@ function handleOnlineMessage(msg, onBackToMenu) {
       initHearts(msg.players.map((p) => p.lives));
       updateHud();
       updateGameScale();
-      showCountdown(msg.countdownMs);
+      showCountdown(msg.countdownMs, msg.players.map((p) => p.name));
       break;
     case 'start':
       state.matchStarted = true;

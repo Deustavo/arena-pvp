@@ -63,7 +63,7 @@ export function startBot() {
   updateHud();
   updateGameScale();
 
-  showCountdown(BOT_COUNTDOWN_MS, () => {
+  showCountdown(BOT_COUNTDOWN_MS, [state.nickname || 'Você', BOT_NAME], () => {
     state.matchStarted = true;
     playStartSound();
     state.bot.botNextShot = Date.now() + 800;

@@ -37,6 +37,8 @@ export const noOpponentsMessageEl = document.getElementById('noOpponentsMessage'
 export const btnTryTrainingMode = document.getElementById('btnTryTrainingMode');
 
 export const countdownOverlayEl = document.getElementById('countdownOverlay');
+export const countdownName1El = document.getElementById('countdownName1');
+export const countdownName2El = document.getElementById('countdownName2');
 export const countdownNumberEl = document.getElementById('countdownNumber');
 
 export const btnHowToPlay = document.getElementById('btnHowToPlay');

@@ -1,8 +1,9 @@
 import {
-  waitingOverlayEl, countdownOverlayEl, countdownNumberEl,
+  waitingOverlayEl, countdownOverlayEl, countdownName1El, countdownName2El, countdownNumberEl,
   noOpponentsMessageEl, btnTryTrainingMode,
 } from './dom.js';
 import { state } from './state.js';
+import { playCountdownBeep } from './audio.js';
 
 export function showWaitingOverlay() {
   waitingOverlayEl.style.display = 'flex';
@@ -26,11 +27,14 @@ export function hideNoOpponentsMessage() {
   btnTryTrainingMode.style.display = 'none';
 }
 
-export function showCountdown(ms, onDone) {
+export function showCountdown(ms, playerNames, onDone) {
   hideWaitingOverlay();
   hideCountdown();
   countdownOverlayEl.style.display = 'flex';
+  countdownName1El.textContent = playerNames?.[0] ?? '';
+  countdownName2El.textContent = playerNames?.[1] ?? '';
   const endAt = Date.now() + ms;
+  let lastSec = null;
   const tick = () => {
     const remaining = endAt - Date.now();
     const secs = Math.ceil(remaining / 1000);
@@ -41,6 +45,10 @@ export function showCountdown(ms, onDone) {
       return;
     }
     countdownNumberEl.textContent = secs;
+    if (secs !== lastSec) {
+      lastSec = secs;
+      playCountdownBeep();
+    }
     state.countdownTimer = setTimeout(tick, 100);
   };
   tick();
