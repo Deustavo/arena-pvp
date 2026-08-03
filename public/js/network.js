@@ -9,6 +9,7 @@ import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
 import { reconcilePrediction } from './prediction.js';
 import { BACKEND_HOST } from './config.js';
+import { updateGameScale } from './gameScale.js';
 
 // Chamado após qualquer atualização de estado que possa esgotar o escudo:
 // se o servidor sinalizar que as cargas acabaram, solta a tecla localmente.
@@ -66,6 +67,7 @@ function handleOnlineMessage(msg, onBackToMenu) {
       state.latestState = { players: msg.players, projectiles: [] };
       initHearts(msg.players.map((p) => p.lives));
       updateHud();
+      updateGameScale();
       showCountdown(msg.countdownMs);
       break;
     case 'start':

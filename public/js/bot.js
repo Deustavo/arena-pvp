@@ -10,6 +10,7 @@ import { updateHud, isShieldAvailable, initHearts } from './hud.js';
 import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
 import { getBotDifficulty } from '../../shared/botDifficulty.js';
+import { updateGameScale } from './gameScale.js';
 
 const BOT_COUNTDOWN_MS = 3000;
 
@@ -60,6 +61,7 @@ export function startBot() {
   state.shieldMaxHits = state.bot.players.map((p) => p.shieldMaxHits);
   initHearts(state.bot.players.map((p) => p.lives));
   updateHud();
+  updateGameScale();
 
   showCountdown(BOT_COUNTDOWN_MS, () => {
     state.matchStarted = true;

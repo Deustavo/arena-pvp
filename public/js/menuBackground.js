@@ -225,6 +225,7 @@ export function stopMenuBackground() {
     cancelAnimationFrame(rafId);
     rafId = null;
   }
+  bgCtx.clearRect(0, 0, arena.w, arena.h);
 }
 
 window.addEventListener('resize', () => {
