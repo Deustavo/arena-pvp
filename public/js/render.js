@@ -12,6 +12,33 @@ const OWN_PLAYER_BORDER_COLOR = '#facc15';
 const OWN_SHOT_COLOR = '#facc15';
 const AIM_PREVIEW_COLOR = '#9ca3af';
 
+// Fundo e borda da arena são desenhados dentro do canvas, e não via CSS: o
+// #game-wrap inteiro recebe um transform: scale() menor que 1 (gameScale.js)
+// para caber na tela, e uma borda CSS fina acabava reduzida a uma fração de
+// pixel de tela, virando um cinza quase invisível dependendo do tamanho da
+// janela. Desenhada em pixels de canvas ela escala junto com a arena e nunca
+// desaparece.
+const ARENA_BG_COLOR = '#242437';
+const ARENA_BORDER_COLOR = '#8f8fb4';
+const ARENA_BORDER_WIDTH = 4;
+
+function drawArenaBackground() {
+  ctx.fillStyle = ARENA_BG_COLOR;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+// Desenhada por último e sempre, mesmo no fim de partida (que pinta o canvas
+// inteiro por cima). O inset de metade da espessura mantém o traço todo dentro
+// do canvas, sem meia borda cortada.
+function drawArenaBorder() {
+  const inset = ARENA_BORDER_WIDTH / 2;
+  ctx.save();
+  ctx.strokeStyle = ARENA_BORDER_COLOR;
+  ctx.lineWidth = ARENA_BORDER_WIDTH;
+  ctx.strokeRect(inset, inset, canvas.width - ARENA_BORDER_WIDTH, canvas.height - ARENA_BORDER_WIDTH);
+  ctx.restore();
+}
+
 function drawShield(cx, cy, charges, maxHits, now) {
   if (charges <= 0) return;
   const pulse = 1 + Math.sin(now / 120) * 0.03;
@@ -178,6 +205,7 @@ function drawProjectiles(renderState) {
 
 export function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawArenaBackground();
 
   if (state.mode) {
     const now = Date.now();
@@ -207,6 +235,8 @@ export function render() {
       updateCooldownBars(now);
     }
   }
+
+  drawArenaBorder();
 
   requestAnimationFrame(render);
 }

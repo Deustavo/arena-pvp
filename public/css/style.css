@@ -366,8 +366,14 @@
   }
   canvas {
     background: #2b2b3d;
-    border: 2px solid #555;
+    border: none;
     display: block;
+  }
+  /* Só o fundo inicial, antes do primeiro frame: o fundo e a borda da arena
+     são desenhados dentro do canvas (render.js), porque uma borda CSS fina
+     desaparece com o transform: scale() do #game-wrap. */
+  #game {
+    background: #242437;
   }
   #canvas-wrap {
     position: relative;
