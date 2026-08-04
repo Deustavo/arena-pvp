@@ -116,7 +116,7 @@ describe('tickBot', () => {
     bot.x = 400;
     bot.y = 300;
     match.projectiles.push({
-      id: 'p1', ownerIndex: 0, x: bot.x - 100, y: bot.y + PLAYER_SIZE / 2, size: 8,
+      id: 'p1', ownerIndex: 0, x: bot.x - 100, y: bot.y + PLAYER_SIZE / 2, size: 8, vx: 5,
     });
     mock.method(Math, 'random', () => 0); // < dodgeChance (1 no demoníaco) => desvia
     tickBot(match);
@@ -130,7 +130,7 @@ describe('tickBot', () => {
     bot.x = 400;
     bot.y = 300;
     match.projectiles.push({
-      id: 'p1', ownerIndex: 0, x: bot.x - 100, y: bot.y + PLAYER_SIZE / 2, size: 8,
+      id: 'p1', ownerIndex: 0, x: bot.x - 100, y: bot.y + PLAYER_SIZE / 2, size: 8, vx: 5,
     });
     mock.method(Math, 'random', () => 0.99); // > dodgeChance (0.2 no noob) => não desvia
     tickBot(match);
@@ -143,7 +143,7 @@ describe('tickBot', () => {
     bot.x = 400;
     bot.y = 300;
     match.projectiles.push({
-      id: 'p1', ownerIndex: 0, x: bot.x + PLAYER_SIZE / 2 - 25, y: bot.y + PLAYER_SIZE / 2, size: 8,
+      id: 'p1', ownerIndex: 0, x: bot.x + PLAYER_SIZE / 2 - 25, y: bot.y + PLAYER_SIZE / 2, size: 8, vx: 5,
     });
     mock.method(Math, 'random', () => 0); // shieldChance do demoníaco é 1 => sempre escuda
     tickBot(match);
@@ -157,7 +157,7 @@ describe('tickBot', () => {
     bot.y = 300;
     bot.shieldHits = bot.shieldMaxHits;
     match.projectiles.push({
-      id: 'p1', ownerIndex: 0, x: bot.x + PLAYER_SIZE / 2 - 5, y: bot.y + PLAYER_SIZE / 2, size: 8,
+      id: 'p1', ownerIndex: 0, x: bot.x + PLAYER_SIZE / 2 - 5, y: bot.y + PLAYER_SIZE / 2, size: 8, vx: 5,
     });
     mock.method(Math, 'random', () => 0);
     tickBot(match);

@@ -10,6 +10,10 @@ import { updateHud, isShieldAvailable, initHearts } from './hud.js';
 import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
 import { getBotDifficulty } from '../../shared/botDifficulty.js';
+import {
+  createBotAiState, computeBotMovement, computeAimTarget, markAttack,
+  classDodgeChance, classShieldChance, findIncomingThreat,
+} from '../../shared/botStrategy.js';
 import { updateGameScale } from './gameScale.js';
 import { shouldStartMatchTutorial, startMatchTutorial, isMatchTutorialActive } from './tutorial/matchTutorial.js';
 import { atualizarCronometro, resetMatchTimer } from './matchTimer.js';
@@ -54,12 +58,7 @@ export function startBot() {
     nextProjectileId: 1,
     botNextShot: 0,
     difficulty: getBotDifficulty(state.botDifficulty),
-    aimTargetY: null,
-    nextAimUpdate: 0,
-    dodgeDecisions: new Map(),
-    shieldDecisions: new Map(),
-    prevMeX: null,
-    prevMeY: null,
+    ...createBotAiState(),
     // Igual ao servidor: o tempo regulamentar só começa quando a contagem
     // regressiva termina.
     cronometro: null,
@@ -92,25 +91,8 @@ export function stopBot() {
 }
 
 function botAttack(bot, me, enemy) {
-  const cx = enemy.x + PLAYER_SIZE / 2;
-  const cy = enemy.y + PLAYER_SIZE / 2;
   const diff = bot.difficulty;
-
-  let targetX = me.x + PLAYER_SIZE / 2;
-  let targetY = me.y + PLAYER_SIZE / 2;
-
-  // Mira preditiva: projeta a posição do jogador com base na velocidade
-  // estimada (tick anterior), no tempo que o projétil levaria para chegar.
-  if (diff.predictive && bot.prevMeX !== null) {
-    const velX = me.x - bot.prevMeX;
-    const velY = me.y - bot.prevMeY;
-    const travelTicks = Math.hypot(targetX - cx, targetY - cy) / PROJECTILE_SPEED;
-    targetX += velX * travelTicks;
-    targetY += velY * travelTicks;
-  }
-
-  targetX += (Math.random() - 0.5) * diff.aimSpread;
-  targetY += (Math.random() - 0.5) * diff.aimSpread;
+  const { cx, cy, targetX, targetY } = computeAimTarget(diff, enemy, me, bot);
 
   const { projectiles, nextId } = createShotProjectiles(
     bot.nextProjectileId, cx, cy, targetX, targetY, 1, enemy.classId
@@ -118,6 +100,7 @@ function botAttack(bot, me, enemy) {
   bot.nextProjectileId = nextId;
   bot.projectiles.push(...projectiles);
   enemy.lastShot = Date.now();
+  markAttack(enemy.classId, bot, Date.now());
 }
 
 function updateBotAI() {
@@ -130,19 +113,11 @@ function updateBotAI() {
   const enemyCls = getClass(enemy.classId);
   const diff = bot.difficulty;
 
-  // Simple tracking: keep vertical alignment with player, keep desired horizontal distance.
-  if (Number.isFinite(enemyCls.range)) {
-    // Alcance curto (tank): aproxima-se até ficar dentro do alcance do tiro.
-    const dxToPlayer = (me.x + PLAYER_SIZE / 2) - (enemy.x + PLAYER_SIZE / 2);
-    const preferredRange = enemyCls.range - 30;
-    enemy.input.left = dxToPlayer < preferredRange - 10;
-    enemy.input.right = dxToPlayer > preferredRange + 10;
-  } else {
-    const desiredX = ARENA.w - 100 - PLAYER_SIZE;
-    const dx = desiredX - enemy.x;
-    enemy.input.left = dx < -2;
-    enemy.input.right = dx > 2;
-  }
+  // Posicionamento (aproximar, manter distância ou recuar) segue a
+  // estratégia própria da classe do bot — ver shared/botStrategy.js.
+  const movement = computeBotMovement(enemy.classId, enemyCls, enemy, me, bot, now);
+  enemy.input.left = movement.left;
+  enemy.input.right = movement.right;
 
   // Alinhamento vertical: bots fracos só "reparam" na posição do jogador de
   // tempos em tempos (reactionDelayMs) e miram com erro (trackingErrorPx);
@@ -158,11 +133,10 @@ function updateBotAI() {
   // Desvia de tiros próximos. A decisão de desviar é tomada uma única vez
   // por projétil (não a cada tick), senão até uma chance baixa acaba quase
   // sempre acertando ao longo dos vários ticks em que o tiro fica "próximo".
-  const incoming = bot.projectiles.find((p) => p.ownerIndex === 0 &&
-    Math.abs(p.y - (enemy.y + PLAYER_SIZE / 2)) < 60 && p.x < enemy.x && p.x > enemy.x - 250);
+  const incoming = findIncomingThreat(enemy, bot.projectiles);
   if (incoming) {
     if (!bot.dodgeDecisions.has(incoming.id)) {
-      bot.dodgeDecisions.set(incoming.id, Math.random() < diff.dodgeChance);
+      bot.dodgeDecisions.set(incoming.id, Math.random() < classDodgeChance(enemyCls, diff));
     }
     if (bot.dodgeDecisions.get(incoming.id)) {
       enemy.input.up = enemy.y > 40;
@@ -184,7 +158,7 @@ function updateBotAI() {
   let willShield = false;
   if (veryClose) {
     if (!bot.shieldDecisions.has(incoming.id)) {
-      bot.shieldDecisions.set(incoming.id, Math.random() < diff.shieldChance);
+      bot.shieldDecisions.set(incoming.id, Math.random() < classShieldChance(enemyCls, diff));
     }
     willShield = bot.shieldDecisions.get(incoming.id);
   }
@@ -257,8 +231,8 @@ function botTick() {
     stopBot();
   });
 
-  bot.prevMeX = meXBeforeStep;
-  bot.prevMeY = meYBeforeStep;
+  bot.prevPlayerX = meXBeforeStep;
+  bot.prevPlayerY = meYBeforeStep;
 
   // Descarta decisões de desvio/escudo de projéteis que já sumiram, para
   // os mapas não crescerem sem limite ao longo da partida.

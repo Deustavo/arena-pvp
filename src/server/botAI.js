@@ -1,53 +1,38 @@
 // IA do bot usado em partidas online quando não há oponente humano disponível
 // (ver matchmaking.js). Espelha a lógica do modo treino local
 // (public/js/bot.js), adaptada à estrutura de uma partida no servidor — aqui
-// o bot ocupa sempre o slot de índice 1 (o segundo jogador da partida).
+// o bot ocupa sempre o slot de índice 1 (o segundo jogador da partida). A
+// estratégia de posicionamento/ataque por classe vive em
+// `shared/botStrategy.js`, fonte única para servidor e cliente.
 import {
-  ARENA, PLAYER_SIZE, PROJECTILE_SPEED, PROJECTILE_SIZE, SHIELD_RADIUS,
+  PLAYER_SIZE, PROJECTILE_SIZE, SHIELD_RADIUS, PROJECTILE_SPEED,
 } from '../../shared/constants.js';
 import { getClass } from '../../shared/classes.js';
 import { createShotProjectiles } from '../../shared/entities.js';
 import { getBotDifficulty } from '../../shared/botDifficulty.js';
+import {
+  createBotAiState, computeBotMovement, computeAimTarget, markAttack,
+  classDodgeChance, classShieldChance, findIncomingThreat,
+} from '../../shared/botStrategy.js';
 
 export function createBotState(difficultyId) {
   return {
     difficulty: getBotDifficulty(difficultyId),
     nextShotAt: Date.now() + 800,
-    aimTargetY: null,
-    nextAimUpdate: 0,
-    dodgeDecisions: new Map(),
-    shieldDecisions: new Map(),
-    prevPlayerX: null,
-    prevPlayerY: null,
+    ...createBotAiState(),
   };
 }
 
 function botAttack(match, diff, player, bot) {
   const state = match.botState;
-  const cx = bot.x + PLAYER_SIZE / 2;
-  const cy = bot.y + PLAYER_SIZE / 2;
-
-  let targetX = player.x + PLAYER_SIZE / 2;
-  let targetY = player.y + PLAYER_SIZE / 2;
-
-  // Mira preditiva: projeta a posição do jogador com base na velocidade
-  // estimada (tick anterior), no tempo que o projétil levaria para chegar.
-  if (diff.predictive && state.prevPlayerX !== null) {
-    const velX = player.x - state.prevPlayerX;
-    const velY = player.y - state.prevPlayerY;
-    const travelTicks = Math.hypot(targetX - cx, targetY - cy) / PROJECTILE_SPEED;
-    targetX += velX * travelTicks;
-    targetY += velY * travelTicks;
-  }
-
-  targetX += (Math.random() - 0.5) * diff.aimSpread;
-  targetY += (Math.random() - 0.5) * diff.aimSpread;
+  const { cx, cy, targetX, targetY } = computeAimTarget(diff, bot, player, state);
 
   const { projectiles, nextId } = createShotProjectiles(
     match.nextProjectileId, cx, cy, targetX, targetY, 1, bot.classId
   );
   match.nextProjectileId = nextId;
   match.projectiles.push(...projectiles);
+  markAttack(bot.classId, state, Date.now());
 }
 
 // Atualiza o input/mira/escudo do bot e dispara quando necessário. Deve ser
@@ -62,18 +47,9 @@ export function tickBot(match) {
   const botCls = getClass(bot.classId);
   const diff = state.difficulty;
 
-  if (Number.isFinite(botCls.range)) {
-    // Alcance curto (tank): aproxima-se até ficar dentro do alcance do tiro.
-    const dxToPlayer = (player.x + PLAYER_SIZE / 2) - (bot.x + PLAYER_SIZE / 2);
-    const preferredRange = botCls.range - 30;
-    bot.input.left = dxToPlayer < preferredRange - 10;
-    bot.input.right = dxToPlayer > preferredRange + 10;
-  } else {
-    const desiredX = ARENA.w - 100 - PLAYER_SIZE;
-    const dx = desiredX - bot.x;
-    bot.input.left = dx < -2;
-    bot.input.right = dx > 2;
-  }
+  const movement = computeBotMovement(bot.classId, botCls, bot, player, state, now);
+  bot.input.left = movement.left;
+  bot.input.right = movement.right;
 
   if (state.aimTargetY === null || now >= state.nextAimUpdate) {
     state.aimTargetY = player.y + (Math.random() - 0.5) * diff.trackingErrorPx;
@@ -84,11 +60,10 @@ export function tickBot(match) {
   bot.input.down = dy > 4;
 
   // Desvia de tiros próximos (decisão travada por projétil, não por tick).
-  const incoming = match.projectiles.find((p) => p.ownerIndex === 0 &&
-    Math.abs(p.y - (bot.y + PLAYER_SIZE / 2)) < 60 && p.x < bot.x && p.x > bot.x - 250);
+  const incoming = findIncomingThreat(bot, match.projectiles);
   if (incoming) {
     if (!state.dodgeDecisions.has(incoming.id)) {
-      state.dodgeDecisions.set(incoming.id, Math.random() < diff.dodgeChance);
+      state.dodgeDecisions.set(incoming.id, Math.random() < classDodgeChance(botCls, diff));
     }
     if (state.dodgeDecisions.get(incoming.id)) {
       bot.input.up = bot.y > 40;
@@ -104,7 +79,7 @@ export function tickBot(match) {
   let willShield = false;
   if (veryClose) {
     if (!state.shieldDecisions.has(incoming.id)) {
-      state.shieldDecisions.set(incoming.id, Math.random() < diff.shieldChance);
+      state.shieldDecisions.set(incoming.id, Math.random() < classShieldChance(botCls, diff));
     }
     willShield = state.shieldDecisions.get(incoming.id);
   }

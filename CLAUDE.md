@@ -50,9 +50,22 @@ Arquivos principais de `shared/`:
 - `constants.js` — dimensões de arena, tamanhos, velocidades, TICK_MS, etc.
 - `classes.js` — as três classes jogáveis (atirador, mago, tank) com seus stats
   (dano, cooldown, alcance, escudo, ícone SVG). Fonte única para servidor, bot e menu.
-- `botDifficulty.js` — perfis de dificuldade do bot (noob/intermediário/demoníaco):
+- `botDifficulty.js` — perfis de dificuldade do bot (noob/intermediário/difícil/demoníaco):
   mira, tempo de reação, chance de desviar/escudar. Chances de desviar/escudar são
   decididas uma única vez por projétil-ameaça, não a cada tick.
+- `botStrategy.js` — estratégia de posicionamento/ataque por **classe** do bot
+  (independente da dificuldade acima): tanque pressiona de perto, mago se mantém a
+  meio-alcance para aproveitar o leque de projéteis, duelista e sniper mantêm
+  distância (o sniper especificamente recua se o jogador entrar no raio abaixo do
+  bônus de dano de longa distância), e o assassino faz hit-and-run — foge por
+  `ASSASSINO_RETREAT_MS` depois de cada tiro em vez de ficar parado no alcance do
+  troco. Também decide a preferência entre desviar e escudar: classes com só 1 carga
+  de escudo (`shieldMaxHits <= 1`) preferem desviar em vez de arriscar a única
+  chance de bloqueio. `findIncomingThreat` acha o projétil-ameaça olhando o sinal
+  de `vx` do projétil (não a posição relativa ao bot), então funciona nos dois
+  lados da arena — o bot detecta e reage a tiros vindo de qualquer direção, não só
+  de quando o adversário está à sua esquerda. Fonte única para `src/server/botAI.js`
+  e `public/js/bot.js`.
 - `physics.js` — colisões (retângulos, escudo circular), clamp, delta de movimento.
 - `simulation.js` — `stepPlayers`/`stepProjectiles`: um tick de simulação completo
   (movimento + colisão + dano). É literalmente a mesma função chamada a 60hz pelo
@@ -78,7 +91,10 @@ Arquivos principais de `shared/`:
   chamando `stepPlayers`/`stepProjectiles` de `shared/simulation.js`, e faz broadcast
   do estado (`type: 'state'`) para os dois sockets a cada tick.
 - `botAI.js` — IA usada quando `match.bot === true` (oponente sem jogador humano
-  real), aplicada dentro do tick de `Match.js` antes de `stepPlayers`.
+  real), aplicada dentro do tick de `Match.js` antes de `stepPlayers`. O
+  posicionamento/ataque por classe vem de `shared/botStrategy.js`; este arquivo só
+  aplica reflexo/mira/desvio conforme a dificuldade (`shared/botDifficulty.js`) e
+  gerencia o cooldown de tiro.
 
 ### Autenticação e contas (`src/server/auth.js`, `db.js`, `email.js`, `schema.js`)
 
