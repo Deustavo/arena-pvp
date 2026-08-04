@@ -6,6 +6,7 @@ import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { getOnlineCount } from './wsServer.js';
 import { auth } from './auth.js';
 import { getHistory, getSummary } from './matchHistory.js';
+import { getRanking } from './ranking.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, '..', '..');
@@ -42,6 +43,12 @@ export function createHttpServer() {
         return;
       }
       authHandler(req, res);
+      return;
+    }
+
+    if (req.url === '/api/ranking') {
+      res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
+      serveRanking(req, res);
       return;
     }
 
@@ -87,6 +94,20 @@ async function serveMatchHistory(req, res) {
   } catch (erro) {
     console.error('[historico] falha ao consultar:', erro.message);
     json(500, { error: 'Não foi possível carregar o histórico' });
+  }
+}
+
+// Ranking global de contas por vitórias. Público (mesma política do
+// online-count): não expõe nada sensível, só nome e contagem de vitórias.
+async function serveRanking(req, res) {
+  try {
+    const ranking = await getRanking();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ranking }));
+  } catch (erro) {
+    console.error('[ranking] falha ao consultar:', erro.message);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Não foi possível carregar o ranking' }));
   }
 }
 

@@ -86,6 +86,8 @@ export const btnTutClose = document.getElementById('btnTutClose');
 
 export const onlineCountValueEl = document.getElementById('onlineCountValue');
 
+export const rankingListEl = document.getElementById('rankingList');
+
 export const classListEl = document.getElementById('classList');
 export const classPreviewEl = document.getElementById('classPreview');
 export const classDetailsEl = document.getElementById('classDetails');
