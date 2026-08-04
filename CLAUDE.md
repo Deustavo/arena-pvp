@@ -165,7 +165,11 @@ conecta event listeners de UI aos módulos.
   jogador do ranking abre o perfil **dele** (`abrirPerfilDeJogador`, rota
   pública, sem token); o botão "Perfil" da barra de conta abre o próprio
   (rota autenticada). O clique usa delegação no `<ol>`, porque a lista é
-  reescrita inteira a cada poll.
+  reescrita inteira a cada poll. O modal também mostra as **3 classes mais
+  usadas nas últimas 20 partidas**, derivadas no cliente do próprio histórico
+  já carregado (a rota devolve 20 partidas) — a conta fica em
+  `profileStats.js`, que é puro e testado (`test/profileStats.test.js`), sem
+  DOM nem rede.
 - `overlays.js`, `gameOver.js`, `hud.js` — overlays de espera/contagem regressiva/fim
   de jogo e HUD (vidas, cooldown, escudo).
 - `tutorial/matchTutorial.js` — único tutorial do jogo (o antigo modal explicativo

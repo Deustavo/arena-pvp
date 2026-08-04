@@ -39,6 +39,7 @@ export const btnProfile = document.getElementById('btnProfile');
 export const profileOverlayEl = document.getElementById('profileOverlay');
 export const profileTitleEl = document.getElementById('profileTitle');
 export const profileSummaryEl = document.getElementById('profileSummary');
+export const profileClassesEl = document.getElementById('profileClasses');
 export const profileBodyEl = document.getElementById('profileBody');
 export const btnProfileClose = document.getElementById('btnProfileClose');
 

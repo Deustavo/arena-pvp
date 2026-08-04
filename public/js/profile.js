@@ -4,12 +4,13 @@
 // contra bot não são gravadas, então não aparecem aqui.
 
 import {
-  profileOverlayEl, profileTitleEl, profileSummaryEl, profileBodyEl,
+  profileOverlayEl, profileTitleEl, profileSummaryEl, profileClassesEl, profileBodyEl,
   btnProfile, btnProfileClose,
 } from './dom.js';
 import { BACKEND_URL } from './config.js';
 import { getToken } from './auth.js';
 import { getClass } from '../../shared/classes.js';
+import { topClassesUsadas, PARTIDAS_CONSIDERADAS } from './profileStats.js';
 
 const RESULTADOS = {
   win: { texto: 'Vitória', classe: 'resultado-vitoria' },
@@ -46,6 +47,30 @@ function renderResumo({ wins, losses, draws, total }) {
   `;
 }
 
+// Top 3 classes mais usadas nas últimas partidas. Sai do próprio histórico já
+// carregado (que vem limitado às últimas 20), sem pedir nada a mais à API.
+function renderClassesMaisUsadas(matches) {
+  const top = topClassesUsadas(matches);
+  if (top.length === 0) {
+    profileClassesEl.innerHTML = '';
+    return;
+  }
+
+  const itens = top.map(({ classId, total }) => {
+    const cls = getClass(classId);
+    return `<li class="classe-usada">
+      <span class="class-icon" style="--class-color: ${cls.color}">${cls.icon}</span>
+      <span class="classe-usada-nome">${escaparHtml(cls.name)}</span>
+      <span class="classe-usada-total">${total} ${total === 1 ? 'partida' : 'partidas'}</span>
+    </li>`;
+  });
+
+  profileClassesEl.innerHTML = `
+    <h3 class="profile-subtitulo">Classes mais usadas (últimas ${PARTIDAS_CONSIDERADAS} partidas)</h3>
+    <ul class="lista-classes-usadas">${itens.join('')}</ul>
+  `;
+}
+
 function renderPartidas(matches, vazioTexto) {
   if (matches.length === 0) {
     profileBodyEl.innerHTML = `<p class="profile-vazio">${vazioTexto}</p>`;
@@ -78,15 +103,18 @@ function escaparHtml(texto) {
 async function carregar(perfil) {
   profileTitleEl.textContent = perfil.titulo;
   profileSummaryEl.innerHTML = '';
+  profileClassesEl.innerHTML = '';
   profileBodyEl.innerHTML = '<p class="profile-vazio">Carregando...</p>';
   try {
     const res = await fetch(perfil.url, { headers: perfil.headers });
     if (!res.ok) throw new Error('resposta inválida');
     const { matches, summary } = await res.json();
     renderResumo(summary);
+    renderClassesMaisUsadas(matches);
     renderPartidas(matches, perfil.vazio);
   } catch {
     profileSummaryEl.innerHTML = '';
+    profileClassesEl.innerHTML = '';
     profileBodyEl.innerHTML = `<p class="profile-vazio">${perfil.erro}</p>`;
   }
 }

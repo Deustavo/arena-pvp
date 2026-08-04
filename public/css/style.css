@@ -1395,6 +1395,45 @@
   .resultado-vitoria { color: #7fd8a4; }
   .resultado-derrota { color: #ff8b93; }
   .resultado-empate  { color: #d0c07f; }
+  #profileClasses:empty {
+    display: none;
+  }
+  .profile-subtitulo {
+    margin: 0 0 8px;
+    font-size: 11px;
+    color: #9a9ab0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .lista-classes-usadas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 8px;
+  }
+  .classe-usada {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: #22222f;
+    border-radius: 8px;
+    padding: 8px 6px;
+  }
+  .classe-usada .class-icon {
+    background: #1c1c28;
+  }
+  .classe-usada-nome {
+    font-size: 13px;
+    font-weight: bold;
+  }
+  .classe-usada-total {
+    font-size: 11px;
+    color: #9a9ab0;
+  }
   #profileBody {
     max-height: 320px;
     overflow-y: auto;
