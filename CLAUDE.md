@@ -106,6 +106,12 @@ como antes (nickname digitado no menu). O planejamento completo está em
   outra conta (`/api/player/matches?name=...`, resolvido por
   `findUserIdByName`). Nas duas rotas o id nunca vem do cliente: no perfil
   próprio vem da sessão, no público vem do nome.
+  As duas rotas são **paginadas** por `limit`/`offset` (`parsePaginacao`, pura e
+  testada: padrão 20, teto de 50, valor inválido cai no padrão) e devolvem
+  `{ matches, hasMore, summary }`. `getHistory` pede uma linha além do limite
+  para calcular `hasMore` sem um `COUNT(*)` extra, e `summary` só vem na
+  primeira página (`offset === 0`) — nas seguintes é `null`, porque o resumo já
+  está na tela e não muda com o scroll.
 - `ranking.js` — ranking global por vitórias (`GET /api/ranking`, público).
 - `scripts/seed-mock.mjs` (`npm run db:seed`) — contas e partidas de mock para
   ter o que olhar no ranking e nos perfis em desenvolvimento. Aborta se o banco
@@ -176,9 +182,15 @@ conecta event listeners de UI aos módulos.
   jogador do ranking abre o perfil **dele** (`abrirPerfilDeJogador`, rota
   pública, sem token); o botão "Perfil" da barra de conta abre o próprio
   (rota autenticada). O clique usa delegação no `<ol>`, porque a lista é
-  reescrita inteira a cada poll. O modal também mostra as **3 classes mais
-  usadas nas últimas 20 partidas**, derivadas no cliente do próprio histórico
-  já carregado (a rota devolve 20 partidas) — a conta fica em
+  reescrita inteira a cada poll. A lista de partidas é **infinite scroll**: abre
+  com as últimas 20 e pede a próxima página quando o scroll do `#profileBody`
+  chega perto do fim (`hasMore` da rota diz se ainda há mais). Cada abertura de
+  perfil tem um id (`aberturaAtual`) para descartar respostas atrasadas de um
+  perfil já fechado ou de outro jogador, e `garantirListaRolavel` puxa mais
+  quando a lista ainda não é alta o bastante para gerar scroll. O modal também
+  mostra as **3 classes mais usadas nas últimas 20 partidas**, derivadas no
+  cliente da **primeira página** do histórico (não muda conforme o scroll
+  carrega partidas mais antigas) — a conta fica em
   `profileStats.js`, que é puro e testado (`test/profileStats.test.js`), sem
   DOM nem rede.
 - `overlays.js`, `gameOver.js`, `hud.js` — overlays de espera/contagem regressiva/fim

@@ -5,7 +5,9 @@ import { fileURLToPath } from 'url';
 import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { getOnlineCount } from './wsServer.js';
 import { auth } from './auth.js';
-import { getHistory, getSummary, findUserIdByName } from './matchHistory.js';
+import {
+  getHistory, getSummary, findUserIdByName, parsePaginacao,
+} from './matchHistory.js';
 import { getRanking } from './ranking.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -92,11 +94,7 @@ async function serveMatchHistory(req, res) {
       json(401, { error: 'Não autenticado' });
       return;
     }
-    const [matches, summary] = await Promise.all([
-      getHistory(session.user.id),
-      getSummary(session.user.id),
-    ]);
-    json(200, { matches, summary });
+    json(200, await paginaDoHistorico(session.user.id, req.url));
   } catch (erro) {
     console.error('[historico] falha ao consultar:', erro.message);
     json(500, { error: 'Não foi possível carregar o histórico' });
@@ -130,15 +128,30 @@ async function servePlayerProfile(req, res) {
       json(404, { error: 'Jogador não encontrado' });
       return;
     }
-    const [matches, summary] = await Promise.all([
-      getHistory(userId),
-      getSummary(userId),
-    ]);
-    json(200, { matches, summary });
+    json(200, await paginaDoHistorico(userId, req.url));
   } catch (erro) {
     console.error('[perfil] falha ao consultar:', erro.message);
     json(500, { error: 'Não foi possível carregar o perfil' });
   }
+}
+
+// Payload comum das duas rotas de perfil: uma página do histórico (paginada por
+// `limit`/`offset` na query string) e, só na primeira página, o resumo de
+// vitórias/derrotas. Nas páginas seguintes o resumo vem null porque o cliente
+// já o tem na tela — não faz sentido reconsultar a cada scroll.
+async function paginaDoHistorico(userId, url) {
+  const params = new URL(url, 'http://localhost').searchParams;
+  const { limite, offset } = parsePaginacao({
+    limit: params.get('limit'),
+    offset: params.get('offset'),
+  });
+
+  const [pagina, summary] = await Promise.all([
+    getHistory(userId, { limite, offset }),
+    offset === 0 ? getSummary(userId) : null,
+  ]);
+
+  return { matches: pagina.matches, hasMore: pagina.hasMore, summary };
 }
 
 // Ranking global de contas por vitórias. Público (mesma política do

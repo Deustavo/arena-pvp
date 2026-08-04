@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildMatchRow, shouldRecordMatch } from '../src/server/matchHistory.js';
+import { buildMatchRow, shouldRecordMatch, parsePaginacao } from '../src/server/matchHistory.js';
 
 function jogadores({ userIdA = 'uA', userIdB = 'uB' } = {}) {
   return [
@@ -44,6 +44,34 @@ describe('buildMatchRow', () => {
   test('winnerIndex indefinido é tratado como empate (null)', () => {
     const linha = buildMatchRow(jogadores(), undefined);
     assert.equal(linha.winnerIndex, null);
+  });
+});
+
+describe('parsePaginacao', () => {
+  test('sem parâmetros usa a primeira página de 20 partidas', () => {
+    assert.deepEqual(parsePaginacao(), { limite: 20, offset: 0 });
+    assert.deepEqual(parsePaginacao({}), { limite: 20, offset: 0 });
+  });
+
+  test('lê limit/offset da query string (strings)', () => {
+    assert.deepEqual(parsePaginacao({ limit: '10', offset: '40' }), { limite: 10, offset: 40 });
+  });
+
+  test('limite acima do teto é preso em 50', () => {
+    assert.deepEqual(parsePaginacao({ limit: '5000' }), { limite: 50, offset: 0 });
+  });
+
+  test('valores negativos ou zerados não viram consulta inválida', () => {
+    assert.deepEqual(parsePaginacao({ limit: '0', offset: '-5' }), { limite: 1, offset: 0 });
+  });
+
+  test('valor não numérico ou vazio cai no padrão', () => {
+    assert.deepEqual(parsePaginacao({ limit: 'abc', offset: '' }), { limite: 20, offset: 0 });
+    assert.deepEqual(parsePaginacao({ limit: null, offset: undefined }), { limite: 20, offset: 0 });
+  });
+
+  test('valor fracionário é truncado', () => {
+    assert.deepEqual(parsePaginacao({ limit: '7.9', offset: '20.5' }), { limite: 7, offset: 20 });
   });
 });
 

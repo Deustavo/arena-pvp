@@ -9,6 +9,27 @@ import { db } from './db.js';
 // completo (ver saveMatchResult).
 
 const LIMITE_PADRAO = 20;
+// Teto por requisição: o perfil só pede LIMITE_PADRAO, mas a rota é pública e
+// o limite vem da query string, então ninguém puxa o histórico inteiro de uma vez.
+const LIMITE_MAXIMO = 50;
+
+// Paginação do histórico: o perfil abre com as últimas LIMITE_PADRAO partidas e
+// pede as próximas conforme o jogador rola a lista. Pura para ser testável, e
+// tolerante a valor inválido (vem da query string): qualquer coisa que não seja
+// número cai no padrão, e o que é número é preso na faixa aceita.
+export function parsePaginacao({ limit, offset } = {}) {
+  return {
+    limite: inteiroNaFaixa(limit, LIMITE_PADRAO, 1, LIMITE_MAXIMO),
+    offset: inteiroNaFaixa(offset, 0, 0, Number.MAX_SAFE_INTEGER),
+  };
+}
+
+function inteiroNaFaixa(valor, padrao, min, max) {
+  if (valor === null || valor === undefined || String(valor).trim() === '') return padrao;
+  const numero = Number(valor);
+  if (!Number.isFinite(numero)) return padrao;
+  return Math.min(Math.max(Math.trunc(numero), min), max);
+}
 
 // Parte pura: monta a linha a gravar. Separada do banco para ser testável.
 // Retorna null se nenhum dos dois jogadores tiver conta.
@@ -78,7 +99,15 @@ const CASE_RESULTADO = `
     ELSE 'loss'
   END`;
 
-export async function getHistory(userId, limite = LIMITE_PADRAO) {
+// Uma página do histórico, da mais recente para a mais antiga. Devolve
+// `{ matches, hasMore }`: para saber se ainda há partidas depois desta página,
+// pede uma linha a mais do que o limite e a descarta — mais barato que um
+// COUNT(*) separado.
+//
+// A paginação é por OFFSET, então uma partida gravada entre dois pedidos
+// desloca a janela e pode repetir uma linha na página seguinte. Para histórico
+// (e no ritmo de uma partida por vez) isso é irrelevante.
+export async function getHistory(userId, { limite = LIMITE_PADRAO, offset = 0 } = {}) {
   const { rows } = await db.execute({
     sql: `SELECT
             CASE WHEN player1_id = ? THEN player2_name ELSE player1_name END AS opponent_name,
@@ -89,16 +118,17 @@ export async function getHistory(userId, limite = LIMITE_PADRAO) {
           FROM matches
          WHERE player1_id = ? OR player2_id = ?
          ORDER BY created_at DESC, id DESC
-         LIMIT ?`,
-    args: [userId, userId, userId, userId, userId, userId, userId, limite],
+         LIMIT ? OFFSET ?`,
+    args: [userId, userId, userId, userId, userId, userId, userId, limite + 1, offset],
   });
-  return rows.map((linha) => ({
+  const matches = rows.slice(0, limite).map((linha) => ({
     opponentName: linha.opponent_name,
     playerClass: linha.player_class,
     opponentClass: linha.opponent_class,
     result: linha.result,
     createdAt: linha.created_at,
   }));
+  return { matches, hasMore: rows.length > limite };
 }
 
 export async function getSummary(userId) {
