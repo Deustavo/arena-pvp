@@ -52,7 +52,7 @@ export function initInput() {
     if (!state.mode) return;
     if (e.code === 'Space') {
       e.preventDefault();
-      if (!state.input.shield && state.matchStarted && !state.gameOver && isShieldAvailable()) {
+      if (!state.input.shield && state.matchStarted && !state.gameOver && !state.desempate && isShieldAvailable()) {
         state.input.shield = true;
         sendInput();
         notifyMatchTutorial('shield');
@@ -60,7 +60,8 @@ export function initInput() {
       return;
     }
     const dir = keyMap[e.code];
-    if (dir && !state.input[dir]) {
+    // No desempate a partida está congelada: mover e atirar não valem mais.
+    if (dir && !state.input[dir] && !state.desempate) {
       state.input[dir] = true;
       sendInput();
       notifyMatchTutorial('move');
@@ -99,7 +100,7 @@ export function initInput() {
       rerollWinnerEmoji();
       return;
     }
-    if (!state.matchStarted) return;
+    if (!state.matchStarted || state.desempate) return;
     // Em modo de defesa o jogador não atira. A regra é aplicada de novo do lado
     // autoritativo (`escudoAtivo` em wsServer/bot); aqui é só para o clique não
     // consumir cooldown nem avançar o tutorial à toa.

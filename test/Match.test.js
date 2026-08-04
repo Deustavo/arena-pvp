@@ -2,6 +2,7 @@ import { test, describe, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { createMatch, endMatch } from '../src/server/Match.js';
 import { COUNTDOWN_MS, TICK_MS } from '../shared/constants.js';
+import { MATCH_DURATION_MS, DESEMPATE_DELAY_MS, DESEMPATE_PASSO_MS } from '../shared/matchTimer.js';
 
 function makeFakeWs({ classId, nickname } = {}) {
   return {
@@ -96,6 +97,127 @@ describe('createMatch', () => {
     // tickBot roda a cada tick e sempre atualiza prevPlayerX/Y ao final.
     assert.notEqual(match.botState.prevPlayerX, null);
     assert.ok(match.projectiles.length > 0);
+  });
+});
+
+describe('cronômetro da partida', () => {
+  beforeEach(() => {
+    mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'] });
+  });
+
+  afterEach(() => {
+    mock.timers.reset();
+  });
+
+  function ultimoState(ws) {
+    return ws.sent.filter((m) => m.type === 'state').at(-1);
+  }
+
+  // Leva a partida até o fim do tempo regulamentar (o cronômetro só começa
+  // depois da contagem regressiva).
+  function avancarAteFimDoTempo() {
+    mock.timers.tick(COUNTDOWN_MS);
+    mock.timers.tick(MATCH_DURATION_MS);
+  }
+
+  // Um passo de dreno por chamada: com os timers mockados, todos os ticks de
+  // um mesmo `mock.timers.tick()` enxergam o mesmo Date.now() (o do fim do
+  // avanço), então um único avanço longo drenaria só um coração.
+  function avancarDrenos(quantidade) {
+    mock.timers.tick(DESEMPATE_DELAY_MS);
+    for (let i = 1; i < quantidade; i++) mock.timers.tick(DESEMPATE_PASSO_MS);
+  }
+
+  test('cada "state" leva o tempo restante, contando para trás', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    createMatch(wsA, wsB);
+
+    mock.timers.tick(COUNTDOWN_MS);
+    mock.timers.tick(TICK_MS);
+    const primeiro = ultimoState(wsA);
+    assert.equal(primeiro.desempate, false);
+    assert.ok(primeiro.remainingMs <= MATCH_DURATION_MS);
+
+    mock.timers.tick(10_000);
+    assert.ok(ultimoState(wsA).remainingMs < primeiro.remainingMs - 9000);
+  });
+
+  test('a partida não acaba sozinha quando o tempo zera: congela em desempate', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    const match = createMatch(wsA, wsB);
+    match.players[0].input = { up: false, down: false, left: false, right: true };
+    const xInicial = match.players[0].x;
+
+    avancarAteFimDoTempo();
+
+    assert.equal(match.running, true);
+    assert.equal(ultimoState(wsA).desempate, true);
+    assert.equal(ultimoState(wsA).remainingMs, 0);
+    // Congelado: o input que estava valendo não move mais ninguém.
+    mock.timers.tick(TICK_MS * 10);
+    assert.equal(match.players[0].x, xInicial);
+  });
+
+  test('no desempate os dois perdem um coração por vez até alguém zerar', () => {
+    const wsA = makeFakeWs({ classId: 'atirador' }); // 9 vidas
+    const wsB = makeFakeWs({ classId: 'mago' }); // 8 vidas
+    const match = createMatch(wsA, wsB);
+
+    avancarAteFimDoTempo();
+    const vidasAntes = match.players.map((p) => p.lives);
+
+    mock.timers.tick(DESEMPATE_DELAY_MS);
+    assert.deepEqual(match.players.map((p) => p.lives), vidasAntes.map((v) => v - 1));
+
+    mock.timers.tick(DESEMPATE_PASSO_MS);
+    assert.deepEqual(match.players.map((p) => p.lives), vidasAntes.map((v) => v - 2));
+  });
+
+  test('quem zera primeiro perde, e o último "state" mostra a morte antes do gameover', () => {
+    const wsA = makeFakeWs({ classId: 'atirador' }); // 9 vidas
+    const wsB = makeFakeWs({ classId: 'mago' }); // 8 vidas
+    const match = createMatch(wsA, wsB);
+
+    avancarAteFimDoTempo();
+    avancarDrenos(8);
+
+    const gameover = wsA.sent.find((m) => m.type === 'gameover');
+    assert.ok(gameover);
+    assert.equal(gameover.winnerIndex, 0);
+    assert.equal(match.running, false);
+    const ultimo = ultimoState(wsA);
+    assert.equal(ultimo.players[1].alive, false);
+    assert.equal(ultimo.players[1].lives, 0);
+  });
+
+  test('vidas iguais zeram no mesmo passo e o gameover é empate (winnerIndex null)', () => {
+    const wsA = makeFakeWs({ classId: 'mago' });
+    const wsB = makeFakeWs({ classId: 'mago' });
+    const match = createMatch(wsA, wsB);
+
+    avancarAteFimDoTempo();
+    avancarDrenos(8);
+
+    const gameover = wsA.sent.find((m) => m.type === 'gameover');
+    assert.equal(gameover.winnerIndex, null);
+    assert.deepEqual(match.players.map((p) => p.alive), [false, false]);
+  });
+
+  test('vitória antes do tempo para o cronômetro junto com a partida', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    const match = createMatch(wsA, wsB);
+    mock.timers.tick(COUNTDOWN_MS);
+    mock.timers.tick(TICK_MS);
+
+    endMatch(match, 0);
+    const restanteNoFim = ultimoState(wsA).remainingMs;
+
+    mock.timers.tick(MATCH_DURATION_MS * 2);
+    assert.equal(ultimoState(wsA).remainingMs, restanteNoFim);
+    assert.equal(wsA.sent.filter((m) => m.type === 'gameover').length, 1);
   });
 });
 

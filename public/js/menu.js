@@ -9,6 +9,7 @@ import { startBot as startBotMatch, stopBot } from './bot.js';
 import { commitNickname } from './nickname.js';
 import { resetEscHint } from './input.js';
 import { resetHud } from './hud.js';
+import { resetMatchTimer } from './matchTimer.js';
 import { openBotClassSelect } from './botClassSelect.js';
 import { updateGameScale } from './gameScale.js';
 import { startMenuBackground, stopMenuBackground } from './menuBackground.js';
@@ -47,6 +48,7 @@ function prepareNewMatch() {
   hideWaitingOverlay();
   hideCountdown();
   resetHud();
+  resetMatchTimer();
   resetEscHint();
   stopMatchTutorial();
   resetMatchTutorialFlag();

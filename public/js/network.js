@@ -12,6 +12,8 @@ import { WS_URL } from './config.js';
 import { getToken } from './auth.js';
 import { updateGameScale } from './gameScale.js';
 import { shouldStartMatchTutorial, startMatchTutorial } from './tutorial/matchTutorial.js';
+import { atualizarCronometro } from './matchTimer.js';
+import { MATCH_DURATION_MS } from '../../shared/matchTimer.js';
 
 // Chamado após qualquer atualização de estado que possa esgotar o escudo:
 // se o servidor sinalizar que as cargas acabaram, solta a tecla localmente.
@@ -83,6 +85,9 @@ function handleOnlineMessage(msg, onBackToMenu) {
       const oppIndex = state.playerIndex === 0 ? 1 : 0;
       initHearts([msg.players[state.playerIndex].lives, msg.players[oppIndex].lives]);
       updateHud();
+      // O tempo regulamentar só começa a correr quando a partida começa, mas
+      // o relógio já aparece cheio durante a contagem regressiva.
+      atualizarCronometro(msg.matchDurationMs ?? MATCH_DURATION_MS, false);
       updateGameScale();
       showCountdown(msg.countdownMs, msg.players.map((p) => p.name));
       break;
@@ -101,6 +106,7 @@ function handleOnlineMessage(msg, onBackToMenu) {
       reconcilePrediction(msg.players[state.playerIndex]);
       releaseExhaustedShield();
       updateHud();
+      atualizarCronometro(msg.remainingMs ?? state.remainingMs, !!msg.desempate);
       break;
     }
     case 'gameover':

@@ -47,6 +47,9 @@ export function showGameOverOverlay() {
   } else if (state.lastResult === 'lose') {
     text = 'Você perdeu';
     gameOverOverlayEl.classList.add('lose');
+  } else if (state.lastResult === 'draw') {
+    // Único jeito de empatar: os dois zerarem no mesmo passo do desempate.
+    text = 'Empate';
   } else {
     text = 'Partida encerrada';
   }

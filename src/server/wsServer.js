@@ -2,6 +2,7 @@ import { WebSocketServer } from 'ws';
 import { PLAYER_SIZE } from '../../shared/constants.js';
 import { createShotProjectiles, escudoAtivo } from '../../shared/entities.js';
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
+import { emDesempate } from '../../shared/matchTimer.js';
 import { handleConnection, handleLeaveQueue, handleDisconnect } from './matchmaking.js';
 import { parseConnectionParams, resolvePlayerIdentity } from './wsIdentity.js';
 import { auth } from './auth.js';
@@ -54,9 +55,11 @@ function handleMessage(ws, raw) {
     return;
   }
 
-  if (msg.type === 'input' && ws.player) {
+  // No desempate a partida está congelada: input e tiro são ignorados até o
+  // fim (ver tickCronometro em shared/matchTimer.js).
+  if (msg.type === 'input' && ws.player && !emDesempate(ws.match?.cronometro)) {
     handleInput(ws, msg);
-  } else if (msg.type === 'shoot' && ws.player && ws.match) {
+  } else if (msg.type === 'shoot' && ws.player && ws.match && !emDesempate(ws.match.cronometro)) {
     handleShoot(ws, msg);
   } else if (msg.type === 'leaveQueue') {
     handleLeaveQueue(ws);

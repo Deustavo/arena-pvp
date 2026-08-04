@@ -8,6 +8,7 @@ import {
 } from '../../shared/constants.js';
 import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 import { DEFAULT_BOT_DIFFICULTY } from '../../shared/botDifficulty.js';
+import { MATCH_DURATION_MS } from '../../shared/matchTimer.js';
 
 export const state = {
   mode: null, // 'online' | 'bot'
@@ -39,6 +40,12 @@ export const state = {
   gameOver: false,
   matchStarted: false,
   countdownTimer: null,
+
+  // Cronômetro da partida (ver shared/matchTimer.js). `desempate` é o estado
+  // de morte súbita depois que o tempo acaba: a partida fica congelada e os
+  // dois jogadores perdem vidas até alguém zerar.
+  remainingMs: MATCH_DURATION_MS,
+  desempate: false,
 
   // Interpolação de entidades (modo online): renderiza um pouco no passado
   // para manter o movimento suave mesmo com jitter de rede.
@@ -116,6 +123,8 @@ export function resetMatchState() {
   state.lastFrameTime = null;
   state.gameOver = false;
   state.matchStarted = false;
+  state.remainingMs = MATCH_DURATION_MS;
+  state.desempate = false;
   state.input.up = state.input.down = state.input.left = state.input.right = state.input.shield = false;
   state.gameOverAt = 0;
   state.overlayShown = false;

@@ -201,6 +201,32 @@ describe('wsServer', () => {
     await wait(20);
   });
 
+  // No desempate (tempo esgotado) a partida fica congelada: nada que o
+  // cliente mandar pode mover ou fazer alguém atirar.
+  test('input e disparo são ignorados durante o desempate', async () => {
+    const serverWsPromise = nextServerConnection(wss);
+    const client = await connectClient(port);
+    const serverWs = await serverWsPromise;
+    serverWs.player = createPlayerState(0, 'atirador');
+    serverWs.player.lastShot = 0;
+    serverWs.match = {
+      nextProjectileId: 1,
+      projectiles: [],
+      interval: 123,
+      cronometro: { fimEm: 0, desempateEm: 1, proximoDreno: 0 },
+    };
+
+    client.send(JSON.stringify({ type: 'input', right: true }));
+    client.send(JSON.stringify({ type: 'shoot', targetX: 500, targetY: 300 }));
+    await wait(30);
+
+    assert.equal(serverWs.player.input.right, false);
+    assert.equal(serverWs.match.projectiles.length, 0);
+
+    client.close();
+    await wait(20);
+  });
+
   test('mensagens JSON inválidas são ignoradas sem derrubar a conexão', async () => {
     const serverWsPromise = nextServerConnection(wss);
     const client = await connectClient(port);

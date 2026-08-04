@@ -12,6 +12,10 @@ import { playStartSound } from './audio.js';
 import { getBotDifficulty } from '../../shared/botDifficulty.js';
 import { updateGameScale } from './gameScale.js';
 import { shouldStartMatchTutorial, startMatchTutorial, isMatchTutorialActive } from './tutorial/matchTutorial.js';
+import { atualizarCronometro, resetMatchTimer } from './matchTimer.js';
+import {
+  criarCronometro, tickCronometro, emDesempate, tempoRestanteMs, adiarFim,
+} from '../../shared/matchTimer.js';
 
 const BOT_COUNTDOWN_MS = 3000;
 
@@ -56,6 +60,9 @@ export function startBot() {
     shieldDecisions: new Map(),
     prevMeX: null,
     prevMeY: null,
+    // Igual ao servidor: o tempo regulamentar só começa quando a contagem
+    // regressiva termina.
+    cronometro: null,
   };
 
   state.latestState = { players: snapshotPlayers(state.bot.players), projectiles: [] };
@@ -63,12 +70,14 @@ export function startBot() {
   state.shieldMaxHits = state.bot.players.map((p) => p.shieldMaxHits);
   initHearts(state.bot.players.map((p) => p.lives));
   updateHud();
+  resetMatchTimer();
   updateGameScale();
 
   showCountdown(BOT_COUNTDOWN_MS, [state.nickname || 'Você', BOT_NAME], () => {
     state.matchStarted = true;
     playStartSound();
     state.bot.botNextShot = Date.now() + 800;
+    state.bot.cronometro = criarCronometro(Date.now());
     state.botInterval = setInterval(botTick, TICK_MS);
     if (shouldStartMatchTutorial()) startMatchTutorial();
   });
@@ -189,9 +198,50 @@ function updateBotAI() {
   }
 }
 
+// winnerIndex vem da simulação (0 = você, 1 = bot) ou do desempate, que usa
+// null para empate.
+function resultadoDoVencedor(winnerIndex) {
+  if (winnerIndex === null) return 'draw';
+  return winnerIndex === 0 ? 'win' : 'lose';
+}
+
+// Fim do tempo regulamentar: a partida congela e os tiros que estavam no ar
+// somem (mesma regra do servidor, ver congelarPartida em Match.js).
+function congelarPartida(bot) {
+  bot.projectiles = [];
+  for (const p of bot.players) {
+    p.input = { up: false, down: false, left: false, right: false };
+    p.shielding = false;
+  }
+}
+
+function publicarEstadoBot(bot) {
+  state.latestState = {
+    players: snapshotPlayers(bot.players),
+    projectiles: bot.projectiles.map((p) => ({ x: p.x, y: p.y, ownerIndex: p.ownerIndex, size: p.size })),
+  };
+  updateHud();
+}
+
 function botTick() {
   if (state.gameOver || !state.bot) return;
   const bot = state.bot;
+
+  // Durante o tutorial o relógio não corre: o jogador está aprendendo os
+  // controles, não disputando a partida.
+  if (isMatchTutorialActive()) adiarFim(bot.cronometro, TICK_MS);
+
+  const evento = tickCronometro(bot.cronometro, bot.players, Date.now());
+  if (evento.iniciouDesempate) congelarPartida(bot);
+  if (emDesempate(bot.cronometro)) {
+    publicarEstadoBot(bot);
+    atualizarCronometro(0, true);
+    if (evento.fim) {
+      recordGameOver(resultadoDoVencedor(evento.winnerIndex));
+      stopBot();
+    }
+    return;
+  }
 
   bot.players[0].input = getWorldInput();
   bot.players[0].shielding = state.input.shield && bot.players[0].shieldHits < bot.players[0].shieldMaxHits;
@@ -202,7 +252,7 @@ function botTick() {
 
   stepPlayers(bot.players, ARENA);
   bot.projectiles = stepProjectiles(bot.projectiles, bot.players, ARENA, (winnerIndex) => {
-    recordGameOver(winnerIndex === 0 ? 'win' : 'lose');
+    recordGameOver(resultadoDoVencedor(winnerIndex));
     stopBot();
   });
 
@@ -215,17 +265,16 @@ function botTick() {
   for (const id of bot.dodgeDecisions.keys()) if (!activeIds.has(id)) bot.dodgeDecisions.delete(id);
   for (const id of bot.shieldDecisions.keys()) if (!activeIds.has(id)) bot.shieldDecisions.delete(id);
 
-  state.latestState = {
-    players: snapshotPlayers(bot.players),
-    projectiles: bot.projectiles.map((p) => ({ x: p.x, y: p.y, ownerIndex: p.ownerIndex, size: p.size })),
-  };
+  publicarEstadoBot(bot);
   if (state.input.shield && !isShieldAvailable()) state.input.shield = false;
-  updateHud();
+  atualizarCronometro(tempoRestanteMs(bot.cronometro, Date.now()), false);
 }
 
 export function botShoot(targetX, targetY) {
   const bot = state.bot;
   if (!bot) return;
+  // Partida congelada no desempate: ninguém atira.
+  if (emDesempate(bot.cronometro)) return;
   const me = bot.players[0];
   if (!me.alive) return;
   // Em modo de defesa o jogador não atira (mas continua podendo se mover).

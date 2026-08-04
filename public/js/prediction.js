@@ -35,6 +35,9 @@ export function advancePrediction() {
   state.lastFrameTime = now;
 
   if (!state.predicted.initialized) return;
+  // No desempate a partida está congelada no servidor: prever movimento aqui
+  // só faria o jogador andar na tela e ser puxado de volta na reconciliação.
+  if (state.desempate) return;
   const me = state.latestState.players[state.playerIndex];
   if (!me || !me.alive) return;
 

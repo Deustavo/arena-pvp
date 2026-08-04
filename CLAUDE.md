@@ -59,6 +59,8 @@ Arquivos principais de `shared/`:
   servidor e pelo loop do bot no cliente.
 - `entities.js` — criação de estado de jogador e projéteis (incluindo leque de
   projéteis do mago via `coneSpreadDeg`).
+- `matchTimer.js` — tempo regulamentar da partida e desempate por morte súbita
+  (ver "Tempo de partida e desempate" abaixo).
 
 ### Servidor (`src/server/`)
 
@@ -260,6 +262,38 @@ do input/mouse do jogador local.
   `bot.js` (simulação local do modo bot).
 - Testes em `test/state.test.js` cobrem `computeInitialViewFlip`, `screenXToWorld` e
   `getWorldInput`.
+
+### Tempo de partida e desempate
+
+Toda partida dura no máximo `MATCH_DURATION_MS` (2 minutos). A contagem e o
+desempate são regra de jogo e vivem em `shared/matchTimer.js`, chamados a cada
+tick pelos dois donos de loop: `Match.js` (online) e `bot.js` (modo treino).
+
+- O cronômetro é criado **quando a partida começa de verdade** (no fim da
+  contagem regressiva), não em `createMatch`/`startBot`.
+- Se alguém vence antes do tempo, o loop para junto com a partida e o relógio
+  simplesmente congela no último valor — não existe estado de "pausa".
+- `tickCronometro` devolve o que aconteceu no tick
+  (`iniciouDesempate`/`drenou`/`fim`/`winnerIndex`) e quem chama decide o que
+  fazer; é a única função que mexe nas vidas fora de `simulation.js`.
+- Acabando o tempo com os dois vivos, entra o **desempate**: a partida congela
+  (`congelarPartida` zera inputs/escudo e descarta os projéteis no ar, para
+  ninguém morrer por um tiro disparado antes), e depois de
+  `DESEMPATE_DELAY_MS` os dois perdem um coração a cada `DESEMPATE_PASSO_MS`.
+  Quem zerar primeiro perde; zerando no mesmo passo, `winnerIndex` é `null` —
+  os dois explodem e a partida é empate (`recordGameOver('draw')`, gravado no
+  histórico com `winner_index` nulo, que já contava como empate no perfil).
+- O congelamento é aplicado nas **duas** pontas: o servidor ignora `input` e
+  `shoot` durante o desempate (`wsServer.js`) e o cliente para a predição
+  local (`prediction.js`), o tiro e o escudo (`input.js`) — senão o jogador
+  veria a si mesmo andando para ser puxado de volta na reconciliação.
+- No modo online o cliente não conta o tempo: `remainingMs`/`desempate` vêm em
+  cada mensagem `state`. No modo bot vêm do cronômetro local. Nos dois casos
+  quem escreve em `state`/HUD é `public/js/matchTimer.js` (`#matchTimer`, no
+  centro do HUD, logo acima da arena).
+- Enquanto o tutorial interativo roda, o relógio **não corre** (`adiarFim` a
+  cada tick em `bot.js`): quem está aprendendo os controles não está disputando
+  a partida.
 
 ### Convenção de nomes e comentários
 

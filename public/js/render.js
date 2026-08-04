@@ -147,7 +147,9 @@ function drawPlayers(renderState, now) {
 
     const classColor = getClass(p.classId).color;
 
-    if (i === state.playerIndex && state.matchStarted && !state.input.shield) {
+    // A prévia de mira some no desempate: a partida está congelada e ninguém
+    // atira mais.
+    if (i === state.playerIndex && state.matchStarted && !state.desempate && !state.input.shield) {
       drawShotPreview(p.x + state.playerSize / 2, p.y + state.playerSize / 2, p.classId);
     }
 
