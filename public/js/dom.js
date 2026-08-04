@@ -18,6 +18,10 @@ export const matchTimerEl = document.getElementById('matchTimer');
 export const cooldownP0El = document.getElementById('cooldownP0');
 export const cooldownP1El = document.getElementById('cooldownP1');
 
+export const soundSettingsEl = document.getElementById('soundSettings');
+export const btnSoundSettings = document.getElementById('btnSoundSettings');
+export const volumeEfeitosInput = document.getElementById('volumeEfeitosInput');
+
 export const menuEl = document.getElementById('menu');
 export const gameWrapEl = document.getElementById('game-wrap');
 export const escHintEl = document.getElementById('escHint');

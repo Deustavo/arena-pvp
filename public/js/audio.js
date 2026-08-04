@@ -6,6 +6,21 @@
 // matchTimer.js para o cronômetro, etc.).
 
 const VOLUME_MASTER = 0.7;
+const VOLUME_EFEITOS_KEY = 'jogoDoAno.volumeEfeitos';
+
+function lerVolumeEfeitosSalvo() {
+  const salvo = localStorage.getItem(VOLUME_EFEITOS_KEY);
+  if (salvo === null) return 100;
+  const bruto = Number(salvo);
+  return Number.isFinite(bruto) && bruto >= 0 && bruto <= 100 ? bruto : 100;
+}
+
+// Controle de volume dos efeitos (0-100), aplicado como multiplicador sobre
+// o `master` (bus de todos os efeitos). Guardado à parte de `VOLUME_MASTER`
+// para não perder o balanceamento relativo entre efeitos já ajustado ali.
+// Música (quando existir) terá seu próprio bus e seu próprio controle — não
+// deve passar por este `master`.
+let volumeEfeitos = lerVolumeEfeitosSalvo();
 
 let audioCtx = null;
 let master = null;
@@ -25,11 +40,30 @@ function ctx() {
     if (!AudioCtx) return null;
     audioCtx = new AudioCtx();
     master = audioCtx.createGain();
-    master.gain.value = VOLUME_MASTER;
+    master.gain.value = VOLUME_MASTER * (volumeEfeitos / 100);
     master.connect(audioCtx.destination);
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx.state === 'running' ? audioCtx : null;
+}
+
+// --- Volume ------------------------------------------------------------
+
+export function getEffectsVolume() {
+  return volumeEfeitos;
+}
+
+// `pct` é 0-100. Persiste em localStorage para valer entre visitas, e aplica
+// na hora se o contexto já existir (efeito toca no volume novo sem precisar
+// de outro gesto do usuário).
+export function setEffectsVolume(pct) {
+  volumeEfeitos = Math.min(100, Math.max(0, Math.round(pct)));
+  try {
+    localStorage.setItem(VOLUME_EFEITOS_KEY, String(volumeEfeitos));
+  } catch {
+    // localStorage indisponível: a preferência só vale para esta sessão.
+  }
+  if (master) master.gain.value = VOLUME_MASTER * (volumeEfeitos / 100);
 }
 
 // Envelope attack/decay exponencial. Nunca chega a zero porque

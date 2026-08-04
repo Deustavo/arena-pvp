@@ -8,6 +8,22 @@
 </head>
 <body>
   <canvas id="menuBg"></canvas>
+  <div id="soundSettings">
+    <button type="button" id="btnSoundSettings" aria-haspopup="true" aria-expanded="false" aria-label="Configurações de som" title="Configurações de som">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor" stroke="none"/>
+        <path id="soundSettingsWave1" d="M16.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path id="soundSettingsWave2" d="M19 6a9 9 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path id="soundSettingsMute" d="M17 7l6 10M23 7l-6 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div id="soundSettingsPanel">
+      <div class="sound-settings-row">
+        <label for="volumeEfeitosInput">Efeitos sonoros</label>
+        <input type="range" id="volumeEfeitosInput" min="0" max="100" step="1">
+      </div>
+    </div>
+  </div>
   <div id="menu">
     <div id="menuBody">
       <h1>Arena PVP</h1>

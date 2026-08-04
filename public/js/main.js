@@ -15,9 +15,11 @@ import { initProfile } from './profile.js';
 import { loadSession } from './auth.js';
 import { initRanking, refreshRankingHighlight } from './ranking.js';
 import { initUiSounds } from './uiSounds.js';
+import { initSoundSettings } from './soundSettings.js';
 
 initInput();
 initUiSounds();
+initSoundSettings();
 initNicknameInput();
 initOnlineClassSelect();
 initBotClassSelect();

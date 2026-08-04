@@ -80,6 +80,72 @@
     z-index: 0;
     pointer-events: none;
   }
+  /* ----- Controle de volume -----
+     Fixo no canto da tela porque vale tanto para o menu quanto para uma
+     partida em andamento — o jogador não deveria ter que voltar ao menu para
+     mudar o volume no meio de um jogo. */
+  #soundSettings {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 5;
+  }
+  #soundSettings button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #444;
+    background: rgba(29, 29, 43, 0.72);
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+  }
+  #soundSettings button:hover {
+    background: rgba(58, 58, 82, 0.85);
+  }
+  #soundSettingsMute {
+    display: none;
+  }
+  #soundSettings.muted #soundSettingsWave1,
+  #soundSettings.muted #soundSettingsWave2 {
+    display: none;
+  }
+  #soundSettings.muted #soundSettingsMute {
+    display: block;
+  }
+  #soundSettingsPanel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    padding: 14px 16px;
+    box-sizing: border-box;
+    background: rgba(29, 29, 43, 0.92);
+    border: 1px solid #444;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(6px);
+  }
+  #soundSettings.open #soundSettingsPanel {
+    display: block;
+  }
+  .sound-settings-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .sound-settings-row label {
+    color: #ccc;
+  }
+  .sound-settings-row input[type="range"] {
+    width: 100%;
+    accent-color: #457b9d;
+  }
   #menu {
     position: relative;
     z-index: 1;
