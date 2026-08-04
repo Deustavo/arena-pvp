@@ -51,7 +51,7 @@ export const CLASSES = {
     coneSpreadDeg: 0,
     projectileSize: PROJECTILE_SIZE * 1.5,
     range: 300,
-    traits: ['Projétil maior', 'Alcance menor no tiro'],
+    traits: ['Vida altíssima', 'Escudo altíssimo', 'Projétil maior', 'Alcance menor no tiro'],
     color: '#3fb87f',
     // Escudo.
     icon: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
@@ -59,7 +59,7 @@ export const CLASSES = {
   assassino: {
     id: 'assassino',
     name: 'Assassino',
-    shotCooldownMs: 1700,
+    shotCooldownMs: 1600,
     damage: 9,
     shieldMaxHits: 1,
     maxLives: 6,
@@ -67,8 +67,8 @@ export const CLASSES = {
     projectileCount: 1,
     coneSpreadDeg: 0,
     projectileSize: PROJECTILE_SIZE,
-    range: 270,
-    traits: ['Dano altíssimo', 'Alcance bem curto', '10% mais rápido'],
+    range: 255,
+    traits: ['Dano altíssimo', 'Vida baixa', 'Alcance bem curto', '30% mais rápido'],
     color: '#e5484d',
     // Adaga.
     icon: '<svg viewBox="0 0 24 24"><path d="M12 2v13"/><path d="M8 6l4-4 4 4-4 4-4-4z"/><path d="M9 15h6l-1.5 5-1.5 2-1.5-2z"/></svg>',
@@ -104,7 +104,7 @@ export const CLASSES = {
     coneSpreadDeg: 0,
     projectileSize: PROJECTILE_SIZE * 0.6,
     range: Infinity,
-    traits: ['Dano altíssimo em tiros de longa distância', 'Dano baixo de perto', 'Cadência de tiro baixa'],
+    traits: ['Dano altíssimo em tiros de longa distância', 'Vida baixa', 'Cadência de tiro baixa'],
     color: '#c9c9c9',
     // Mira telescópica.
     icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg>',
