@@ -1,4 +1,12 @@
-  html, body {
+  /* O flex centralizado é só do body. O html fica um bloco comum de altura
+     100% — é o overflow dele que a viewport usa para rolar, então ele não pode
+     centralizar nem prender o conteúdo (era o que impedia o menu mais alto que
+     a tela de ser rolado). */
+  html {
+    height: 100%;
+    background: #1d1d2b;
+  }
+  body {
     margin: 0;
     height: 100%;
     background: #1d1d2b;
@@ -38,6 +46,21 @@
   }
   *::-webkit-scrollbar-corner {
     background: transparent;
+  }
+  /* Fora da partida a página pode ficar mais alta que a viewport (menu +
+     ranking numa tela baixa). Nesse caso ela precisa rolar: com `height: 100%`
+     e `justify-content: center` puro o excesso sangra para os dois lados e o
+     que sai por cima fica inalcançável (não existe scroll negativo) — era o que
+     escondia o topo do menu, incluindo os links de entrar/criar conta.
+     O `safe` mantém a centralização enquanto sobra espaço e alinha ao topo
+     quando falta. A partida não precisa disso: gameScale.js já ajusta o
+     #game-wrap para caber na tela, então ele segue centrado e sem scroll. */
+  body:not(.game-active) {
+    height: auto;
+    min-height: 100%;
+    justify-content: safe center;
+    padding: 16px 0;
+    box-sizing: border-box;
   }
   body.game-active {
     overflow: hidden;
@@ -971,6 +994,16 @@
   #btnHowToPlay:hover {
     background: #222;
   }
+  /* ----- Regra comum a todas as modais -----
+     Cada modal define a própria largura, mas a altura é sempre limitada à
+     viewport: numa tela baixa uma modal mais alta que a tela era cortada em
+     cima e embaixo, escondendo o título e o botão de fechar (a única saída
+     virava o Esc). Passando do limite, o conteúdo rola dentro da modal. */
+  .modal {
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
   #botClassOverlay {
     display: none;
     position: fixed;
@@ -1534,8 +1567,12 @@
     font-size: 11px;
     color: #9a9ab0;
   }
+  /* A lista tem scroll próprio (é o que dispara o infinite scroll), mas o teto
+     precisa acompanhar a tela: fixo em 320px, ele sozinho já fazia a modal
+     passar da altura de uma janela baixa. */
   #profileBody {
     max-height: 320px;
+    max-height: min(320px, 42dvh);
     overflow-y: auto;
   }
   .lista-partidas {
