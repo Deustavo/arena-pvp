@@ -15,8 +15,8 @@
 export const MATCH_DURATION_MS = 2 * 60 * 1000;
 // Respiro entre o fim do tempo e o começo do dreno, para o jogador entender
 // que a partida parou antes dos corações começarem a cair.
-export const DESEMPATE_DELAY_MS = 2500;
-export const DESEMPATE_PASSO_MS = 700;
+export const DESEMPATE_DELAY_MS = 1250;
+export const DESEMPATE_PASSO_MS = 350;
 
 export function criarCronometro(agora) {
   return { fimEm: agora + MATCH_DURATION_MS, desempateEm: null, proximoDreno: 0 };

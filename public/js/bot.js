@@ -117,6 +117,7 @@ function botAttack(bot, me, enemy) {
   );
   bot.nextProjectileId = nextId;
   bot.projectiles.push(...projectiles);
+  enemy.lastShot = Date.now();
 }
 
 function updateBotAI() {

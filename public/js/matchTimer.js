@@ -8,7 +8,7 @@
 
 import { matchTimerEl } from './dom.js';
 import { state } from './state.js';
-import { playTimerTickSound, playSuddenDeathSound } from './audio.js';
+import { playTimerTickSound, playTimeWarningSound, playSuddenDeathSound } from './audio.js';
 import { MATCH_DURATION_MS, formatarTempo } from '../../shared/matchTimer.js';
 
 // A partir daqui o relógio fica amarelo, avisando que o tempo está no fim.
@@ -17,11 +17,18 @@ const AVISO_MS = 15000;
 // Últimos segundos com tique sonoro, um por segundo.
 const TIQUES_FINAIS_S = 10;
 
+// Marcas de tempo restante que disparam um aviso sonoro uma única vez cada,
+// antes dos tiques finais de `TIQUES_FINAIS_S`.
+const MARCAS_AVISO_MS = [60000, 30000];
+
 const TEXTO_DESEMPATE = 'DESEMPATE';
 
 // Último segundo já anunciado, para o tique tocar uma vez por segundo e não a
 // cada atualização (que chega a 60x por segundo, do servidor ou do loop local).
 let ultimoTique = null;
+
+// Marcas de `MARCAS_AVISO_MS` ainda não anunciadas nesta partida.
+let marcasAvisoRestantes = new Set(MARCAS_AVISO_MS);
 
 function tocarTiqueSeVirouSegundo(restanteMs) {
   const segundos = Math.ceil(restanteMs / 1000);
@@ -34,6 +41,15 @@ function tocarTiqueSeVirouSegundo(restanteMs) {
   playTimerTickSound(segundos);
 }
 
+function tocarAvisoSeCruzouMarca(restanteMs) {
+  for (const marca of MARCAS_AVISO_MS) {
+    if (marcasAvisoRestantes.has(marca) && restanteMs <= marca) {
+      marcasAvisoRestantes.delete(marca);
+      playTimeWarningSound(marca);
+    }
+  }
+}
+
 export function atualizarCronometro(restanteMs, desempate) {
   // Ao congelar a partida o jogador pode estar com teclas pressionadas; sem
   // soltá-las aqui ele continuaria "andando" na predição local e o escudo
@@ -43,7 +59,10 @@ export function atualizarCronometro(restanteMs, desempate) {
     state.input.shield = false;
     playSuddenDeathSound();
   }
-  if (!desempate) tocarTiqueSeVirouSegundo(restanteMs);
+  if (!desempate) {
+    tocarAvisoSeCruzouMarca(restanteMs);
+    tocarTiqueSeVirouSegundo(restanteMs);
+  }
   state.remainingMs = restanteMs;
   state.desempate = desempate;
   renderizarCronometro();
@@ -57,6 +76,7 @@ export function renderizarCronometro() {
 
 export function resetMatchTimer() {
   ultimoTique = null;
+  marcasAvisoRestantes = new Set(MARCAS_AVISO_MS);
   state.remainingMs = MATCH_DURATION_MS;
   state.desempate = false;
   renderizarCronometro();
