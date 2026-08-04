@@ -1,11 +1,12 @@
 steps:
   - name: 'node:20-alpine'
-    entrypoint: npm
-    args: ['install']
-
-  - name: 'node:20-alpine'
-    entrypoint: npm
-    args: ['test']
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        apk add --no-cache python3 make g++
+        npm install
+        npm test
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/jogo-do-ano', '.']
