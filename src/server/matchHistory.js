@@ -2,32 +2,29 @@ import { db } from './db.js';
 
 // Histórico de partidas das contas — base do ranking global que virá depois.
 //
-// Uma linha por jogador logado por partida: uma partida entre dois logados
-// gera duas linhas (uma da perspectiva de cada um). Convidados não geram nada,
-// e partidas contra bot ficam de fora por completo (ver saveMatchResult).
+// Uma linha por partida (não por jogador): o jogo é sempre 1x1, então
+// `player1`/`player2` bastam, sem precisar de uma tabela de junção. Só é
+// gravada se ao menos um dos dois tiver conta — partida entre dois
+// convidados não gera nada, e partidas contra bot ficam de fora por
+// completo (ver saveMatchResult).
 
 const LIMITE_PADRAO = 20;
 
-// Parte pura: monta as linhas a gravar. Separada do banco para ser testável.
-export function buildMatchHistoryRows(players, winnerIndex) {
-  return players
-    .filter((jogador) => jogador.userId)
-    .map((jogador) => {
-      const oponente = players.find((outro) => outro.index !== jogador.index);
-      return {
-        userId: jogador.userId,
-        opponentName: oponente?.name ?? 'Desconhecido',
-        opponentUserId: oponente?.userId ?? null,
-        playerClass: jogador.classId,
-        opponentClass: oponente?.classId ?? null,
-        result: resultadoPara(jogador.index, winnerIndex),
-      };
-    });
-}
+// Parte pura: monta a linha a gravar. Separada do banco para ser testável.
+// Retorna null se nenhum dos dois jogadores tiver conta.
+export function buildMatchRow(players, winnerIndex) {
+  const [jogador1, jogador2] = players;
+  if (!jogador1.userId && !jogador2.userId) return null;
 
-function resultadoPara(index, winnerIndex) {
-  if (winnerIndex === null || winnerIndex === undefined) return 'draw';
-  return winnerIndex === index ? 'win' : 'loss';
+  return {
+    player1Id: jogador1.userId ?? null,
+    player1Name: jogador1.name,
+    player1Class: jogador1.classId,
+    player2Id: jogador2.userId ?? null,
+    player2Name: jogador2.name,
+    player2Class: jogador2.classId,
+    winnerIndex: winnerIndex ?? null,
+  };
 }
 
 // Partidas contra bot não entram no histórico — senão dava para inflar o
@@ -40,36 +37,48 @@ export function shouldRecordMatch(match) {
 export async function saveMatchResult(match, winnerIndex) {
   if (!shouldRecordMatch(match)) return;
 
-  const linhas = buildMatchHistoryRows(match.players, winnerIndex);
-  if (linhas.length === 0) return;
+  const linha = buildMatchRow(match.players, winnerIndex);
+  if (!linha) return;
 
   try {
-    await db.batch(
-      linhas.map((linha) => ({
-        sql: `INSERT INTO match_history
-                (user_id, opponent_name, opponent_user_id, player_class, opponent_class, result)
-              VALUES (?, ?, ?, ?, ?, ?)`,
-        args: [
-          linha.userId, linha.opponentName, linha.opponentUserId,
-          linha.playerClass, linha.opponentClass, linha.result,
-        ],
-      })),
-      'write',
-    );
+    await db.execute({
+      sql: `INSERT INTO matches
+              (player1_id, player1_name, player1_class, player2_id, player2_name, player2_class, winner_index)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        linha.player1Id, linha.player1Name, linha.player1Class,
+        linha.player2Id, linha.player2Name, linha.player2Class,
+        linha.winnerIndex,
+      ],
+    });
   } catch (erro) {
     // Falhar ao gravar histórico nunca pode atrapalhar o fim da partida.
     console.error('[historico] falha ao gravar resultado:', erro.message);
   }
 }
 
+// CASE compartilhado por getHistory/getSummary para decidir, por linha, qual
+// resultado a partida teve do ponto de vista de `userId`.
+const CASE_RESULTADO = `
+  CASE
+    WHEN winner_index IS NULL THEN 'draw'
+    WHEN (player1_id = ? AND winner_index = 0) OR (player2_id = ? AND winner_index = 1) THEN 'win'
+    ELSE 'loss'
+  END`;
+
 export async function getHistory(userId, limite = LIMITE_PADRAO) {
   const { rows } = await db.execute({
-    sql: `SELECT opponent_name, player_class, opponent_class, result, created_at
-            FROM match_history
-           WHERE user_id = ?
-           ORDER BY created_at DESC, id DESC
-           LIMIT ?`,
-    args: [userId, limite],
+    sql: `SELECT
+            CASE WHEN player1_id = ? THEN player2_name ELSE player1_name END AS opponent_name,
+            CASE WHEN player1_id = ? THEN player1_class ELSE player2_class END AS player_class,
+            CASE WHEN player1_id = ? THEN player2_class ELSE player1_class END AS opponent_class,
+            ${CASE_RESULTADO} AS result,
+            created_at
+          FROM matches
+         WHERE player1_id = ? OR player2_id = ?
+         ORDER BY created_at DESC, id DESC
+         LIMIT ?`,
+    args: [userId, userId, userId, userId, userId, userId, userId, limite],
   });
   return rows.map((linha) => ({
     opponentName: linha.opponent_name,
@@ -82,11 +91,11 @@ export async function getHistory(userId, limite = LIMITE_PADRAO) {
 
 export async function getSummary(userId) {
   const { rows } = await db.execute({
-    sql: `SELECT result, COUNT(*) AS total
-            FROM match_history
-           WHERE user_id = ?
+    sql: `SELECT ${CASE_RESULTADO} AS result, COUNT(*) AS total
+            FROM matches
+           WHERE player1_id = ? OR player2_id = ?
            GROUP BY result`,
-    args: [userId],
+    args: [userId, userId, userId, userId],
   });
   const resumo = { wins: 0, losses: 0, draws: 0, total: 0 };
   const campo = { win: 'wins', loss: 'losses', draw: 'draws' };

@@ -10,22 +10,28 @@ const COMANDOS = [
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_user_name_unico
      ON user (LOWER(name))`,
 
-  // Histórico de partidas. Uma linha por jogador logado por partida — uma
-  // partida entre dois logados gera duas linhas. Partidas contra bot não são
-  // gravadas (ver Match.js).
-  `CREATE TABLE IF NOT EXISTS match_history (
-     id               INTEGER PRIMARY KEY AUTOINCREMENT,
-     user_id          TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
-     opponent_name    TEXT NOT NULL,
-     opponent_user_id TEXT,
-     player_class     TEXT NOT NULL,
-     opponent_class   TEXT NOT NULL,
-     result           TEXT NOT NULL CHECK (result IN ('win', 'loss', 'draw')),
-     created_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  // Histórico de partidas. Uma linha por partida (não por jogador) — os dois
+  // lados ficam em colunas próprias, já que o jogo é sempre 1x1. Ao menos um
+  // dos dois precisa ter conta (senão a partida nem é gravada, ver
+  // matchHistory.js); o outro lado pode ser convidado (*_id nulo). Partidas
+  // contra bot não são gravadas (ver Match.js).
+  `CREATE TABLE IF NOT EXISTS matches (
+     id            INTEGER PRIMARY KEY AUTOINCREMENT,
+     player1_id    TEXT REFERENCES user(id) ON DELETE CASCADE,
+     player1_name  TEXT NOT NULL,
+     player1_class TEXT NOT NULL,
+     player2_id    TEXT REFERENCES user(id) ON DELETE CASCADE,
+     player2_name  TEXT NOT NULL,
+     player2_class TEXT NOT NULL,
+     winner_index  INTEGER,
+     created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
    )`,
 
-  `CREATE INDEX IF NOT EXISTS idx_match_history_user
-     ON match_history (user_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_matches_player1
+     ON matches (player1_id, created_at DESC)`,
+
+  `CREATE INDEX IF NOT EXISTS idx_matches_player2
+     ON matches (player2_id, created_at DESC)`,
 ];
 
 export async function applyAppSchema() {

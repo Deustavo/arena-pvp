@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildMatchHistoryRows, shouldRecordMatch } from '../src/server/matchHistory.js';
+import { buildMatchRow, shouldRecordMatch } from '../src/server/matchHistory.js';
 
 function jogadores({ userIdA = 'uA', userIdB = 'uB' } = {}) {
   return [
@@ -9,51 +9,41 @@ function jogadores({ userIdA = 'uA', userIdB = 'uB' } = {}) {
   ];
 }
 
-describe('buildMatchHistoryRows', () => {
-  test('gera uma linha por jogador logado, com a perspectiva de cada um', () => {
-    const linhas = buildMatchHistoryRows(jogadores(), 0);
-    assert.equal(linhas.length, 2);
-
-    assert.deepEqual(linhas[0], {
-      userId: 'uA',
-      opponentName: 'Bia',
-      opponentUserId: 'uB',
-      playerClass: 'mago',
-      opponentClass: 'tank',
-      result: 'win',
-    });
-    assert.deepEqual(linhas[1], {
-      userId: 'uB',
-      opponentName: 'Ana',
-      opponentUserId: 'uA',
-      playerClass: 'tank',
-      opponentClass: 'mago',
-      result: 'loss',
+describe('buildMatchRow', () => {
+  test('gera uma linha só, com os dois lados da partida', () => {
+    const linha = buildMatchRow(jogadores(), 0);
+    assert.deepEqual(linha, {
+      player1Id: 'uA',
+      player1Name: 'Ana',
+      player1Class: 'mago',
+      player2Id: 'uB',
+      player2Name: 'Bia',
+      player2Class: 'tank',
+      winnerIndex: 0,
     });
   });
 
-  test('empate (winnerIndex null) vira draw para os dois', () => {
-    const linhas = buildMatchHistoryRows(jogadores(), null);
-    assert.deepEqual(linhas.map((l) => l.result), ['draw', 'draw']);
+  test('empate (winnerIndex null) grava winnerIndex null', () => {
+    const linha = buildMatchRow(jogadores(), null);
+    assert.equal(linha.winnerIndex, null);
   });
 
-  test('convidado não gera linha, mas aparece como oponente do logado', () => {
-    const linhas = buildMatchHistoryRows(jogadores({ userIdB: null }), 1);
-    assert.equal(linhas.length, 1);
-    assert.equal(linhas[0].userId, 'uA');
-    assert.equal(linhas[0].result, 'loss');
-    assert.equal(linhas[0].opponentName, 'Bia');
-    assert.equal(linhas[0].opponentUserId, null);
+  test('convidado gera linha com o lado dele nulo', () => {
+    const linha = buildMatchRow(jogadores({ userIdB: null }), 1);
+    assert.equal(linha.player1Id, 'uA');
+    assert.equal(linha.player2Id, null);
+    assert.equal(linha.player2Name, 'Bia');
+    assert.equal(linha.winnerIndex, 1);
   });
 
   test('partida entre dois convidados não gera nada', () => {
-    const linhas = buildMatchHistoryRows(jogadores({ userIdA: null, userIdB: null }), 0);
-    assert.deepEqual(linhas, []);
+    const linha = buildMatchRow(jogadores({ userIdA: null, userIdB: null }), 0);
+    assert.equal(linha, null);
   });
 
-  test('winnerIndex indefinido é tratado como empate', () => {
-    const linhas = buildMatchHistoryRows(jogadores(), undefined);
-    assert.deepEqual(linhas.map((l) => l.result), ['draw', 'draw']);
+  test('winnerIndex indefinido é tratado como empate (null)', () => {
+    const linha = buildMatchRow(jogadores(), undefined);
+    assert.equal(linha.winnerIndex, null);
   });
 });
 
