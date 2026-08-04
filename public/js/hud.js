@@ -4,7 +4,7 @@ import {
 } from './dom.js';
 import { state } from './state.js';
 import { checkDeathExplosion } from './explosions.js';
-import { playHitSound, playShieldBlockSound, playShieldBreakSound } from './audio.js';
+import { playHitSound, playShieldBlockSound, playShieldBreakSound, playShotSound } from './audio.js';
 import { getClass } from '../../shared/classes.js';
 
 export const HEART_PIXELS = [
@@ -39,6 +39,11 @@ let shieldsEls = [[], []];
 // que revela um bloqueio: nem o servidor nem a simulação avisam "bloqueou", só
 // mandam o estado novo. `null` = ainda não há partida para comparar.
 let prevShieldCharges = [null, null];
+// `lastShot` do tick anterior, por slot visual — mesma lógica do escudo acima:
+// nem servidor nem simulação avisam "atirou", só mandam o timestamp do último
+// disparo. Cobre os dois jogadores, então o som de tiro do oponente também
+// toca no modo online. `null` = ainda não há partida para comparar.
+let prevLastShot = [null, null];
 
 function updateClassIcon(el, nameEl, row, classId) {
   if (!el || classId === prevClassIds[row]) return;
@@ -128,6 +133,7 @@ export function initHearts(maxLives = [10, 10]) {
   shieldsEls[0] = createShieldsRow(shieldsP0El, maxShields[0]);
   shieldsEls[1] = createShieldsRow(shieldsP1El, maxShields[1]);
   prevShieldCharges = [maxShields[0], maxShields[1]];
+  prevLastShot = [null, null];
 }
 
 // Limpa tudo que o HUD acumulou da partida anterior (corações, escudos, nomes,
@@ -140,6 +146,7 @@ export function resetHud() {
   shieldsEls = [[], []];
   prevLives = [0, 0];
   prevShieldCharges = [null, null];
+  prevLastShot = [null, null];
   prevClassIds = [null, null];
   hitFlashUntil = [0, 0];
   livesP0El.innerHTML = '';
@@ -208,6 +215,15 @@ function updateShieldsRow(row, charges) {
   prevShieldCharges[row] = charges;
 }
 
+// Disparo: `lastShot` mudou desde o tick anterior. Cobre os dois jogadores
+// (ambos passam pelo mesmo `updateHud`), então também dá o som do tiro do
+// oponente no modo online — sem isso o jogador só ouviria os próprios tiros.
+function checkShot(row, lastShot) {
+  const prev = prevLastShot[row];
+  if (prev !== null && lastShot && lastShot !== prev) playShotSound();
+  prevLastShot[row] = lastShot ?? prev;
+}
+
 export function shieldCharges(index) {
   const p = state.latestState.players[index];
   const maxHits = p?.shieldMaxHits ?? state.shieldMaxHits[index];
@@ -244,12 +260,14 @@ export function updateHud() {
     updateClassIcon(classIconP0El, classNameP0El, 0, me.classId);
     updateHeartsRow(0, me.lives, state.playerIndex);
     updateShieldsRow(0, shieldCharges(state.playerIndex));
+    checkShot(0, me.lastShot);
     checkDeathExplosion(state.playerIndex, me);
   }
   if (opp) {
     nameP1El.textContent = opp.name || 'Oponente';
     updateClassIcon(classIconP1El, classNameP1El, 1, opp.classId);
     updateHeartsRow(1, opp.lives, oppIndex);
+    checkShot(1, opp.lastShot);
     updateShieldsRow(1, shieldCharges(oppIndex));
     checkDeathExplosion(oppIndex, opp);
   }

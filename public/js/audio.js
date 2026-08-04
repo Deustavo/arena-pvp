@@ -141,6 +141,13 @@ function efeito(id, janelaMs, toca) {
 
 // --- Combate ---------------------------------------------------------------
 
+// Tiro. É o mesmo som para todas as classes, de propósito: é o efeito mais
+// repetido da partida, então precisa ser curto e discreto (sweep agudo de 50ms)
+// para não cansar.
+export const playShotSound = efeito('shot', 30, () => {
+  nota({ type: 'square', freq: 1400, to: 700, dur: 0.05, gain: 0.1 });
+});
+
 // Levou dano. É a informação mais importante do jogo, então é o efeito mais
 // alto do combate. Também é o som de cada coração drenado no desempate.
 export const playHitSound = efeito('hit', 40, () => {

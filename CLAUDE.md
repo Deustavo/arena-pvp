@@ -242,15 +242,21 @@ evento.
 - Falha de áudio nunca pode atrapalhar a partida: todo efeito roda dentro de um
   `try/catch` silencioso.
 
-Dano e bloqueio **não** são detectados pelo input local — senão o jogador não
-ouviria nada do que o oponente faz, e o modo online não teria como saber. Os dois
-saem da comparação de snapshots dentro do HUD (`hud.js`): `updateHeartsRow` toca
-o som de dano quando as vidas caem, e `updateShieldsRow` compara as cargas de
-escudo com as do tick anterior (`prevShieldCharges`) — perdeu carga = bloqueou,
-e se era a última o som é o de escudo quebrando. Isso vale de graça para os dois
-modos, porque `updateHud` é chamado tanto por `network.js` (mensagem `state`)
-quanto por `bot.js` (`publicarEstadoBot`), e também para o dreno de corações do
-desempate, que é justamente vida caindo.
+Tiro, dano e bloqueio **não** são detectados pelo input local — senão o
+jogador não ouviria nada do que o oponente faz, e o modo online não teria como
+saber. Os três saem da comparação de snapshots dentro do HUD (`hud.js`) contra
+o valor do jogador naquele slot no tick anterior:
+- `checkShot` toca `playShotSound()` quando `lastShot` mudou — **o mesmo som
+  para as 6 classes**, de propósito: é o efeito mais repetido da partida, então
+  precisa ser o mais discreto e não vale a pena diferenciar por classe.
+- `updateHeartsRow` toca o som de dano quando as vidas caem.
+- `updateShieldsRow` compara as cargas de escudo (`prevShieldCharges`) — perdeu
+  carga = bloqueou, e se era a última o som é o de escudo quebrando.
+
+Isso vale de graça para os dois jogadores e os dois modos, porque `updateHud`
+é chamado tanto por `network.js` (mensagem `state`) quanto por `bot.js`
+(`publicarEstadoBot`) — e também cobre o dreno de corações do desempate, que é
+justamente vida caindo.
 
 Outros pontos de disparo: `explosions.js` (explosão, no mesmo lugar que dispara
 as partículas), `gameOver.js` (vitória/derrota — no **overlay**, não em
@@ -261,9 +267,9 @@ desempate), `input.js` (escudo erguido e ação indisponível), `nearMiss.js`
 os projéteis do snapshot não têm id) e `uiSounds.js` (hover/clique, delegados no
 `document` — tudo clicável no jogo é um `<button>`).
 
-Ainda não têm som: os **tiros** (um timbre por classe) e os efeitos de
-ambiente. Falta também expor **volume/mudo** na interface — o `GainNode` master
-já está no lugar, só não há controle nem preferência salva.
+Ainda não têm som os efeitos de ambiente. Falta também expor **volume/mudo**
+na interface — o `GainNode` master já está no lugar, só não há controle nem
+preferência salva.
 
 #### Loading skeleton na tela inicial
 
