@@ -15,7 +15,10 @@ import {
   classDodgeChance, classShieldChance, findIncomingThreat,
 } from '../../shared/botStrategy.js';
 import { updateGameScale } from './gameScale.js';
-import { shouldStartMatchTutorial, startMatchTutorial, isMatchTutorialActive } from './tutorial/matchTutorial.js';
+import {
+  shouldStartMatchTutorial, startMatchTutorial, isMatchTutorialActive,
+  isMatchTutorialDummyInvulnerable,
+} from './tutorial/matchTutorial.js';
 import { atualizarCronometro, resetMatchTimer } from './matchTimer.js';
 import {
   criarCronometro, tickCronometro, emDesempate, tempoRestanteMs, adiarFim,
@@ -113,6 +116,16 @@ function updateBotAI() {
   const enemyCls = getClass(enemy.classId);
   const diff = bot.difficulty;
 
+  // Durante o tutorial o oponente é um boneco de treino: fica parado (um alvo
+  // em movimento atrapalha quem ainda está aprendendo a mirar), não atira e
+  // mantém o escudo erguido enquanto o tutorial não terminar — ver
+  // isMatchTutorialDummyInvulnerable e o refill de shieldHits em botTick.
+  if (isMatchTutorialActive()) {
+    enemy.input = { up: false, down: false, left: false, right: false };
+    enemy.shielding = isMatchTutorialDummyInvulnerable();
+    return;
+  }
+
   // Posicionamento (aproximar, manter distância ou recuar) segue a
   // estratégia própria da classe do bot — ver shared/botStrategy.js.
   const movement = computeBotMovement(enemy.classId, enemyCls, enemy, me, bot, now);
@@ -165,9 +178,7 @@ function updateBotAI() {
   enemy.shielding = willShield && enemy.shieldHits < enemy.shieldMaxHits;
   if (enemy.shielding) return;
 
-  // Na primeira partida (tutorial interativo), o bot não atira, para o
-  // jogador poder praticar mover/atirar/escudo sem risco de perder vidas.
-  if (now >= bot.botNextShot && me.alive && !isMatchTutorialActive()) {
+  if (now >= bot.botNextShot && me.alive) {
     botAttack(bot, me, enemy);
     bot.botNextShot = now + enemyCls.shotCooldownMs + diff.cooldownExtraMs + Math.random() * diff.shotJitterMs;
   }
@@ -225,11 +236,30 @@ function botTick() {
   const meXBeforeStep = bot.players[0].x;
   const meYBeforeStep = bot.players[0].y;
 
+  // Enquanto o boneco de treino é invulnerável a partida não pode acabar: o
+  // tutorial só termina completando os passos, nunca matando o oponente.
+  const bonecoInvulneravel = isMatchTutorialDummyInvulnerable();
+  const vidasBoneco = bot.players[1].lives;
+
   stepPlayers(bot.players, ARENA);
   bot.projectiles = stepProjectiles(bot.projectiles, bot.players, ARENA, (winnerIndex) => {
+    if (bonecoInvulneravel && winnerIndex === 0) return;
     recordGameOver(resultadoDoVencedor(winnerIndex));
     stopBot();
   });
+
+  // Escudo infinito do boneco de treino: as cargas gastas neste tick são
+  // devolvidas antes de publicar o estado — assim o jogador nunca fura a
+  // defesa. As vidas são restauradas junto porque o escudo tem um limite de
+  // cargas *por tick*: vários projéteis no mesmo tick (o leque do mago, ou uma
+  // classe com uma única carga) chegariam a passar. Feito depois da simulação
+  // para o HUD não registrar perda de carga/coração e tocar som de escudo
+  // quebrado ou de dano em algo que não acontece.
+  if (bonecoInvulneravel) {
+    bot.players[1].shieldHits = 0;
+    bot.players[1].lives = vidasBoneco;
+    bot.players[1].alive = true;
+  }
 
   bot.prevPlayerX = meXBeforeStep;
   bot.prevPlayerY = meYBeforeStep;

@@ -12,10 +12,10 @@ import { playTutorialStepSound, playTutorialCompleteSound } from '../audio.js';
 const MATCH_TUTORIAL_SEEN_KEY = 'jogoDoAno.tutorialPartidaVisto';
 
 const STEPS = [
-  { text: 'Use <strong>WASD</strong> ou as <strong>setas</strong> para se mover.', action: 'move' },
+  { text: 'Use <strong>WASD</strong> para se mover.', action: 'move' },
   { text: 'Clique em qualquer ponto da arena para <strong>atirar</strong>.', action: 'shoot' },
   { text: 'Segure <strong>Espaço</strong> para erguer o <strong>escudo</strong> e bloquear tiros.', action: 'shield' },
-  { text: 'Boa sorte! Vence quem zerar as vidas do oponente primeiro.', action: null },
+  { text: 'Atire no inimigo até derrota-lo.', action: null },
 ];
 
 const FINAL_STEP_HIDE_MS = 4000;
@@ -66,6 +66,15 @@ export function forceNextMatchTutorial() {
 
 export function isMatchTutorialActive() {
   return active;
+}
+
+// true enquanto o oponente do tutorial precisa ser um alvo indestrutível: o
+// jogador não pode encerrar a partida (matando o bot) antes de ter passado por
+// mover, atirar e escudar. Deixa de valer no passo final (`action: null`, a
+// mensagem de "boa sorte"), que é justamente quando a partida vira uma partida
+// de verdade e o bot pode morrer.
+export function isMatchTutorialDummyInvulnerable() {
+  return active && STEPS[stepIndex].action !== null;
 }
 
 export function wasMatchTutorial() {

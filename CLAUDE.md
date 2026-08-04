@@ -220,8 +220,21 @@ conecta event listeners de UI aos módulos.
   `notifyMatchTutorial` é chamado com a ação correspondente — disparado de
   `input.js` a cada tecla de movimento, clique de tiro e ativação de escudo.
   Ao completar um passo o balão fica verde e toca `playTutorialStepSound()`
-  (`audio.js`). Enquanto o tutorial está ativo (`isMatchTutorialActive()`), o
-  bot não atira (`bot.js`), para o jogador poder praticar sem risco.
+  (`audio.js`). A faixa fica na faixa de cima da arena mas afastada da borda
+  (`top: 24%`) e com fonte grande — não no centro exato, porque os dois
+  jogadores nascem na metade vertical e ficariam cobertos.
+  Enquanto o tutorial está ativo (`isMatchTutorialActive()`), o oponente é um
+  **boneco de treino** (`updateBotAI` em `bot.js` sai antes de toda a IA
+  normal): fica parado, não atira e mantém o escudo erguido. E enquanto
+  `isMatchTutorialDummyInvulnerable()` (ativo e o passo atual ainda tem ação,
+  isto é, até o passo final de "boa sorte") o boneco é indestrutível — o
+  jogador não pode encerrar o tutorial matando o oponente antes de passar por
+  mover/atirar/escudar. A invulnerabilidade é aplicada em `botTick` **depois**
+  da simulação e antes de publicar o estado (cargas de escudo e vidas
+  restauradas, vitória do jogador ignorada no callback): antes da simulação o
+  escudo furaria com vários projéteis no mesmo tick (leque do mago, classe com
+  uma única carga), e restaurar depois evita que o HUD veja a perda e toque som
+  de dano/escudo quebrado.
   - Controlado por uma flag em `localStorage` (`jogoDoAno.tutorialPartidaVisto`):
     roda sozinho só uma vez por navegador, na primeira partida contra bot **ou**
     online — `startOnline` (`menu.js`) redireciona a primeira partida online do
