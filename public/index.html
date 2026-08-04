@@ -11,7 +11,7 @@
   <div id="menu">
     <div id="menuBody">
       <h1>Arena PVP</h1>
-      <div id="accountBar">
+      <div id="accountBar" class="skeleton-loading">
         <div id="accountLoggedIn">
           <span id="accountGreeting">Jogando como <strong id="accountName"></strong></span>
           <div id="accountActions">
@@ -34,7 +34,7 @@
       <button id="btnBot">Modo treino</button>
       <hr id="menuDivider">
       <button id="btnHowToPlay">Como jogar</button>
-      <div id="onlineCount">● <span id="onlineCountValue">--</span> jogador(es) online</div>
+      <div id="onlineCount" class="skeleton-loading">● <span id="onlineCountValue">--</span> jogador(es) online</div>
     </div>
     <div id="rankingPanel">
       <h2>Ranking</h2>
@@ -42,7 +42,13 @@
         <span>Nome</span>
         <span>Vitórias</span>
       </div>
-      <ol id="rankingList"></ol>
+      <ol id="rankingList">
+        <li class="skeleton-row"></li>
+        <li class="skeleton-row"></li>
+        <li class="skeleton-row"></li>
+        <li class="skeleton-row"></li>
+        <li class="skeleton-row"></li>
+      </ol>
     </div>
   </div>
 

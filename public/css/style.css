@@ -42,6 +42,36 @@
   body.game-active {
     overflow: hidden;
   }
+  /* ----- Skeleton de loading (tela inicial) -----
+     Padrão: elemento carrega dado assíncrono (sessão, contagem online,
+     ranking) e mostra esse esqueleto animado no lugar do conteúdo real até a
+     primeira resposta chegar, sem alterar a estrutura da página — o JS só
+     alterna a classe/conteúdo, os elementos e o layout continuam os mesmos. */
+  @keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .skeleton-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+  }
+  .skeleton-loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #2b2b3d 25%, #3a3a52 37%, #2b2b3d 63%);
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+  }
+  .skeleton-row {
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #2b2b3d 25%, #3a3a52 37%, #2b2b3d 63%);
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+  }
   #menuBg {
     position: fixed;
     inset: 0;
@@ -1165,7 +1195,7 @@
     min-height: 20px;
   }
   #accountLoggedIn, #accountLoggedOut {
-    display: flex;
+    display: none;
     align-items: baseline;
     gap: 8px;
     font-size: 14px;

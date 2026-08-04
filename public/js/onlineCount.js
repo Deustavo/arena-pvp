@@ -1,4 +1,4 @@
-import { onlineCountValueEl } from './dom.js';
+import { onlineCountEl, onlineCountValueEl } from './dom.js';
 import { BACKEND_URL } from './config.js';
 
 const ONLINE_COUNT_POLL_MS = 5000;
@@ -11,6 +11,8 @@ async function fetchOnlineCount() {
     onlineCountValueEl.textContent = data.count;
   } catch {
     onlineCountValueEl.textContent = '--';
+  } finally {
+    onlineCountEl.classList.remove('skeleton-loading');
   }
 }
 

@@ -26,6 +26,7 @@ export const nicknameInput = document.getElementById('nicknameInput');
 export const nicknameErrorEl = document.getElementById('nicknameError');
 export const nicknameFieldEl = document.getElementById('nicknameField');
 
+export const accountBarEl = document.getElementById('accountBar');
 export const accountLoggedInEl = document.getElementById('accountLoggedIn');
 export const accountLoggedOutEl = document.getElementById('accountLoggedOut');
 export const accountNameEl = document.getElementById('accountName');
@@ -85,6 +86,7 @@ export const btnTutPrev = document.getElementById('btnTutPrev');
 export const btnTutNext = document.getElementById('btnTutNext');
 export const btnTutClose = document.getElementById('btnTutClose');
 
+export const onlineCountEl = document.getElementById('onlineCount');
 export const onlineCountValueEl = document.getElementById('onlineCountValue');
 
 export const rankingListEl = document.getElementById('rankingList');

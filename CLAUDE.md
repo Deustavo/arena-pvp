@@ -150,6 +150,21 @@ conecta event listeners de UI aos módulos.
 - `tutorial/` — tutorial interativo desenhado em canvas próprio (`canvasHelpers.js`,
   `steps.js`, `tutorial.js`).
 
+#### Loading skeleton na tela inicial
+
+Qualquer elemento da tela de menu que depende de uma resposta assíncrona antes de
+mostrar conteúdo real (barra de conta aguardando `loadSession()`, contagem de
+jogadores online, ranking) começa com um estado de loading em vez de aparecer vazio
+ou pular direto para um valor "adivinhado" (ex.: assumir convidado antes da sessão
+responder). Use sempre o padrão de **loading skeleton** já definido em
+`public/css/style.css` (classes `.skeleton-loading` e `.skeleton-row`, com a
+animação `skeleton-shimmer`), e troque só a classe/conteúdo via JS quando a resposta
+chegar — a estrutura HTML dos elementos não muda entre o estado de loading e o
+estado carregado. Exemplos existentes: `#accountBar` (`.skeleton-loading` até
+`atualizarBarraDeConta()` rodar em `authScreens.js`), `#onlineCount`
+(`onlineCount.js`) e os `<li class="skeleton-row">` de `#rankingList` (substituídos
+pelo conteúdo real assim que `ranking.js` recebe a primeira resposta).
+
 ### Espelhamento de visão (jogador sempre à esquerda)
 
 O jogador local sempre vê a si mesmo do lado esquerdo da tela, mesmo quando a posição

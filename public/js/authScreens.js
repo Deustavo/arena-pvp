@@ -7,7 +7,7 @@ import {
   authFieldNameEl, authFieldEmailEl, authFieldPasswordEl, authTurnstileEl,
   authNameInput, authEmailInput, authPasswordInput,
   authLinksEl, btnAuthSubmit, btnAuthClose, btnAuthForgot, btnAuthSwitch,
-  accountLoggedInEl, accountLoggedOutEl, accountNameEl,
+  accountBarEl, accountLoggedInEl, accountLoggedOutEl, accountNameEl,
   nicknameFieldEl, btnLogin, btnSignup, btnLogout,
 } from './dom.js';
 import { state } from './state.js';
@@ -182,6 +182,7 @@ async function submeter(evento) {
 // "convidado" (campo de nickname visível).
 export function atualizarBarraDeConta() {
   const logado = state.user !== null;
+  accountBarEl.classList.remove('skeleton-loading');
   accountLoggedInEl.style.display = logado ? 'flex' : 'none';
   accountLoggedOutEl.style.display = logado ? 'none' : 'flex';
   nicknameFieldEl.style.display = logado ? 'none' : 'flex';
@@ -214,5 +215,8 @@ export function initAuthScreens() {
     if (e.key === 'Escape' && authOverlayEl.classList.contains('visible')) fechar();
   });
 
-  atualizarBarraDeConta();
+  // Não chama atualizarBarraDeConta() aqui: o #accountBar fica com o
+  // skeleton (ver index.html) até loadSession() resolver em main.js. Chamar
+  // aqui já assumiria "convidado" e tiraria o skeleton cedo demais, causando
+  // um flash da barra de convidado para quem tem sessão salva.
 }
