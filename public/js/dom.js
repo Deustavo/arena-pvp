@@ -24,6 +24,37 @@ export const btnOnline = document.getElementById('btnOnline');
 export const btnBot = document.getElementById('btnBot');
 export const nicknameInput = document.getElementById('nicknameInput');
 export const nicknameErrorEl = document.getElementById('nicknameError');
+export const nicknameFieldEl = document.getElementById('nicknameField');
+
+export const accountLoggedInEl = document.getElementById('accountLoggedIn');
+export const accountLoggedOutEl = document.getElementById('accountLoggedOut');
+export const accountNameEl = document.getElementById('accountName');
+export const btnLogin = document.getElementById('btnLogin');
+export const btnSignup = document.getElementById('btnSignup');
+export const btnLogout = document.getElementById('btnLogout');
+export const btnProfile = document.getElementById('btnProfile');
+
+export const profileOverlayEl = document.getElementById('profileOverlay');
+export const profileSummaryEl = document.getElementById('profileSummary');
+export const profileBodyEl = document.getElementById('profileBody');
+export const btnProfileClose = document.getElementById('btnProfileClose');
+
+export const authOverlayEl = document.getElementById('authOverlay');
+export const authTitleEl = document.getElementById('authTitle');
+export const authFormEl = document.getElementById('authForm');
+export const authFeedbackEl = document.getElementById('authFeedback');
+export const authFieldNameEl = document.getElementById('authFieldName');
+export const authFieldEmailEl = document.getElementById('authFieldEmail');
+export const authFieldPasswordEl = document.getElementById('authFieldPassword');
+export const authNameInput = document.getElementById('authName');
+export const authEmailInput = document.getElementById('authEmail');
+export const authPasswordInput = document.getElementById('authPassword');
+export const authTurnstileEl = document.getElementById('authTurnstile');
+export const btnAuthSubmit = document.getElementById('btnAuthSubmit');
+export const btnAuthClose = document.getElementById('btnAuthClose');
+export const authLinksEl = document.getElementById('authLinks');
+export const btnAuthForgot = document.getElementById('btnAuthForgot');
+export const btnAuthSwitch = document.getElementById('btnAuthSwitch');
 
 export const gameOverOverlayEl = document.getElementById('gameOverOverlay');
 export const gameOverMessageEl = document.getElementById('gameOverMessage');
@@ -49,11 +80,14 @@ export const tutTitleEl = document.getElementById('tutTitle');
 export const tutTextEl = document.getElementById('tutText');
 export const tutDotsEl = document.getElementById('tutDots');
 export const tutStepCountEl = document.getElementById('tutStepCount');
+export const btnTutSkip = document.getElementById('btnTutSkip');
 export const btnTutPrev = document.getElementById('btnTutPrev');
 export const btnTutNext = document.getElementById('btnTutNext');
 export const btnTutClose = document.getElementById('btnTutClose');
 
 export const onlineCountValueEl = document.getElementById('onlineCountValue');
+
+export const rankingListEl = document.getElementById('rankingList');
 
 export const classListEl = document.getElementById('classList');
 export const classPreviewEl = document.getElementById('classPreview');

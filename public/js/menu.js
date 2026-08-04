@@ -3,6 +3,7 @@ import { state, resetMatchState } from './state.js';
 import { hideWaitingOverlay, hideCountdown } from './overlays.js';
 import { hideGameOverOverlay } from './gameOver.js';
 import { startOnlineCountPolling, stopOnlineCountPolling } from './onlineCount.js';
+import { startRankingPolling, stopRankingPolling } from './ranking.js';
 import { startOnline as connectOnline, closeConnection } from './network.js';
 import { startBot as startBotMatch, stopBot } from './bot.js';
 import { commitNickname } from './nickname.js';
@@ -19,6 +20,7 @@ export function showMenu() {
   document.body.classList.remove('game-active');
   hideWaitingOverlay();
   startOnlineCountPolling();
+  startRankingPolling();
   startMenuBackground();
 }
 
@@ -27,6 +29,7 @@ export function showGame() {
   gameWrapEl.style.display = 'flex';
   document.body.classList.add('game-active');
   stopOnlineCountPolling();
+  stopRankingPolling();
   stopMenuBackground();
   updateGameScale();
 }

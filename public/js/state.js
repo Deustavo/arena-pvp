@@ -16,6 +16,12 @@ export const state = {
   playerIndex: null,
   matchId: null,
   nickname: '',
+
+  // Conta logada (null = jogando como convidado). Preenchido por auth.js a
+  // partir do token guardado no localStorage. Quando há conta, o nome do
+  // jogador vem dela e o campo de nickname do menu fica escondido.
+  user: null,
+
   classId: DEFAULT_CLASS_ID, // classe escolhida no menu para a próxima partida
   botClassId: null, // classe do bot escolhida no modal do modo treino
   botDifficulty: DEFAULT_BOT_DIFFICULTY, // dificuldade do bot escolhida no modal do modo treino

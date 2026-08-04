@@ -1,6 +1,6 @@
 import {
   howToPlayOverlayEl, tutTitleEl, tutTextEl, tutDotsEl, tutStepCountEl,
-  btnTutPrev, btnTutNext, btnTutClose,
+  btnTutPrev, btnTutNext, btnTutClose, btnTutSkip,
 } from '../dom.js';
 import { TUT, clamp, tutCtx } from './canvasHelpers.js';
 import { TUTORIAL_STEPS } from './steps.js';
@@ -102,6 +102,7 @@ export function initTutorialUI() {
   buildTutorialDots();
 
   btnTutClose.addEventListener('click', () => closeTutorial());
+  btnTutSkip.addEventListener('click', () => closeTutorial());
   btnTutPrev.addEventListener('click', () => setTutorialStep(tutStep - 1));
   btnTutNext.addEventListener('click', () => {
     if (tutStep === TUTORIAL_STEPS.length - 1) closeTutorial();

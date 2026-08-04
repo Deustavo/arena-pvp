@@ -77,6 +77,49 @@ Arquivos principais de `shared/`:
 - `botAI.js` — IA usada quando `match.bot === true` (oponente sem jogador humano
   real), aplicada dentro do tick de `Match.js` antes de `stepPlayers`.
 
+### Autenticação e contas (`src/server/auth.js`, `db.js`, `email.js`, `schema.js`)
+
+Contas são opcionais: quem não faz login joga como **convidado**, exatamente
+como antes (nickname digitado no menu). O planejamento completo está em
+`PLANEJAMENTO_AUTH.md`.
+
+- `auth.js` — instância do **Better Auth** (e-mail/senha, verificação de e-mail
+  obrigatória, reset de senha por link). Montado em `/api/auth/*` pelo
+  `httpServer.js` via `toNodeHandler`.
+- `db.js` — client libSQL compartilhado. Em produção aponta para o **Turso**
+  (`libsql://`), em desenvolvimento para um arquivo local (`file:./data/local.db`).
+  Mesmo driver e mesmo dialeto SQL nos dois casos.
+- `email.js` — **único** arquivo que conhece o provedor de e-mail (hoje SMTP do
+  Gmail via nodemailer). Trocar de provedor deve mexer só aqui.
+- `schema.js` — schema que **não** é do Better Auth: índice único de nome de
+  jogador e tabela `match_history`. Idempotente.
+- `wsIdentity.js` — quem é o jogador do socket. Com sessão válida o nome vem da
+  conta e o `nickname` da query string é ignorado; sem sessão, convidado.
+  Recebe `getSession` injetado, então é testável sem banco.
+- `matchHistory.js` — histórico das contas. `buildMatchHistoryRows` é pura
+  (testada); `saveMatchResult` é chamada no `endMatch` e nunca pode atrapalhar
+  o fim da partida.
+
+Pontos de atenção:
+
+- **Front e backend ficam em domínios diferentes** (Vercel × Cloud Run), então o
+  cookie de sessão seria um cookie de terceiros e é bloqueado por padrão em
+  vários navegadores. Por isso a sessão usa o plugin **`bearer`**: o cliente
+  guarda o token devolvido no header `set-auth-token` e o envia em
+  `Authorization: Bearer`. Não introduza fluxos que dependam de cookie cross-site.
+- O nome da conta **é** o nome exibido em partida e é único (ignorando
+  maiúsculas). A garantia real é o índice `idx_user_name_unico`; o hook em
+  `auth.js` existe só para a mensagem de erro amigável. Ambos usam as regras de
+  `shared/nickname.js`.
+- O token de sessão é base64 e contém `+`, `/` e `=`. Em query string um `+`
+  cru vira **espaço** e corrompe o token silenciosamente (o jogador vira
+  convidado, sem erro). Monte a URL do WebSocket sempre com `URLSearchParams`.
+- Só partidas online entre jogadores com conta geram histórico: convidados e
+  partidas contra bot ficam de fora.
+- Migrations: `npm run db:migrate` (roda a CLI do Better Auth e depois o schema
+  da aplicação). Credenciais ficam no `.env` local (ignorado pelo git) e em
+  secrets no Cloud Run.
+
 ### Cliente (`public/js/`)
 
 Sem componentes/framework: cada arquivo é um módulo com responsabilidade única,

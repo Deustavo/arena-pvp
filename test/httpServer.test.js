@@ -76,6 +76,27 @@ describe('httpServer', () => {
     assert.equal(typeof json.count, 'number');
   });
 
+  // O link de redefinição de senha do e-mail chega como
+  // /reset-password.html?token=..., então a query string não pode virar parte
+  // do nome do arquivo procurado em disco.
+  test('serve arquivo estático ignorando a query string', async () => {
+    const res = await get(port, '/reset-password.html?token=abc123');
+    assert.equal(res.status, 200);
+    assert.equal(res.headers['content-type'], 'text/html');
+    assert.match(res.body, /<html/i);
+  });
+
+  test('serve / ignorando a query string', async () => {
+    const res = await get(port, '/?utm_source=x');
+    assert.equal(res.status, 200);
+    assert.match(res.body, /<html/i);
+  });
+
+  test('bloqueia path traversal com caminho percent-encoded', async () => {
+    const res = await get(port, '/%2e%2e/package.json');
+    assert.equal(res.status, 403);
+  });
+
   test('bloqueia path traversal para fora do diretório public', async () => {
     const res = await get(port, '/../package.json');
     assert.equal(res.status, 403);

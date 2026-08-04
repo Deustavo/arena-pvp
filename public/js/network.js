@@ -8,7 +8,8 @@ import { updateHud, isShieldAvailable, initHearts } from './hud.js';
 import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
 import { reconcilePrediction } from './prediction.js';
-import { BACKEND_HOST } from './config.js';
+import { WS_URL } from './config.js';
+import { getToken } from './auth.js';
 import { updateGameScale } from './gameScale.js';
 
 // Chamado após qualquer atualização de estado que possa esgotar o escudo:
@@ -21,9 +22,17 @@ function releaseExhaustedShield() {
 }
 
 export function startOnline(onBackToMenu) {
-  const nickname = encodeURIComponent(state.nickname);
-  const classId = encodeURIComponent(state.classId);
-  state.ws = new WebSocket(`wss://${BACKEND_HOST}?nickname=${nickname}&classId=${classId}`);
+  const params = new URLSearchParams({
+    nickname: state.nickname,
+    classId: state.classId,
+  });
+  // Com conta logada o servidor usa o nome da conta e ignora o nickname acima.
+  // O token vai na query string porque o browser não permite headers
+  // customizados em `new WebSocket`.
+  const token = getToken();
+  if (token) params.set('token', token);
+
+  state.ws = new WebSocket(`${WS_URL}?${params}`);
 
   state.ws.onopen = () => {
     showWaitingOverlay();

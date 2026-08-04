@@ -8,6 +8,7 @@ import { createPlayerState } from '../../shared/entities.js';
 import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 import { stepPlayers, stepProjectiles } from '../../shared/simulation.js';
 import { createBotState, tickBot } from './botAI.js';
+import { saveMatchResult } from './matchHistory.js';
 
 function makePlayer(ws, index) {
   return {
@@ -16,6 +17,8 @@ function makePlayer(ws, index) {
     index,
     color: COLORS[index],
     name: ws.nickname || 'Jogador',
+    // null para convidados; só quem tem conta gera histórico.
+    userId: ws.userId ?? null,
   };
 }
 
@@ -107,6 +110,8 @@ export function endMatch(match, winnerIndex) {
   match.running = false;
   clearInterval(match.interval);
   for (const p of match.players) send(p.ws, { type: 'gameover', winnerIndex });
+  // Gravação em segundo plano: o fim da partida não espera o banco.
+  saveMatchResult(match, winnerIndex);
   if (match.onEnd) match.onEnd(match, winnerIndex);
 }
 
