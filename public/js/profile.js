@@ -1,8 +1,10 @@
-// Tela de histórico de partidas da conta. Só existe para quem está logado —
-// partidas de convidado e contra bot não são gravadas.
+// Tela de histórico de partidas de uma conta. Serve tanto para o perfil do
+// próprio jogador logado (botão "Perfil") quanto para o perfil público de
+// outra conta, aberto ao clicar num nome do ranking. Partidas de convidado e
+// contra bot não são gravadas, então não aparecem aqui.
 
 import {
-  profileOverlayEl, profileSummaryEl, profileBodyEl,
+  profileOverlayEl, profileTitleEl, profileSummaryEl, profileBodyEl,
   btnProfile, btnProfileClose,
 } from './dom.js';
 import { BACKEND_URL } from './config.js';
@@ -44,10 +46,9 @@ function renderResumo({ wins, losses, draws, total }) {
   `;
 }
 
-function renderPartidas(matches) {
+function renderPartidas(matches, vazioTexto) {
   if (matches.length === 0) {
-    profileBodyEl.innerHTML = '<p class="profile-vazio">Você ainda não jogou nenhuma partida online. '
-      + 'Partidas do modo treino não entram no histórico.</p>';
+    profileBodyEl.innerHTML = `<p class="profile-vazio">${vazioTexto}</p>`;
     return;
   }
 
@@ -71,26 +72,47 @@ function escaparHtml(texto) {
   return div.innerHTML;
 }
 
-async function carregar() {
+// `perfil` descreve de quem é o histórico: a URL a buscar, o título do modal e
+// os textos de vazio/erro (que falam na segunda pessoa no perfil próprio e na
+// terceira no de outro jogador).
+async function carregar(perfil) {
+  profileTitleEl.textContent = perfil.titulo;
   profileSummaryEl.innerHTML = '';
   profileBodyEl.innerHTML = '<p class="profile-vazio">Carregando...</p>';
   try {
-    const res = await fetch(`${BACKEND_URL}/api/me/matches`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
-    });
+    const res = await fetch(perfil.url, { headers: perfil.headers });
     if (!res.ok) throw new Error('resposta inválida');
     const { matches, summary } = await res.json();
     renderResumo(summary);
-    renderPartidas(matches);
+    renderPartidas(matches, perfil.vazio);
   } catch {
     profileSummaryEl.innerHTML = '';
-    profileBodyEl.innerHTML = '<p class="profile-vazio">Não foi possível carregar seu histórico agora.</p>';
+    profileBodyEl.innerHTML = `<p class="profile-vazio">${perfil.erro}</p>`;
   }
 }
 
-function abrir() {
+function abrirPerfilProprio() {
   profileOverlayEl.classList.add('visible');
-  carregar();
+  carregar({
+    url: `${BACKEND_URL}/api/me/matches`,
+    headers: { Authorization: `Bearer ${getToken()}` },
+    titulo: 'Suas partidas',
+    vazio: 'Você ainda não jogou nenhuma partida online. '
+      + 'Partidas do modo treino não entram no histórico.',
+    erro: 'Não foi possível carregar seu histórico agora.',
+  });
+}
+
+// Perfil público de outra conta (clique num nome do ranking). Não manda token:
+// a rota é pública e não devolve nada além do que o ranking já mostra.
+export function abrirPerfilDeJogador(nome) {
+  profileOverlayEl.classList.add('visible');
+  carregar({
+    url: `${BACKEND_URL}/api/player/matches?${new URLSearchParams({ name: nome })}`,
+    titulo: `Partidas de ${nome}`,
+    vazio: 'Esse jogador ainda não jogou nenhuma partida online.',
+    erro: 'Não foi possível carregar o perfil desse jogador agora.',
+  });
 }
 
 function fechar() {
@@ -98,7 +120,7 @@ function fechar() {
 }
 
 export function initProfile() {
-  btnProfile.addEventListener('click', abrir);
+  btnProfile.addEventListener('click', abrirPerfilProprio);
   btnProfileClose.addEventListener('click', fechar);
   profileOverlayEl.addEventListener('mousedown', (e) => {
     if (e.target === profileOverlayEl) fechar();

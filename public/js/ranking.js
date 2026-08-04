@@ -3,6 +3,7 @@
 import { rankingListEl } from './dom.js';
 import { BACKEND_URL } from './config.js';
 import { state } from './state.js';
+import { abrirPerfilDeJogador } from './profile.js';
 
 const RANKING_POLL_MS = 30000;
 let rankingInterval = null;
@@ -21,11 +22,12 @@ function renderRanking(ranking) {
     return;
   }
   const nomeJogadorLogado = state.user?.name?.toLowerCase();
-  const linhas = ranking.map((jogador) => {
+  const linhas = ranking.map((jogador, indice) => {
     const ehJogadorLogado = jogador.name.toLowerCase() === nomeJogadorLogado;
     const classeNome = ehJogadorLogado ? 'ranking-nome ranking-nome-proprio' : 'ranking-nome';
     return `<li>
-    <span class="${classeNome}">${escaparHtml(jogador.name)}</span>
+    <span class="ranking-posicao">${indice + 1}º</span>
+    <button type="button" class="${classeNome}" title="Ver perfil de ${escaparHtml(jogador.name)}">${escaparHtml(jogador.name)}</button>
     <span class="ranking-vitorias">${jogador.wins}</span>
   </li>`;
   });
@@ -41,6 +43,16 @@ async function fetchRanking() {
   } catch {
     rankingListEl.innerHTML = '<p class="ranking-erro">Não foi possível carregar o ranking.</p>';
   }
+}
+
+// Delegação: a lista é reescrita a cada poll, então o listener fica no <ol> e
+// não em cada nome. O nome vai para o perfil a partir do textContent, sem
+// precisar guardá-lo num atributo.
+export function initRanking() {
+  rankingListEl.addEventListener('click', (e) => {
+    const botao = e.target.closest('.ranking-nome');
+    if (botao) abrirPerfilDeJogador(botao.textContent);
+  });
 }
 
 export function startRankingPolling() {

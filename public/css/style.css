@@ -112,6 +112,8 @@
   #rankingHeader {
     display: flex;
     justify-content: space-between;
+    /* Alinha "Jogador" com o nome (e não com a posição) na linha de baixo. */
+    padding-left: 26px;
     gap: 8px;
     font-size: 12px;
     text-transform: uppercase;
@@ -128,17 +130,42 @@
     gap: 8px;
   }
   #rankingList li {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    align-items: baseline;
     gap: 8px;
     font-size: 14px;
   }
-  #rankingList .ranking-nome {
+  #rankingList .ranking-posicao {
+    color: #9a9ab0;
+    font-size: 12px;
+    text-align: right;
+  }
+  /* O nome é um <button> (abre o perfil do jogador), mas tem que parecer só um
+     item da lista: nada de fundo, borda ou padding de botão. O painel de
+     ranking fica dentro de #menu, então precisa do prefixo #menu para vencer
+     em especificidade a regra `#menu button:not(.class-card)` — mesmo truque
+     usado em `#menu button.link-button`. */
+  #menu #rankingList .ranking-nome {
+    min-width: 0;
+    width: auto;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  #rankingList .ranking-nome-proprio {
+  #menu #rankingList .ranking-nome:hover {
+    background: none;
+    text-decoration: underline;
+  }
+  #menu #rankingList .ranking-nome-proprio {
     color: #ffd54f;
   }
   #rankingList .ranking-vitorias {
@@ -1463,7 +1490,7 @@
   }
 
   @media (max-width: 700px) {
-    #menu button:not(.class-card) {
+    #menu button:not(.class-card):not(.ranking-nome) {
       min-width: 0;
       width: 100%;
       box-sizing: border-box;

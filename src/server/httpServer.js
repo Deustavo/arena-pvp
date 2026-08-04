@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { getOnlineCount } from './wsServer.js';
 import { auth } from './auth.js';
-import { getHistory, getSummary } from './matchHistory.js';
+import { getHistory, getSummary, findUserIdByName } from './matchHistory.js';
 import { getRanking } from './ranking.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -52,6 +52,12 @@ export function createHttpServer() {
       return;
     }
 
+    if (req.url.split('?')[0] === '/api/player/matches') {
+      res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
+      servePlayerProfile(req, res);
+      return;
+    }
+
     if (req.url.split('?')[0] === '/api/me/matches') {
       applyCorsHeaders(req, res);
       if (req.method === 'OPTIONS') {
@@ -94,6 +100,44 @@ async function serveMatchHistory(req, res) {
   } catch (erro) {
     console.error('[historico] falha ao consultar:', erro.message);
     json(500, { error: 'Não foi possível carregar o histórico' });
+  }
+}
+
+// Perfil público de uma conta pelo nome exibido (o que aparece no ranking).
+// Público pela mesma política do ranking: só devolve o que o ranking já
+// mostraria em mais detalhe (nome, classes e resultados de partidas), nada
+// de e-mail ou dado de conta.
+async function servePlayerProfile(req, res) {
+  function json(status, payload) {
+    res.writeHead(status, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(payload));
+  }
+
+  if (req.method !== 'GET') {
+    json(405, { error: 'Método não permitido' });
+    return;
+  }
+
+  const nome = new URL(req.url, 'http://localhost').searchParams.get('name') ?? '';
+  if (nome.trim() === '') {
+    json(400, { error: 'Informe o nome do jogador' });
+    return;
+  }
+
+  try {
+    const userId = await findUserIdByName(nome);
+    if (!userId) {
+      json(404, { error: 'Jogador não encontrado' });
+      return;
+    }
+    const [matches, summary] = await Promise.all([
+      getHistory(userId),
+      getSummary(userId),
+    ]);
+    json(200, { matches, summary });
+  } catch (erro) {
+    console.error('[perfil] falha ao consultar:', erro.message);
+    json(500, { error: 'Não foi possível carregar o perfil' });
   }
 }
 

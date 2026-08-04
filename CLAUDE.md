@@ -17,6 +17,7 @@ npm start         # roda o servidor em src/server/index.js (porta 3000, ou $PORT
 npm test          # roda toda a suíte com o runner nativo node --test
 node --test test/Match.test.js          # roda um arquivo de teste específico
 node --test --test-name-pattern="foo"   # roda testes que casam com um padrão de nome
+npm run db:seed   # popula o banco LOCAL com jogadores/partidas de mock
 ```
 
 Não há linter, bundler ou etapa de build configurados. Não há transpilação: o código
@@ -100,7 +101,21 @@ como antes (nickname digitado no menu). O planejamento completo está em
   Recebe `getSession` injetado, então é testável sem banco.
 - `matchHistory.js` — histórico das contas. `buildMatchHistoryRows` é pura
   (testada); `saveMatchResult` é chamada no `endMatch` e nunca pode atrapalhar
-  o fim da partida.
+  o fim da partida. `getHistory`/`getSummary` recebem um `userId` e servem tanto
+  o perfil próprio (`/api/me/matches`, autenticado) quanto o perfil público de
+  outra conta (`/api/player/matches?name=...`, resolvido por
+  `findUserIdByName`). Nas duas rotas o id nunca vem do cliente: no perfil
+  próprio vem da sessão, no público vem do nome.
+- `ranking.js` — ranking global por vitórias (`GET /api/ranking`, público).
+- `scripts/seed-mock.mjs` (`npm run db:seed`) — contas e partidas de mock para
+  ter o que olhar no ranking e nos perfis em desenvolvimento. Aborta se o banco
+  for remoto (Turso), é idempotente (apaga o mock anterior pelo prefixo `mock-`
+  no id) e não cria linha em `account`, então as contas de mock não fazem login.
+  Gera round-robin repetido entre os jogadores de mock (~26 partidas por
+  perfil), algumas contra convidado (`player2_id` nulo) e também partidas das
+  contas reais do banco local contra os mocks, para o perfil de quem faz login
+  em dev não ficar vazio. Toda partida gerada tem ao menos um lado de mock —
+  é isso que garante que a limpeza pelo prefixo desfaça o seed por completo.
 
 Pontos de atenção:
 
@@ -145,6 +160,12 @@ conecta event listeners de UI aos módulos.
 - `menu.js` — transições entre tela de menu e tela de jogo, e start/stop dos dois modos.
 - `classSelect.js` / `botClassSelect.js` — seleção de classe (própria e, no modo bot,
   também a do oponente).
+- `ranking.js` / `profile.js` — ranking do menu (posição, nome e vitórias, com
+  poll a cada 30s) e modal de histórico de partidas. Clicar no nome de um
+  jogador do ranking abre o perfil **dele** (`abrirPerfilDeJogador`, rota
+  pública, sem token); o botão "Perfil" da barra de conta abre o próprio
+  (rota autenticada). O clique usa delegação no `<ol>`, porque a lista é
+  reescrita inteira a cada poll.
 - `overlays.js`, `gameOver.js`, `hud.js` — overlays de espera/contagem regressiva/fim
   de jogo e HUD (vidas, cooldown, escudo).
 - `tutorial/matchTutorial.js` — único tutorial do jogo (o antigo modal explicativo

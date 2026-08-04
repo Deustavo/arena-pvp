@@ -13,7 +13,7 @@ import { initBotClassSelect, openBotClassSelect } from './botClassSelect.js';
 import { initAuthScreens, atualizarBarraDeConta } from './authScreens.js';
 import { initProfile } from './profile.js';
 import { loadSession } from './auth.js';
-import { refreshRankingHighlight } from './ranking.js';
+import { initRanking, refreshRankingHighlight } from './ranking.js';
 
 initInput();
 initNicknameInput();
@@ -21,6 +21,7 @@ initOnlineClassSelect();
 initBotClassSelect();
 initAuthScreens();
 initProfile();
+initRanking();
 
 // Restaura a sessão do token guardado. Não bloqueia a tela: o menu já aparece
 // como convidado e troca para o estado logado quando a resposta chega.

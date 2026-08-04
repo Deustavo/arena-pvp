@@ -11,8 +11,12 @@ function startServer() {
 }
 
 function get(port, requestPath) {
+  return request(port, 'GET', requestPath);
+}
+
+function request(port, method, requestPath) {
   return new Promise((resolve, reject) => {
-    const req = http.request({ host: 'localhost', port, path: requestPath, method: 'GET' }, (res) => {
+    const req = http.request({ host: 'localhost', port, path: requestPath, method }, (res) => {
       const chunks = [];
       res.on('data', (c) => chunks.push(c));
       res.on('end', () => resolve({
@@ -74,6 +78,25 @@ describe('httpServer', () => {
     assert.equal(res.headers['content-type'], 'application/json');
     const json = JSON.parse(res.body);
     assert.equal(typeof json.count, 'number');
+  });
+
+  // O perfil público de outra conta é identificado pelo nome exibido (o que
+  // aparece no ranking), então sem `name` não há o que consultar — precisa
+  // falhar antes de qualquer ida ao banco.
+  test('GET /api/player/matches sem name retorna 400', async () => {
+    const res = await get(port, '/api/player/matches');
+    assert.equal(res.status, 400);
+    assert.equal(res.headers['content-type'], 'application/json');
+  });
+
+  test('GET /api/player/matches com name vazio retorna 400', async () => {
+    const res = await get(port, '/api/player/matches?name=%20');
+    assert.equal(res.status, 400);
+  });
+
+  test('POST /api/player/matches retorna 405', async () => {
+    const res = await request(port, 'POST', '/api/player/matches?name=alguem');
+    assert.equal(res.status, 405);
   });
 
   // O link de redefinição de senha do e-mail chega como

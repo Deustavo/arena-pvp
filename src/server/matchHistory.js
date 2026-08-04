@@ -57,6 +57,18 @@ export async function saveMatchResult(match, winnerIndex) {
   }
 }
 
+// Resolve o nome exibido (como aparece no ranking) para o id da conta. A
+// comparação ignora maiúsculas, igual ao índice único de nome (schema.js).
+// Devolve null se ninguém tiver esse nome.
+export async function findUserIdByName(name) {
+  if (typeof name !== 'string' || name.trim() === '') return null;
+  const { rows } = await db.execute({
+    sql: 'SELECT id FROM user WHERE LOWER(name) = LOWER(?) LIMIT 1',
+    args: [name.trim()],
+  });
+  return rows[0]?.id ?? null;
+}
+
 // CASE compartilhado por getHistory/getSummary para decidir, por linha, qual
 // resultado a partida teve do ponto de vista de `userId`.
 const CASE_RESULTADO = `
