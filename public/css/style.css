@@ -343,13 +343,15 @@
   #menu button#btnOnline:hover {
     background: #23854e;
   }
+  /* A largura é definida por gameScale.js (é a largura da arena depois de
+     caber na tela); 800px é só o valor natural antes dele rodar. */
   #game-wrap {
     display: none;
     flex-direction: column;
     align-items: center;
     width: 800px;
+    max-width: 100%;
     box-sizing: border-box;
-    transform-origin: center center;
   }
   #hud {
     position: relative;
@@ -358,6 +360,29 @@
     justify-content: space-between;
     width: 100%;
     font-size: 18px;
+  }
+  /* Em tela estreita as duas colunas do HUD não cabem lado a lado sem reduzir o
+     texto a ponto de não dar para ler. Empilhadas, cada linha tem a largura
+     toda e a redução necessária é muito menor. A classe é aplicada por
+     gameScale.js, que é quem sabe a largura que sobrou. O cronômetro continua
+     absoluto no topo, então as linhas abrem espaço para ele com o padding. */
+  #hud.hud-stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding-top: 30px;
+  }
+  #hud.hud-stacked .hud-row-right {
+    align-items: flex-start;
+  }
+  /* Empilhado, o ícone da classe fica antes do nome nas duas linhas (a linha do
+     oponente é montada espelhada para o HUD lado a lado). */
+  #hud.hud-stacked .hud-row-right .hud-name-row {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+  }
+  #hud.hud-stacked .hud-name-col-right {
+    align-items: flex-start;
   }
   /* Cronômetro centralizado sobre a arena. Posicionado absoluto porque as duas
      colunas do HUD têm larguras diferentes (nome/classe de cada jogador) — no
@@ -520,8 +545,9 @@
     display: block;
   }
   /* Só o fundo inicial, antes do primeiro frame: o fundo e a borda da arena
-     são desenhados dentro do canvas (render.js), porque uma borda CSS fina
-     desaparece com o transform: scale() do #game-wrap. */
+     são desenhados dentro do canvas (render.js), porque o canvas é reduzido por
+     CSS para caber na tela (gameScale.js) e uma borda CSS fina desapareceria
+     nessa redução. */
   #game {
     background: #242437;
   }
@@ -545,7 +571,7 @@
     border: 1px solid #555;
     border-radius: 6px;
     color: #f1f1f6;
-    font-size: 18px;
+    font-size: clamp(13px, 3.4vw, 18px);
     line-height: 1.4;
     text-align: center;
     pointer-events: none;
@@ -580,31 +606,41 @@
     font-size: 18px;
     color: #bbb;
   }
+  /* Os textos dos overlays da partida têm tamanho próprio, limitado pela
+     largura da tela: a arena é redimensionada por CSS (ver gameScale.js) e não
+     reduz mais o texto junto com ela, então cada um precisa caber sozinho numa
+     arena estreita sem estourar. */
   #countdownMatchup {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 16px;
-    font-size: 72px;
+    max-width: 92%;
+    font-size: clamp(28px, 8vw, 72px);
     font-weight: bold;
     color: #fff;
     text-align: center;
+    overflow-wrap: anywhere;
   }
   #countdownVs {
-    font-size: 32px;
+    font-size: clamp(18px, 4vw, 32px);
     font-weight: normal;
     color: #999;
   }
   #countdownNumber {
     font-family: 'Courier New', 'Consolas', monospace;
-    font-size: 120px;
+    font-size: clamp(56px, 15vw, 120px);
     font-weight: bold;
     color: #4ade80;
     text-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
   }
   #gameOverOverlay h2, #waitingOverlay h2 {
     margin: 0;
-    font-size: 36px;
+    max-width: 92%;
+    font-size: clamp(22px, 5vw, 36px);
+    text-align: center;
+    overflow-wrap: anywhere;
   }
   #waitingOverlay h2 {
     animation: blink 1.2s ease-in-out infinite;
@@ -673,6 +709,8 @@
   }
   #gameOverOverlay .overlay-buttons, #waitingOverlay .overlay-buttons {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 16px;
   }
   #gameOverOverlay button, #waitingOverlay button {
@@ -1676,13 +1714,8 @@
     }
   }
   @media (max-width: 420px) {
-    .heart, .shield {
-      transform: scale(0.85);
-      transform-origin: left center;
-    }
-    .hud-name {
-      font-size: 12px;
-    }
+    /* O HUD da partida não é ajustado aqui: quem decide o quanto ele encolhe é
+       gameScale.js, que conhece a largura que sobrou depois da arena. */
     #classArea {
       flex-direction: column;
     }
