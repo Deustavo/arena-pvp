@@ -61,7 +61,7 @@
       <form id="authForm" novalidate>
         <div class="auth-field" id="authFieldName">
           <label for="authName">Nome do jogador</label>
-          <input type="text" id="authName" maxlength="20" autocomplete="nickname" placeholder="Como você aparece na arena">
+          <input type="text" id="authName" maxlength="20" autocomplete="nickname" pattern="[A-Za-z0-9]+" placeholder="Só letras e números, sem espaços">
         </div>
         <div class="auth-field" id="authFieldEmail">
           <label for="authEmail">E-mail</label>

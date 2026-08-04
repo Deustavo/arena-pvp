@@ -13,6 +13,7 @@ import {
 import { state } from './state.js';
 import * as auth from './auth.js';
 import { TURNSTILE_SITE_KEY } from './config.js';
+import { isValidAccountName, filterAccountNameChars, ACCOUNT_NAME_ERROR } from '../../shared/nickname.js';
 import { initPasswordToggles } from './passwordToggle.js';
 
 // 'login' | 'signup' | 'forgot'
@@ -113,6 +114,28 @@ function fechar() {
   mostrarFeedback('', '');
 }
 
+// Descarta caractere proibido na hora em que ele é digitado (ou colado), em
+// vez de só reclamar no envio. Cobre paste e arrastar texto porque o evento
+// `input` dispara em todos esses casos.
+function filtrarNomeDigitado() {
+  const digitado = authNameInput.value;
+  const limpo = filterAccountNameChars(digitado);
+  if (limpo === digitado) return;
+
+  // Sem isto o cursor pularia para o fim do campo a cada caractere descartado,
+  // o que atrapalha quem está corrigindo o meio do nome.
+  const cursor = authNameInput.selectionStart ?? digitado.length;
+  const removidosAntesDoCursor = cursor - filterAccountNameChars(digitado.slice(0, cursor)).length;
+
+  authNameInput.value = limpo;
+  const novaPosicao = cursor - removidosAntesDoCursor;
+  authNameInput.setSelectionRange(novaPosicao, novaPosicao);
+
+  // O caractere simplesmente desaparecer sem explicação parece bug; o aviso
+  // diz por que ele não entrou.
+  mostrarFeedback(ACCOUNT_NAME_ERROR, 'erro');
+}
+
 function setEnviando(valor) {
   enviando = valor;
   btnAuthSubmit.disabled = valor;
@@ -133,6 +156,15 @@ async function submeter(evento) {
   }
   if (view === 'signup' && !nome) {
     mostrarFeedback('Escolha um nome de jogador.', 'erro');
+    authNameInput.focus();
+    return;
+  }
+  // Mesma regra do servidor (shared/nickname.js): sem espaço nem caractere
+  // especial. Barra o envio antes de gastar uma tentativa de cadastro (e o
+  // token do captcha, que só vale para uma requisição).
+  if (view === 'signup' && !isValidAccountName(nome)) {
+    mostrarFeedback(ACCOUNT_NAME_ERROR, 'erro');
+    authNameInput.focus();
     return;
   }
   if (VIEWS[view].campos.senha && senha.length < 8) {
@@ -197,6 +229,7 @@ export function atualizarBarraDeConta() {
 export function initAuthScreens() {
   initPasswordToggles(authOverlayEl);
   authFormEl.addEventListener('submit', submeter);
+  authNameInput.addEventListener('input', filtrarNomeDigitado);
   btnAuthClose.addEventListener('click', fechar);
   btnAuthForgot.addEventListener('click', () => abrir('forgot'));
   btnAuthSwitch.addEventListener('click', () => abrir(VIEWS[view].trocarPara));

@@ -4,7 +4,7 @@ import { APIError } from 'better-auth/api';
 import { LibsqlDialect } from '@libsql/kysely-libsql';
 import { db } from './db.js';
 import { enviarVerificacaoEmail, enviarResetSenha } from './email.js';
-import { sanitizeNickname, isValidNickname } from '../../shared/nickname.js';
+import { sanitizeNickname, isValidAccountName, ACCOUNT_NAME_ERROR } from '../../shared/nickname.js';
 
 // URL pública do backend (Cloud Run) — base dos links gerados nos e-mails.
 const BASE_URL = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
@@ -20,11 +20,14 @@ export const TRUSTED_ORIGINS = [
 // O nome da conta é o nome do jogador exibido em partida, então precisa ser
 // único. O índice único em LOWER(name) (ver schema.js) é a garantia real;
 // esta checagem existe para devolver uma mensagem de erro amigável.
+//
+// A validação de caracteres também é feita no formulário do front, mas aqui é
+// o que realmente vale: a rota de cadastro pode ser chamada direto.
 async function garantirNomeDisponivel(name) {
   const nome = sanitizeNickname(name);
-  if (!isValidNickname(nome)) {
+  if (!isValidAccountName(nome)) {
     throw new APIError('BAD_REQUEST', {
-      message: 'Escolha um nome de jogador válido.',
+      message: ACCOUNT_NAME_ERROR,
     });
   }
   const { rows } = await db.execute({

@@ -128,6 +128,17 @@ Pontos de atenção:
   maiúsculas). A garantia real é o índice `idx_user_name_unico`; o hook em
   `auth.js` existe só para a mensagem de erro amigável. Ambos usam as regras de
   `shared/nickname.js`.
+- Nome de **conta** é mais restrito que nickname de convidado: só letras sem
+  acento e números (`isValidAccountName`/`ACCOUNT_NAME_PATTERN` em
+  `shared/nickname.js`) — sem espaço, acento, pontuação ou emoji, para não
+  existirem dois nomes visualmente iguais no ranking/perfil. A regra é aplicada
+  em três camadas: o campo `#authName` descarta caractere proibido enquanto o
+  jogador digita ou cola (`filtrarNomeDigitado` em `authScreens.js`, usando
+  `filterAccountNameChars` e preservando a posição do cursor), o envio do
+  formulário é barrado antes de gastar o token do captcha, e o hook `before` de
+  criação de usuário em `auth.js`, que é o que
+  realmente vale — a rota de cadastro pode ser chamada direto. Nickname de
+  convidado (`isValidNickname`) segue aceitando qualquer caractere.
 - O token de sessão é base64 e contém `+`, `/` e `=`. Em query string um `+`
   cru vira **espaço** e corrompe o token silenciosamente (o jogador vira
   convidado, sem erro). Monte a URL do WebSocket sempre com `URLSearchParams`.
