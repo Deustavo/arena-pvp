@@ -108,6 +108,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  #rankingList .ranking-nome-proprio {
+    color: #ffd54f;
+  }
   #rankingList .ranking-vitorias {
     color: #9ecbff;
     font-weight: bold;

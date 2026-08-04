@@ -2,6 +2,7 @@
 
 import { rankingListEl } from './dom.js';
 import { BACKEND_URL } from './config.js';
+import { state } from './state.js';
 
 const RANKING_POLL_MS = 30000;
 let rankingInterval = null;
@@ -17,10 +18,15 @@ function renderRanking(ranking) {
     rankingListEl.innerHTML = '<p class="ranking-vazio">Nenhuma conta jogou ainda.</p>';
     return;
   }
-  const linhas = ranking.map((jogador) => `<li>
-    <span class="ranking-nome">${escaparHtml(jogador.name)}</span>
+  const nomeJogadorLogado = state.user?.name?.toLowerCase();
+  const linhas = ranking.map((jogador) => {
+    const ehJogadorLogado = jogador.name.toLowerCase() === nomeJogadorLogado;
+    const classeNome = ehJogadorLogado ? 'ranking-nome ranking-nome-proprio' : 'ranking-nome';
+    return `<li>
+    <span class="${classeNome}">${escaparHtml(jogador.name)}</span>
     <span class="ranking-vitorias">${jogador.wins}</span>
-  </li>`);
+  </li>`;
+  });
   rankingListEl.innerHTML = linhas.join('');
 }
 
