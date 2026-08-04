@@ -123,7 +123,9 @@ function applyCorsHeaders(req, res) {
   }
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // x-captcha-response: header custom que o plugin captcha do Better Auth
+  // manda em sign-up/sign-in/forget-password quando o Turnstile está ativo.
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-captcha-response');
   res.setHeader('Access-Control-Expose-Headers', 'set-auth-token');
   res.setHeader('Access-Control-Max-Age', '86400');
 }
