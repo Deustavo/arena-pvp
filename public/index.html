@@ -145,27 +145,6 @@
     </div>
   </div>
 
-  <div id="howToPlayOverlay">
-    <div class="modal">
-      <div id="tutHeader">
-        <h2>Como jogar</h2>
-        <div id="tutHeaderRight">
-          <span id="tutStepCount"></span>
-          <button id="btnTutClose" type="button" title="Fechar (Esc)" aria-label="Fechar">✕</button>
-        </div>
-      </div>
-      <canvas id="tutCanvas" width="340" height="190"></canvas>
-      <h3 id="tutTitle"></h3>
-      <p id="tutText"></p>
-      <div id="tutDots"></div>
-      <div id="tutNav">
-        <button id="btnTutPrev">Voltar</button>
-        <button id="btnTutNext">Próximo</button>
-      </div>
-      <button id="btnTutSkip">Pular tutorial</button>
-    </div>
-  </div>
-
   <div id="game-wrap">
     <div id="hud">
       <div class="hud-row">
@@ -195,6 +174,7 @@
     </div>
     <div id="canvas-wrap">
       <canvas id="game" width="800" height="600"></canvas>
+      <div id="matchTutorialBanner"></div>
       <div id="gameOverOverlay">
         <h2 id="gameOverMessage"></h2>
         <div class="overlay-buttons">

@@ -20,6 +20,7 @@ export const cooldownP1El = document.getElementById('cooldownP1');
 export const menuEl = document.getElementById('menu');
 export const gameWrapEl = document.getElementById('game-wrap');
 export const escHintEl = document.getElementById('escHint');
+export const matchTutorialBannerEl = document.getElementById('matchTutorialBanner');
 export const btnOnline = document.getElementById('btnOnline');
 export const btnBot = document.getElementById('btnBot');
 export const nicknameInput = document.getElementById('nicknameInput');
@@ -74,17 +75,6 @@ export const countdownName2El = document.getElementById('countdownName2');
 export const countdownNumberEl = document.getElementById('countdownNumber');
 
 export const btnHowToPlay = document.getElementById('btnHowToPlay');
-export const howToPlayOverlayEl = document.getElementById('howToPlayOverlay');
-export const tutCanvas = document.getElementById('tutCanvas');
-export const tutCtx = tutCanvas.getContext('2d');
-export const tutTitleEl = document.getElementById('tutTitle');
-export const tutTextEl = document.getElementById('tutText');
-export const tutDotsEl = document.getElementById('tutDots');
-export const tutStepCountEl = document.getElementById('tutStepCount');
-export const btnTutSkip = document.getElementById('btnTutSkip');
-export const btnTutPrev = document.getElementById('btnTutPrev');
-export const btnTutNext = document.getElementById('btnTutNext');
-export const btnTutClose = document.getElementById('btnTutClose');
 
 export const onlineCountEl = document.getElementById('onlineCount');
 export const onlineCountValueEl = document.getElementById('onlineCountValue');

@@ -2,7 +2,7 @@ import {
   btnOnline, btnBot, btnHowToPlay, btnLeaveQueue, btnTryTrainingMode, btnPlayAgain, btnBackToMenu, btnSwapClasses,
 } from './dom.js';
 import { state } from './state.js';
-import { initTutorialUI, comTutorialNaPrimeiraVez, openHowToPlay } from './tutorial/tutorial.js';
+import { forceNextMatchTutorial } from './tutorial/matchTutorial.js';
 import { initInput } from './input.js';
 import { leaveQueue as leaveNetworkQueue } from './network.js';
 import { showMenu, startOnline, startBot, backToMenu } from './menu.js';
@@ -15,7 +15,6 @@ import { initProfile } from './profile.js';
 import { loadSession } from './auth.js';
 import { refreshRankingHighlight } from './ranking.js';
 
-initTutorialUI();
 initInput();
 initNicknameInput();
 initOnlineClassSelect();
@@ -32,10 +31,13 @@ loadSession().then(() => {
 
 btnOnline.addEventListener('click', () => {
   if (!commitNickname()) return;
-  openOnlineClassSelect(() => comTutorialNaPrimeiraVez(startOnline));
+  openOnlineClassSelect(startOnline);
 });
-btnBot.addEventListener('click', () => openBotClassSelect(() => comTutorialNaPrimeiraVez(startBot)));
-btnHowToPlay.addEventListener('click', openHowToPlay);
+btnBot.addEventListener('click', () => openBotClassSelect(startBot));
+btnHowToPlay.addEventListener('click', () => {
+  forceNextMatchTutorial();
+  startBot();
+});
 btnLeaveQueue.addEventListener('click', () => leaveNetworkQueue(backToMenu));
 btnTryTrainingMode.addEventListener('click', () => {
   state.pendingTrainingRedirect = true;

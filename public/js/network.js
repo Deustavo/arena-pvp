@@ -11,6 +11,7 @@ import { reconcilePrediction } from './prediction.js';
 import { WS_URL } from './config.js';
 import { getToken } from './auth.js';
 import { updateGameScale } from './gameScale.js';
+import { shouldStartMatchTutorial, startMatchTutorial } from './tutorial/matchTutorial.js';
 
 // Chamado após qualquer atualização de estado que possa esgotar o escudo:
 // se o servidor sinalizar que as cargas acabaram, solta a tecla localmente.
@@ -84,6 +85,7 @@ function handleOnlineMessage(msg, onBackToMenu) {
       state.matchStarted = true;
       hideCountdown();
       playStartSound();
+      if (shouldStartMatchTutorial()) startMatchTutorial();
       break;
     case 'state': {
       state.latestState = msg;

@@ -43,3 +43,17 @@ export function playStartSound() {
     // Audio unavailable (e.g. no user interaction yet) — fail silently.
   }
 }
+
+// Bipe curto e agudo tocado quando o jogador completa um passo do tutorial
+// interativo da primeira partida.
+export function playTutorialStepSound() {
+  try {
+    const audioCtx = getAudioCtx();
+    const now = audioCtx.currentTime;
+    scheduleNote(audioCtx, 784, now, 0.06);
+    const last = scheduleNote(audioCtx, 1174.66, now + 0.07, 0.12);
+    last.onended = () => audioCtx.close();
+  } catch {
+    // Audio unavailable (e.g. no user interaction yet) — fail silently.
+  }
+}

@@ -378,6 +378,31 @@
     font-size: 13px;
     color: #777;
   }
+  #matchTutorialBanner {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 90%;
+    padding: 10px 20px;
+    background: rgba(20, 20, 30, 0.85);
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #f1f1f6;
+    font-size: 18px;
+    line-height: 1.4;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease, background-color 0.2s ease, border-color 0.2s ease;
+  }
+  #matchTutorialBanner.visible {
+    opacity: 1;
+  }
+  #matchTutorialBanner.success {
+    background: rgba(45, 138, 86, 0.9);
+    border-color: #4ade80;
+  }
   #escHint.armed {
     color: #f4c542;
   }
@@ -1045,144 +1070,7 @@
   #btnOnlineClassConfirm:hover {
     background: #3a6a89;
   }
-  #howToPlayOverlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-  }
-  #howToPlayOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
-    border-radius: 10px;
-    padding: 20px 24px;
-    width: 388px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  #howToPlayOverlay h2 {
-    margin: 0;
-    font-size: 22px;
-  }
-  #tutHeader {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-  #tutHeaderRight {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  #tutStepCount {
-    font-size: 13px;
-    color: #8a8aa0;
-  }
-  #tutHeaderRight button#btnTutClose {
-    width: 26px;
-    height: 26px;
-    min-width: 0;
-    padding: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: #9a9ab0;
-    font-size: 15px;
-    line-height: 1;
-  }
-  #tutHeaderRight button#btnTutClose:hover {
-    background: #3d3d52;
-    color: #fff;
-  }
-  #tutCanvas {
-    background: #22222f;
-    border: 1px solid #444;
-    border-radius: 6px;
-    display: block;
-    width: 340px;
-    height: 190px;
-    align-self: center;
-  }
-  #tutTitle {
-    margin: 0;
-    font-size: 17px;
-    color: #7dd3fc;
-  }
-  #tutText {
-    margin: 0;
-    height: 56px;
-    overflow-y: auto;
-    font-size: 14px;
-    line-height: 1.55;
-    color: #ddd;
-  }
-  #tutDots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
-  #tutDots button.tut-dot {
-    width: 9px;
-    height: 9px;
-    min-width: 0;
-    padding: 0;
-    border-radius: 50%;
-    border: none;
-    background: #4a4a5e;
-    cursor: pointer;
-  }
-  #tutDots button.tut-dot:hover {
-    background: #6a6a80;
-  }
-  #tutDots button.tut-dot.active {
-    background: #7dd3fc;
-  }
-  #tutNav {
-    display: flex;
-    gap: 12px;
-  }
-  #howToPlayOverlay button {
-    font-size: 15px;
-    padding: 9px 20px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    background: #457b9d;
-    color: #fff;
-  }
-  #howToPlayOverlay button:hover {
-    background: #3a6a89;
-  }
-  #tutNav button {
-    flex: 1;
-  }
-  #btnTutPrev {
-    background: #555;
-  }
-  #btnTutPrev:hover {
-    background: #444;
-  }
-  #btnTutPrev:disabled {
-    background: #333340;
-    color: #666;
-    cursor: default;
-  }
-  #howToPlayOverlay #btnTutSkip {
-    width: 100%;
-    margin-top: 4px;
-    padding: 4px;
-    background: transparent;
-    color: #9a9ab0;
-    text-decoration: underline;
-  }
-  #howToPlayOverlay #btnTutSkip:hover {
-    background: transparent;
-    color: #fff;
-  }
-  #botClassOverlay .modal, #howToPlayOverlay .modal {
+  #botClassOverlay .modal {
     max-width: calc(100vw - 32px);
     box-sizing: border-box;
   }

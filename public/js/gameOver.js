@@ -1,5 +1,6 @@
 import { gameOverOverlayEl, gameOverMessageEl, btnSwapClasses } from './dom.js';
 import { state } from './state.js';
+import { stopMatchTutorial } from './tutorial/matchTutorial.js';
 
 const WINNER_EMOJIS = ['😆', '🤣', '😂', '😅', '😘', '😜', '🤪', '😢', '🤫', '😹', '👻', '🤡', '👀'];
 
@@ -15,6 +16,7 @@ export function rerollWinnerEmoji() {
 }
 
 export function recordGameOver(result) {
+  stopMatchTutorial();
   state.gameOver = true;
   state.gameOverAt = Date.now();
   state.overlayShown = false;

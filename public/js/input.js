@@ -5,6 +5,7 @@ import { sendInput, sendShoot } from './network.js';
 import { botShoot } from './bot.js';
 import { backToMenu } from './menu.js';
 import { rerollWinnerEmoji } from './gameOver.js';
+import { notifyMatchTutorial } from './tutorial/matchTutorial.js';
 
 const keyMap = {
   KeyW: 'up', ArrowUp: 'up',
@@ -56,6 +57,7 @@ export function initInput() {
         // Ao defender, o movimento acumulado é descartado.
         state.input.up = state.input.down = state.input.left = state.input.right = false;
         sendInput();
+        notifyMatchTutorial('shield');
       }
       return;
     }
@@ -63,6 +65,7 @@ export function initInput() {
     if (dir && !state.input[dir] && !state.input.shield) {
       state.input[dir] = true;
       sendInput();
+      notifyMatchTutorial('move');
     }
   });
 
@@ -111,5 +114,6 @@ export function initInput() {
     } else if (state.mode === 'bot') {
       botShoot(targetX, targetY);
     }
+    notifyMatchTutorial('shoot');
   });
 }

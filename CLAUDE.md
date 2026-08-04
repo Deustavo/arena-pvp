@@ -147,8 +147,26 @@ conecta event listeners de UI aos módulos.
   também a do oponente).
 - `overlays.js`, `gameOver.js`, `hud.js` — overlays de espera/contagem regressiva/fim
   de jogo e HUD (vidas, cooldown, escudo).
-- `tutorial/` — tutorial interativo desenhado em canvas próprio (`canvasHelpers.js`,
-  `steps.js`, `tutorial.js`).
+- `tutorial/matchTutorial.js` — único tutorial do jogo (o antigo modal explicativo
+  "Como jogar" em canvas foi removido): joga-se uma partida de verdade contra o
+  bot enquanto uma faixa no topo da arena (`#matchTutorialBanner`) indica a
+  próxima ação (mover, atirar, escudar), avançando para o próximo passo quando
+  `notifyMatchTutorial` é chamado com a ação correspondente — disparado de
+  `input.js` a cada tecla de movimento, clique de tiro e ativação de escudo.
+  Ao completar um passo o balão fica verde e toca `playTutorialStepSound()`
+  (`audio.js`). Enquanto o tutorial está ativo (`isMatchTutorialActive()`), o
+  bot não atira (`bot.js`), para o jogador poder praticar sem risco.
+  - Controlado por uma flag em `localStorage` (`jogoDoAno.tutorialPartidaVisto`):
+    roda sozinho só uma vez por navegador, na primeira partida contra bot **ou**
+    online — `startOnline` (`menu.js`) redireciona a primeira partida online do
+    jogador para uma partida de bot com tutorial em vez de matchmaking real,
+    porque um oponente online de verdade não pode ser impedido de atirar.
+    `startMatchTutorial()` é chamado quando a partida realmente começa (`bot.js`,
+    no fim da contagem regressiva), e `stopMatchTutorial()` ao voltar ao menu ou
+    preparar uma nova partida (`menu.js`) e ao fim de uma partida (`gameOver.js`).
+  - O botão "Como jogar" do menu (`main.js`) chama `forceNextMatchTutorial()` e
+    inicia uma partida de bot, reabrindo o tutorial mesmo que já tenha sido
+    visto antes.
 
 #### Loading skeleton na tela inicial
 

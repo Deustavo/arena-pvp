@@ -10,9 +10,9 @@ import { commitNickname } from './nickname.js';
 import { resetEscHint } from './input.js';
 import { resetHud } from './hud.js';
 import { openBotClassSelect } from './botClassSelect.js';
-import { comTutorialNaPrimeiraVez } from './tutorial/tutorial.js';
 import { updateGameScale } from './gameScale.js';
 import { startMenuBackground, stopMenuBackground } from './menuBackground.js';
+import { stopMatchTutorial, shouldStartMatchTutorial } from './tutorial/matchTutorial.js';
 
 export function showMenu() {
   menuEl.style.display = 'flex';
@@ -48,10 +48,19 @@ function prepareNewMatch() {
   hideCountdown();
   resetHud();
   resetEscHint();
+  stopMatchTutorial();
 }
 
 export function startOnline() {
   if (!commitNickname()) return;
+  // Na primeira partida do jogador, mesmo escolhendo "Jogar online", cai no
+  // tutorial interativo contra bot — só assim dá pra garantir que o
+  // "oponente" não atira nele durante o tutorial (não seria possível com um
+  // adversário online de verdade).
+  if (shouldStartMatchTutorial()) {
+    startBot();
+    return;
+  }
   state.mode = 'online';
   prepareNewMatch();
   showGame();
@@ -71,6 +80,6 @@ export function backToMenu() {
   showMenu();
   if (state.pendingTrainingRedirect) {
     state.pendingTrainingRedirect = false;
-    openBotClassSelect(() => comTutorialNaPrimeiraVez(startBot));
+    openBotClassSelect(startBot);
   }
 }

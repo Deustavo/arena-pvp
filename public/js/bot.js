@@ -11,6 +11,7 @@ import { recordGameOver } from './gameOver.js';
 import { playStartSound } from './audio.js';
 import { getBotDifficulty } from '../../shared/botDifficulty.js';
 import { updateGameScale } from './gameScale.js';
+import { shouldStartMatchTutorial, startMatchTutorial, isMatchTutorialActive } from './tutorial/matchTutorial.js';
 
 const BOT_COUNTDOWN_MS = 3000;
 
@@ -69,6 +70,7 @@ export function startBot() {
     playStartSound();
     state.bot.botNextShot = Date.now() + 800;
     state.botInterval = setInterval(botTick, TICK_MS);
+    if (shouldStartMatchTutorial()) startMatchTutorial();
   });
 }
 
@@ -179,7 +181,9 @@ function updateBotAI() {
   enemy.shielding = willShield && enemy.shieldHits < enemy.shieldMaxHits;
   if (enemy.shielding) return;
 
-  if (now >= bot.botNextShot && me.alive) {
+  // Na primeira partida (tutorial interativo), o bot não atira, para o
+  // jogador poder praticar mover/atirar/escudo sem risco de perder vidas.
+  if (now >= bot.botNextShot && me.alive && !isMatchTutorialActive()) {
     botAttack(bot, me, enemy);
     bot.botNextShot = now + enemyCls.shotCooldownMs + diff.cooldownExtraMs + Math.random() * diff.shotJitterMs;
   }
