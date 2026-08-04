@@ -106,13 +106,20 @@ export function createShieldsRow(container, count, pixelSize = SHIELD_PIXEL_SIZE
 
 // `maxLives` são as vidas máximas de cada jogador, dependentes da classe
 // escolhida (ex.: atirador 10, mago 8, tank 12) — vêm do snapshot inicial da
-// partida, já que ambos os lados começam com vida cheia.
+// partida, já na ordem visual [você, oponente] (não a ordem bruta do
+// servidor), já que ambos os lados começam com vida cheia.
 export function initHearts(maxLives = [10, 10]) {
   heartsEls[0] = createHeartsRow(livesP0El, maxLives[0]);
   heartsEls[1] = createHeartsRow(livesP1El, maxLives[1]);
   prevLives = [maxLives[0], maxLives[1]];
   hitFlashUntil = [0, 0];
-  const maxShields = state.shieldMaxHits;
+  // `state.shieldMaxHits` fica indexado pela posição real do jogador no
+  // servidor (é isso que `shieldCharges` espera), então precisa ser
+  // reordenado para [você, oponente] aqui, senão a fileira de escudos do
+  // slot 0 é montada com a contagem do jogador errado quando você não é
+  // `players[0]` no servidor.
+  const oppIndex = state.playerIndex === 0 ? 1 : 0;
+  const maxShields = [state.shieldMaxHits[state.playerIndex], state.shieldMaxHits[oppIndex]];
   shieldsEls[0] = createShieldsRow(shieldsP0El, maxShields[0]);
   shieldsEls[1] = createShieldsRow(shieldsP1El, maxShields[1]);
 }

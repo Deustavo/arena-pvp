@@ -76,7 +76,12 @@ function handleOnlineMessage(msg, onBackToMenu) {
       state.matchStarted = false;
       state.latestState = { players: msg.players, projectiles: [] };
       state.viewFlipped = computeInitialViewFlip(msg.players, state.playerIndex);
-      initHearts(msg.players.map((p) => p.lives));
+      // `initHearts` espera vidas na ordem visual [você, oponente], não na
+      // ordem bruta do servidor — senão o HUD monta a fileira de corações do
+      // slot errado quando o jogador local não é `players[0]` (ver initHearts
+      // em hud.js).
+      const oppIndex = state.playerIndex === 0 ? 1 : 0;
+      initHearts([msg.players[state.playerIndex].lives, msg.players[oppIndex].lives]);
       updateHud();
       updateGameScale();
       showCountdown(msg.countdownMs, msg.players.map((p) => p.name));

@@ -84,7 +84,7 @@ export function initInput() {
     }
   });
 
-  canvas.addEventListener('mousemove', (e) => {
+  window.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
@@ -92,7 +92,8 @@ export function initInput() {
     state.mouse.y = (e.clientY - rect.top) * scaleY;
   });
 
-  canvas.addEventListener('click', (e) => {
+  window.addEventListener('click', (e) => {
+    if (e.target.closest('button, a, input, select, textarea')) return;
     if (!state.mode) return;
     if (state.gameOver) {
       rerollWinnerEmoji();
