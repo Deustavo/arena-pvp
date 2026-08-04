@@ -6,6 +6,7 @@ import { state } from './state.js';
 
 const RANKING_POLL_MS = 30000;
 let rankingInterval = null;
+let ultimoRanking = null;
 
 function escaparHtml(texto) {
   const div = document.createElement('div');
@@ -14,6 +15,7 @@ function escaparHtml(texto) {
 }
 
 function renderRanking(ranking) {
+  ultimoRanking = ranking;
   if (ranking.length === 0) {
     rankingListEl.innerHTML = '<p class="ranking-vazio">Nenhuma conta jogou ainda.</p>';
     return;
@@ -53,4 +55,11 @@ export function stopRankingPolling() {
     clearInterval(rankingInterval);
     rankingInterval = null;
   }
+}
+
+// loadSession() (main.js) resolve depois do primeiro fetchRanking, então o nome
+// do jogador logado pode não estar disponível ainda no primeiro render — sem
+// isso, o destaque amarelo só apareceria no próximo poll (30s depois).
+export function refreshRankingHighlight() {
+  if (ultimoRanking) renderRanking(ultimoRanking);
 }

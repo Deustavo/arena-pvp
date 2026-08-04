@@ -13,6 +13,7 @@ import { initBotClassSelect, openBotClassSelect } from './botClassSelect.js';
 import { initAuthScreens, atualizarBarraDeConta } from './authScreens.js';
 import { initProfile } from './profile.js';
 import { loadSession } from './auth.js';
+import { refreshRankingHighlight } from './ranking.js';
 
 initTutorialUI();
 initInput();
@@ -24,7 +25,10 @@ initProfile();
 
 // Restaura a sessão do token guardado. Não bloqueia a tela: o menu já aparece
 // como convidado e troca para o estado logado quando a resposta chega.
-loadSession().then(atualizarBarraDeConta);
+loadSession().then(() => {
+  atualizarBarraDeConta();
+  refreshRankingHighlight();
+});
 
 btnOnline.addEventListener('click', () => {
   if (!commitNickname()) return;
