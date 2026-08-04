@@ -290,7 +290,7 @@ Notas pensando no ranking futuro:
 | `GMAIL_APP_PASSWORD` | Senha de app do Gmail (requer 2FA na conta) |
 | `TURNSTILE_SECRET_KEY` | Secret key do Cloudflare Turnstile — habilita o plugin `captcha` do Better Auth (cadastro, login e pedido de reset). Sem ela definida o plugin nem é montado, e o captcha fica desativado. |
 
-Local: arquivo `.env` (Node 20 suporta `--env-file`, sem dependência nova). Produção: secrets do Cloud Run (Secret Manager), referenciados no `cloudbuild.yaml`.
+Local: arquivo `.env` (Node 20 suporta `--env-file`, sem dependência nova). Produção: secrets configurados no próprio serviço do Cloud Run (Secret Manager), não no pipeline de deploy.
 
 ### 3.4 Captcha: Cloudflare Turnstile
 

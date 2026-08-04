@@ -220,6 +220,29 @@ editar ou adicionar código neste repositório.
 
 ## Deploy
 
-Cloud Run (`southamerica-east1`), buildado via Cloud Build (`cloudbuild.yaml`): o
-pipeline roda `npm install` + `npm test` antes de buildar e publicar a imagem Docker
-(`Dockerfile`, Node 20 Alpine). `npm test` falhando bloqueia o deploy.
+Front e backend ficam em plataformas diferentes, mas num **único pipeline** no
+GitHub Actions (`.github/workflows/deploy.yml`), disparado por push na `main`:
+
+1. `test` — `npm install` + `npm test`. É o gate: falhando, nenhum dos dois
+   deploys roda.
+2. `deploy-backend` — build da imagem Docker (`Dockerfile`, Node 20 Alpine),
+   push para o Artifact Registry e `gcloud run deploy` do serviço `jogo-do-ano`
+   (projeto `jogo-do-ano-app`, região `southamerica-east1`). Autentica no GCP
+   via Workload Identity Federation (secrets `GCP_WIF_PROVIDER` e
+   `GCP_DEPLOY_SA`), sem chave de service account no repo.
+3. `deploy-frontend` — `vercel build`/`deploy --prod` da pasta `public/`.
+
+Pontos de atenção:
+
+- A ordem backend → frontend é **proposital** e não deve ser paralelizada: o
+  front tem o host do backend hardcoded em `public/js/config.js` e consome
+  `/api/*` dele, então subir o front antes arriscaria chamar uma API que ainda
+  não existe. Se um deploy falhar, a metade que subiu é a compatível com a
+  versão antiga da outra.
+- A imagem é taggeada com `:latest` e com o SHA do commit; rollback é
+  `gcloud run deploy --image ...:<sha antigo>`.
+- Não existe mais `cloudbuild.yaml`, e o trigger do Cloud Build precisa ficar
+  **desabilitado** no console GCP — ativo, ele dispararia o deploy do backend
+  por fora do gate de teste.
+- Mudança em `shared/` ou em contrato de API precisa dos dois deploys; é o
+  pipeline único que garante que eles saem do mesmo commit.
