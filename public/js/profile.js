@@ -77,6 +77,55 @@ function renderClassesMaisUsadas(matches) {
   `;
 }
 
+// ----- Loading skeleton -----
+// Enquanto a primeira página do histórico não chega, o modal já mostra a mesma
+// estrutura que vai aparecer (resumo, classes mais usadas e linhas de partida)
+// com os valores em shimmer, em vez de um "Carregando..." que muda o layout
+// inteiro quando a resposta chega.
+
+// Os rótulos do resumo não vêm da API (só os números), então aparecem de
+// verdade já no skeleton — é isso que faz a caixa ter a altura final correta.
+const RESUMO_ROTULOS = ['partidas', 'vitórias', 'derrotas', 'empates', 'vitórias'];
+const SKELETON_CLASSES = 3;
+const SKELETON_PARTIDAS = 5;
+
+function renderResumoSkeleton() {
+  profileSummaryEl.innerHTML = RESUMO_ROTULOS.map((rotulo) => `
+    <div class="resumo-item">
+      <strong class="skeleton-loading">00</strong>
+      <span>${rotulo}</span>
+    </div>
+  `).join('');
+}
+
+function renderClassesSkeleton() {
+  const itens = Array.from({ length: SKELETON_CLASSES }, () => `
+    <li class="classe-usada">
+      <span class="class-icon skeleton-loading"></span>
+      <span class="classe-usada-nome skeleton-loading">Classe</span>
+      <span class="classe-usada-total skeleton-loading">00 partidas</span>
+    </li>
+  `).join('');
+  profileClassesEl.innerHTML = `
+    <h3 class="profile-subtitulo">Classes mais usadas (últimas ${PARTIDAS_CONSIDERADAS} partidas)</h3>
+    <ul class="lista-classes-usadas">${itens}</ul>
+  `;
+}
+
+function linhaPartidaSkeleton(classeExtra = '') {
+  return `<li class="partida ${classeExtra}">
+    <span class="partida-resultado skeleton-loading">Vitória</span>
+    <span class="partida-oponente skeleton-loading">vs jogador</span>
+    <span class="partida-classes skeleton-loading">Classe x Classe</span>
+    <span class="partida-data skeleton-loading">00/00 00:00</span>
+  </li>`;
+}
+
+function renderPartidasSkeleton() {
+  const itens = Array.from({ length: SKELETON_PARTIDAS }, () => linhaPartidaSkeleton()).join('');
+  profileBodyEl.innerHTML = `<ul class="lista-partidas">${itens}</ul>`;
+}
+
 function linhaPartida(partida) {
   const resultado = RESULTADOS[partida.result] ?? RESULTADOS.draw;
   return `<li class="partida">
@@ -143,9 +192,9 @@ async function carregar(perfil) {
   listaEl = null;
 
   profileTitleEl.textContent = perfil.titulo;
-  profileSummaryEl.innerHTML = '';
-  profileClassesEl.innerHTML = '';
-  profileBodyEl.innerHTML = '<p class="profile-vazio">Carregando...</p>';
+  renderResumoSkeleton();
+  renderClassesSkeleton();
+  renderPartidasSkeleton();
   profileBodyEl.scrollTop = 0;
 
   try {
@@ -207,17 +256,18 @@ function garantirListaRolavel() {
   if (profileBodyEl.scrollHeight <= profileBodyEl.clientHeight) carregarMais();
 }
 
+// A próxima página também entra como skeleton, no fim da própria lista: as
+// linhas em shimmer ocupam o mesmo espaço das partidas que vão substituí-las,
+// então a lista não "pula" quando a resposta chega.
 function mostrarCarregandoMais(visivel) {
-  const existente = profileBodyEl.querySelector('.profile-carregando-mais');
+  const existentes = listaEl?.querySelectorAll('.partida-skeleton') ?? [];
   if (!visivel) {
-    existente?.remove();
+    existentes.forEach((el) => el.remove());
     return;
   }
-  if (existente || !listaEl) return;
-  profileBodyEl.insertAdjacentHTML(
-    'beforeend',
-    '<p class="profile-carregando-mais">Carregando mais partidas...</p>',
-  );
+  if (existentes.length > 0 || !listaEl) return;
+  const itens = Array.from({ length: 2 }, () => linhaPartidaSkeleton('partida-skeleton')).join('');
+  listaEl.insertAdjacentHTML('beforeend', itens);
 }
 
 function onScrollHistorico() {
