@@ -1,35 +1,36 @@
-import nodemailer from 'nodemailer';
-
-// Único arquivo que conhece o provedor de e-mail. Hoje é o SMTP do Gmail
-// (custo zero, sem domínio próprio); quando houver domínio, trocar o
-// transporter por Resend/SES aqui não afeta o resto do servidor.
-const GMAIL_USER = process.env.GMAIL_USER;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-
-const REMETENTE = `Arena PVP <${GMAIL_USER}>`;
-
-let transporter = null;
-
-function getTransporter() {
-  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) return null;
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-    });
-  }
-  return transporter;
-}
+// Único arquivo que conhece o provedor de e-mail. Usa a API HTTP da Brevo
+// (sem SMTP, sem domínio próprio — só verificar um e-mail remetente em
+// app.brevo.com/senders). Trocar de provedor de novo não afeta o resto do servidor.
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
+const BREVO_SENDER_NOME = 'Arena PVP';
 
 // Sem credenciais configuradas (ex.: rodando testes locais), loga no console
 // em vez de quebrar — o fluxo de auth continua utilizável em desenvolvimento.
 async function enviar({ to, subject, html, text }) {
-  const t = getTransporter();
-  if (!t) {
-    console.warn(`[email] SMTP não configurado. E-mail para ${to}: ${subject}\n${text}`);
+  if (!BREVO_API_KEY || !BREVO_SENDER_EMAIL) {
+    console.warn(`[email] BREVO_API_KEY/BREVO_SENDER_EMAIL não configurados. E-mail para ${to}: ${subject}\n${text}`);
     return;
   }
-  await t.sendMail({ from: REMETENTE, to, subject, html, text });
+  const resposta = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': BREVO_API_KEY,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      sender: { name: BREVO_SENDER_NOME, email: BREVO_SENDER_EMAIL },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+    }),
+  });
+  if (!resposta.ok) {
+    const corpo = await resposta.text();
+    throw new Error(`[email] falha ao enviar via Brevo (${resposta.status}): ${corpo}`);
+  }
   console.log(`[email] enviado para ${to}: ${subject}`);
 }
 

@@ -89,8 +89,10 @@ como antes (nickname digitado no menu). O planejamento completo está em
 - `db.js` — client libSQL compartilhado. Em produção aponta para o **Turso**
   (`libsql://`), em desenvolvimento para um arquivo local (`file:./data/local.db`).
   Mesmo driver e mesmo dialeto SQL nos dois casos.
-- `email.js` — **único** arquivo que conhece o provedor de e-mail (hoje SMTP do
-  Gmail via nodemailer). Trocar de provedor deve mexer só aqui.
+- `email.js` — **único** arquivo que conhece o provedor de e-mail (hoje a API
+  HTTP da Brevo, via `BREVO_API_KEY`/`BREVO_SENDER_EMAIL`; não exige domínio
+  próprio, só um e-mail remetente verificado em app.brevo.com/senders). Trocar
+  de provedor deve mexer só aqui.
 - `schema.js` — schema que **não** é do Better Auth: índice único de nome de
   jogador e tabela `match_history`. Idempotente.
 - `wsIdentity.js` — quem é o jogador do socket. Com sessão válida o nome vem da
