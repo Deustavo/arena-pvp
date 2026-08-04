@@ -13,6 +13,7 @@ import {
 import { state } from './state.js';
 import * as auth from './auth.js';
 import { TURNSTILE_SITE_KEY } from './config.js';
+import { initPasswordToggles } from './passwordToggle.js';
 
 // 'login' | 'signup' | 'forgot'
 let view = 'login';
@@ -193,6 +194,7 @@ export function atualizarBarraDeConta() {
 }
 
 export function initAuthScreens() {
+  initPasswordToggles(authOverlayEl);
   authFormEl.addEventListener('submit', submeter);
   btnAuthClose.addEventListener('click', fechar);
   btnAuthForgot.addEventListener('click', () => abrir('forgot'));

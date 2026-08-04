@@ -63,7 +63,10 @@
         </div>
         <div class="auth-field" id="authFieldPassword">
           <label for="authPassword">Senha</label>
-          <input type="password" id="authPassword" autocomplete="current-password" placeholder="Mínimo de 8 caracteres">
+          <div class="password-field-wrap">
+            <input type="password" id="authPassword" autocomplete="current-password" placeholder="Mínimo de 8 caracteres">
+            <button type="button" class="password-toggle-btn" aria-label="Mostrar senha">👁</button>
+          </div>
         </div>
         <div id="authTurnstile"></div>
         <button type="submit" id="btnAuthSubmit">Entrar</button>

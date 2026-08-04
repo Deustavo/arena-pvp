@@ -2,6 +2,9 @@
 // redireciona para cá com o token na query string.
 
 import { resetPassword } from './auth.js';
+import { initPasswordToggles } from './passwordToggle.js';
+
+initPasswordToggles();
 
 const form = document.getElementById('resetForm');
 const senhaInput = document.getElementById('resetPassword');
