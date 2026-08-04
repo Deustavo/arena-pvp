@@ -23,13 +23,14 @@ describe('stepPlayers', () => {
     assert.equal(p.x, startX);
   });
 
-  test('jogador em modo escudo fica imóvel', () => {
+  // O escudo protege sem imobilizar: dá para se defender andando.
+  test('jogador em modo escudo continua se movendo', () => {
     const p = createPlayerState(0);
     const startX = p.x;
     p.shielding = true;
     p.input.right = true;
     stepPlayers([p], ARENA);
-    assert.equal(p.x, startX);
+    assert.equal(p.x, startX + PLAYER_SPEED);
   });
 
   test('não ultrapassa os limites da arena', () => {

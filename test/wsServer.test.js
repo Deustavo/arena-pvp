@@ -168,6 +168,24 @@ describe('wsServer', () => {
     await wait(20);
   });
 
+  // Escudo esgotado não protege mais, então também não pode impedir o tiro.
+  test('handleShoot permite disparo com escudo esgotado', async () => {
+    const serverWsPromise = nextServerConnection(wss);
+    const client = await connectClient(port);
+    const serverWs = await serverWsPromise;
+    serverWs.player = createPlayerState(0, 'atirador');
+    serverWs.player.shielding = true;
+    serverWs.player.shieldHits = serverWs.player.shieldMaxHits;
+    serverWs.match = { nextProjectileId: 1, projectiles: [], interval: 123 };
+
+    client.send(JSON.stringify({ type: 'shoot', targetX: 500, targetY: 300 }));
+    await wait(30);
+    assert.equal(serverWs.match.projectiles.length, 1);
+
+    client.close();
+    await wait(20);
+  });
+
   test('handleShoot ignora disparo sem partida em andamento (match.interval ausente)', async () => {
     const serverWsPromise = nextServerConnection(wss);
     const client = await connectClient(port);

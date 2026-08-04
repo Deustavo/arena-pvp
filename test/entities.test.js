@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { createPlayerState, createProjectile, createShotProjectiles } from '../shared/entities.js';
+import { createPlayerState, createProjectile, createShotProjectiles, escudoAtivo } from '../shared/entities.js';
 import { ARENA, PLAYER_SIZE, PROJECTILE_SPEED } from '../shared/constants.js';
 import { CLASSES } from '../shared/classes.js';
 
@@ -127,5 +127,25 @@ describe('createProjectile', () => {
     assert.equal(proj.range, 260);
     assert.equal(proj.startX, 0);
     assert.equal(proj.startY, 0);
+  });
+});
+
+describe('escudoAtivo', () => {
+  test('falso quando o jogador não está defendendo', () => {
+    const p = createPlayerState(0);
+    assert.equal(escudoAtivo(p), false);
+  });
+
+  test('verdadeiro defendendo com hits disponíveis', () => {
+    const p = createPlayerState(0);
+    p.shielding = true;
+    assert.equal(escudoAtivo(p), true);
+  });
+
+  test('falso quando o escudo já absorveu o máximo de hits', () => {
+    const p = createPlayerState(0);
+    p.shielding = true;
+    p.shieldHits = p.shieldMaxHits;
+    assert.equal(escudoAtivo(p), false);
   });
 });

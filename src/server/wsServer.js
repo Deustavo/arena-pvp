@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws';
 import { PLAYER_SIZE } from '../../shared/constants.js';
-import { createShotProjectiles } from '../../shared/entities.js';
+import { createShotProjectiles, escudoAtivo } from '../../shared/entities.js';
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { handleConnection, handleLeaveQueue, handleDisconnect } from './matchmaking.js';
 import { parseConnectionParams, resolvePlayerIdentity } from './wsIdentity.js';
@@ -73,6 +73,8 @@ function handleShoot(ws, msg) {
   const player = ws.player;
   const match = ws.match;
   if (!player.alive || !match.interval) return;
+  // Em modo de defesa o jogador não atira (mas continua podendo se mover).
+  if (escudoAtivo(player)) return;
 
   const cls = getClass(player.classId);
   const now = Date.now();

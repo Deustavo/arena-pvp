@@ -2,7 +2,7 @@ import { state, computeInitialViewFlip, getWorldInput } from './state.js';
 import {
   ARENA, PLAYER_SIZE, TICK_MS, PROJECTILE_SPEED, SHIELD_RADIUS, PROJECTILE_SIZE,
 } from '../../shared/constants.js';
-import { createPlayerState, createShotProjectiles } from '../../shared/entities.js';
+import { createPlayerState, createShotProjectiles, escudoAtivo } from '../../shared/entities.js';
 import { CLASSES, getClass } from '../../shared/classes.js';
 import { stepPlayers, stepProjectiles } from '../../shared/simulation.js';
 import { showCountdown } from './overlays.js';
@@ -228,6 +228,8 @@ export function botShoot(targetX, targetY) {
   if (!bot) return;
   const me = bot.players[0];
   if (!me.alive) return;
+  // Em modo de defesa o jogador não atira (mas continua podendo se mover).
+  if (escudoAtivo(me)) return;
   const cls = getClass(me.classId);
   const now = Date.now();
   if (now - me.lastShot < cls.shotCooldownMs) return;

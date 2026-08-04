@@ -21,6 +21,12 @@ export function createPlayerState(index, classId = DEFAULT_CLASS_ID) {
   };
 }
 
+// Escudo levantado e ainda com hits disponíveis. Enquanto está ativo o jogador
+// pode se mover, mas não pode atirar — defender é abrir mão do ataque.
+export function escudoAtivo(player) {
+  return !!player.shielding && player.shieldHits < player.shieldMaxHits;
+}
+
 export function createProjectile(
   id, cx, cy, targetX, targetY, ownerIndex, speed = PROJECTILE_SPEED, damage = 1,
   size = PROJECTILE_SIZE, range = Infinity, longRangeDistance = null, longRangeDamage = null

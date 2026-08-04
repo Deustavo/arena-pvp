@@ -100,6 +100,10 @@ export function initInput() {
       return;
     }
     if (!state.matchStarted) return;
+    // Em modo de defesa o jogador não atira. A regra é aplicada de novo do lado
+    // autoritativo (`escudoAtivo` em wsServer/bot); aqui é só para o clique não
+    // consumir cooldown nem avançar o tutorial à toa.
+    if (state.input.shield && isShieldAvailable()) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
