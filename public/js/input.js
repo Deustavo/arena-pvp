@@ -54,15 +54,13 @@ export function initInput() {
       e.preventDefault();
       if (!state.input.shield && state.matchStarted && !state.gameOver && isShieldAvailable()) {
         state.input.shield = true;
-        // Ao defender, o movimento acumulado é descartado.
-        state.input.up = state.input.down = state.input.left = state.input.right = false;
         sendInput();
         notifyMatchTutorial('shield');
       }
       return;
     }
     const dir = keyMap[e.code];
-    if (dir && !state.input[dir] && !state.input.shield) {
+    if (dir && !state.input[dir]) {
       state.input[dir] = true;
       sendInput();
       notifyMatchTutorial('move');
@@ -101,8 +99,6 @@ export function initInput() {
       return;
     }
     if (!state.matchStarted) return;
-    // Em modo de defesa o jogador não atira.
-    if (state.input.shield && isShieldAvailable()) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;

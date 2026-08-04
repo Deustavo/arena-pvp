@@ -37,9 +37,6 @@ export function advancePrediction() {
   if (!state.predicted.initialized) return;
   const me = state.latestState.players[state.playerIndex];
   if (!me || !me.alive) return;
-  // Em modo de defesa o jogador não se move.
-  const maxHits = me.shieldMaxHits ?? state.shieldMaxHits[state.playerIndex];
-  if (state.input.shield && me.shieldHits < maxHits) return;
 
   const { dx, dy } = movementDelta(getWorldInput());
   const speed = me.speed ?? getClass(me.classId).speed ?? PLAYER_SPEED;

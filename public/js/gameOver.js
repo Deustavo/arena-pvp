@@ -1,8 +1,13 @@
-import { gameOverOverlayEl, gameOverMessageEl, btnSwapClasses } from './dom.js';
+import { gameOverOverlayEl, gameOverMessageEl, btnPlayAgain, btnSwapClasses } from './dom.js';
 import { state } from './state.js';
-import { stopMatchTutorial } from './tutorial/matchTutorial.js';
+import { wasMatchTutorial, stopMatchTutorial } from './tutorial/matchTutorial.js';
 
 const WINNER_EMOJIS = ['😆', '🤣', '😂', '😅', '😘', '😜', '🤪', '😢', '🤫', '😹', '👻', '🤡', '👀'];
+
+// Guarda se a partida que terminou era o tutorial, para esconder "Jogar
+// novamente"/"Trocar classes" no overlay de fim de jogo — depois do tutorial
+// só faz sentido voltar ao menu.
+let lastMatchWasTutorial = false;
 
 function randomWinnerEmoji() {
   return WINNER_EMOJIS[Math.floor(Math.random() * WINNER_EMOJIS.length)];
@@ -16,6 +21,7 @@ export function rerollWinnerEmoji() {
 }
 
 export function recordGameOver(result) {
+  lastMatchWasTutorial = wasMatchTutorial();
   stopMatchTutorial();
   state.gameOver = true;
   state.gameOverAt = Date.now();
@@ -45,7 +51,10 @@ export function showGameOverOverlay() {
     text = 'Partida encerrada';
   }
   gameOverMessageEl.textContent = text;
-  btnSwapClasses.style.display = (state.mode === 'bot' || state.mode === 'online') ? 'block' : 'none';
+  // Ao terminar o tutorial, só faz sentido oferecer "Menu inicial" — o
+  // jogador ainda não escolheu classe/modo de verdade para repetir.
+  btnPlayAgain.style.display = lastMatchWasTutorial ? 'none' : 'block';
+  btnSwapClasses.style.display = !lastMatchWasTutorial && (state.mode === 'bot' || state.mode === 'online') ? 'block' : 'none';
   gameOverOverlayEl.style.display = 'flex';
 }
 

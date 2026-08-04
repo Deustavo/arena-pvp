@@ -11,8 +11,6 @@ export function stepPlayers(players, arena) {
     if (!p.alive) continue;
     // Escudo esgotado não pode mais ser usado.
     if (p.shielding && p.shieldHits >= p.shieldMaxHits) p.shielding = false;
-    // Em modo de defesa o jogador fica imóvel.
-    if (p.shielding) continue;
     const { dx, dy } = movementDelta(p.input);
     const speed = p.speed ?? PLAYER_SPEED;
     p.x = clamp(p.x + dx * speed, 0, arena.w - PLAYER_SIZE);

@@ -73,8 +73,6 @@ function handleShoot(ws, msg) {
   const player = ws.player;
   const match = ws.match;
   if (!player.alive || !match.interval) return;
-  // Em modo de defesa o jogador não atira.
-  if (player.shielding) return;
 
   const cls = getClass(player.classId);
   const now = Date.now();

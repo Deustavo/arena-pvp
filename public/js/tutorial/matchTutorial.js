@@ -33,6 +33,12 @@ let advancing = false;
 // Força o tutorial a rodar na próxima partida mesmo que já tenha sido visto
 // (usado pelo botão "Como jogar", que deve poder reabri-lo a qualquer hora).
 let forcedNext = false;
+// true se o tutorial foi iniciado na partida atual — diferente de `active`,
+// que já vira false antes do fim real da partida (passo final se esconde
+// sozinho após FINAL_STEP_HIDE_MS). Usado pelo overlay de fim de jogo para
+// esconder "Jogar novamente"/"Trocar classes" quando a partida era o
+// tutorial. Zerado só em prepareNewMatch (menu.js), via resetMatchTutorialFlag.
+let startedThisMatch = false;
 
 function tutorialJaVisto() {
   try {
@@ -62,6 +68,14 @@ export function isMatchTutorialActive() {
   return active;
 }
 
+export function wasMatchTutorial() {
+  return startedThisMatch;
+}
+
+export function resetMatchTutorialFlag() {
+  startedThisMatch = false;
+}
+
 function renderStep() {
   matchTutorialBannerEl.innerHTML = STEPS[stepIndex].text;
   matchTutorialBannerEl.classList.add('visible');
@@ -71,6 +85,7 @@ export function startMatchTutorial() {
   marcarTutorialVisto();
   forcedNext = false;
   active = true;
+  startedThisMatch = true;
   advancing = false;
   stepIndex = 0;
   clearTimeout(hideTimer);

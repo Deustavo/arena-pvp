@@ -12,7 +12,7 @@ import { resetHud } from './hud.js';
 import { openBotClassSelect } from './botClassSelect.js';
 import { updateGameScale } from './gameScale.js';
 import { startMenuBackground, stopMenuBackground } from './menuBackground.js';
-import { stopMatchTutorial, shouldStartMatchTutorial } from './tutorial/matchTutorial.js';
+import { stopMatchTutorial, shouldStartMatchTutorial, resetMatchTutorialFlag } from './tutorial/matchTutorial.js';
 
 export function showMenu() {
   menuEl.style.display = 'flex';
@@ -49,6 +49,7 @@ function prepareNewMatch() {
   resetHud();
   resetEscHint();
   stopMatchTutorial();
+  resetMatchTutorialFlag();
 }
 
 export function startOnline() {
