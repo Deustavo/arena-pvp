@@ -101,7 +101,7 @@ async function serveMatchHistory(req, res) {
 // online-count): não expõe nada sensível, só nome e contagem de vitórias.
 async function serveRanking(req, res) {
   try {
-    const ranking = await getRanking();
+    const ranking = await getRanking(10);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ranking }));
   } catch (erro) {

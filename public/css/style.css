@@ -76,8 +76,17 @@
   }
   #rankingPanel h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 26px;
     text-align: center;
+  }
+  #rankingHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9a9ab0;
   }
   #rankingList {
     margin: 0;
