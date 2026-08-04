@@ -84,6 +84,7 @@ export const auth = betterAuth({
       '/sign-in/email': { window: 60, max: 5 },
       '/forget-password': { window: 60, max: 3 },
       '/reset-password': { window: 60, max: 5 },
+      '/sign-up/email': { window: 60, max: 5 },
     },
   },
 
@@ -134,3 +135,7 @@ export const auth = betterAuth({
       : []),
   ],
 });
+
+if (!process.env.TURNSTILE_SECRET_KEY && process.env.NODE_ENV === 'production') {
+  console.warn('[auth] TURNSTILE_SECRET_KEY ausente em produção — captcha desativado no cadastro/login/reset de senha.');
+}
