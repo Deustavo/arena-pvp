@@ -9,7 +9,8 @@
     "test": "node --test",
     "build:front": "node scripts/copy-shared.mjs",
     "db:migrate:auth": "node --env-file-if-exists=.env node_modules/@better-auth/cli/dist/index.mjs migrate --config src/server/auth.js -y",
-    "db:migrate": "npm run db:migrate:auth && node --env-file-if-exists=.env scripts/migrate.mjs"
+    "db:migrate": "npm run db:migrate:auth && node --env-file-if-exists=.env scripts/migrate.mjs",
+    "db:seed": "node --env-file-if-exists=.env scripts/seed-mock.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
