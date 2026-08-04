@@ -49,6 +49,7 @@ export const authFieldPasswordEl = document.getElementById('authFieldPassword');
 export const authNameInput = document.getElementById('authName');
 export const authEmailInput = document.getElementById('authEmail');
 export const authPasswordInput = document.getElementById('authPassword');
+export const authTurnstileEl = document.getElementById('authTurnstile');
 export const btnAuthSubmit = document.getElementById('btnAuthSubmit');
 export const btnAuthClose = document.getElementById('btnAuthClose');
 export const authLinksEl = document.getElementById('authLinks');

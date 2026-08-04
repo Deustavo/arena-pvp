@@ -4,7 +4,7 @@
 
 import {
   authOverlayEl, authTitleEl, authFormEl, authFeedbackEl,
-  authFieldNameEl, authFieldEmailEl, authFieldPasswordEl,
+  authFieldNameEl, authFieldEmailEl, authFieldPasswordEl, authTurnstileEl,
   authNameInput, authEmailInput, authPasswordInput,
   authLinksEl, btnAuthSubmit, btnAuthClose, btnAuthForgot, btnAuthSwitch,
   accountLoggedInEl, accountLoggedOutEl, accountNameEl,
@@ -12,10 +12,34 @@ import {
 } from './dom.js';
 import { state } from './state.js';
 import * as auth from './auth.js';
+import { TURNSTILE_SITE_KEY } from './config.js';
 
 // 'login' | 'signup' | 'forgot'
 let view = 'login';
 let enviando = false;
+
+// O widget do Turnstile é renderizado uma única vez (as três views usam o
+// mesmo captcha) e resetado a cada tentativa de envio, já que o token só
+// serve para uma requisição. `window.turnstile` só existe depois do script
+// externo carregar — sem ele o captcha fica desativado e o servidor decide
+// se exige ou não o header (não exige sem TURNSTILE_SECRET_KEY configurada).
+let turnstileWidgetId = null;
+let turnstileToken = null;
+
+function renderTurnstileSeNecessario() {
+  if (turnstileWidgetId !== null || typeof window.turnstile === 'undefined') return;
+  turnstileWidgetId = window.turnstile.render(authTurnstileEl, {
+    sitekey: TURNSTILE_SITE_KEY,
+    callback: (token) => { turnstileToken = token; },
+    'expired-callback': () => { turnstileToken = null; },
+    'error-callback': () => { turnstileToken = null; },
+  });
+}
+
+function resetTurnstile() {
+  turnstileToken = null;
+  if (turnstileWidgetId !== null) window.turnstile?.reset(turnstileWidgetId);
+}
 
 const VIEWS = {
   login: {
@@ -77,6 +101,7 @@ function abrir(novaView) {
   view = novaView;
   renderView();
   authOverlayEl.classList.add('visible');
+  renderTurnstileSeNecessario();
   const primeiro = view === 'signup' ? authNameInput : authEmailInput;
   primeiro.focus();
 }
@@ -114,16 +139,17 @@ async function submeter(evento) {
     return;
   }
 
+  const captchaToken = turnstileToken;
   setEnviando(true);
   try {
     if (view === 'login') {
-      await auth.signIn({ email, password: senha });
+      await auth.signIn({ email, password: senha, captchaToken });
       atualizarBarraDeConta();
       fechar();
       return;
     }
     if (view === 'signup') {
-      await auth.signUp({ name: nome, email, password: senha });
+      await auth.signUp({ name: nome, email, password: senha, captchaToken });
       authFormEl.reset();
       mostrarApenasAviso(
         `Conta criada! Enviamos um link de confirmação para ${email}. `
@@ -131,7 +157,7 @@ async function submeter(evento) {
       );
       return;
     }
-    await auth.requestPasswordReset(email);
+    await auth.requestPasswordReset(email, captchaToken);
     authFormEl.reset();
     mostrarApenasAviso(
       'Se existir uma conta com esse e-mail, o link para criar uma nova senha '
@@ -140,6 +166,7 @@ async function submeter(evento) {
   } catch (erro) {
     mostrarFeedback(erro.message, 'erro');
   } finally {
+    resetTurnstile();
     setEnviando(false);
   }
 }

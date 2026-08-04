@@ -27,11 +27,16 @@ export function isLoggedIn() {
 // Erro com a mensagem já pronta para exibir ao jogador.
 class AuthError extends Error {}
 
-async function apiAuth(path, { method = 'POST', body } = {}) {
+async function apiAuth(path, { method = 'POST', body, captchaToken } = {}) {
   const token = getToken();
   const headers = {};
   if (body) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
+  // O plugin captcha do Better Auth espera o token do Turnstile neste header
+  // (ver x-captcha-response). Só é exigido nos endpoints protegidos
+  // (cadastro, login, pedido de reset) e só quando o servidor tem
+  // TURNSTILE_SECRET_KEY configurada — sem isso o header é ignorado.
+  if (captchaToken) headers['x-captcha-response'] = captchaToken;
 
   let res;
   try {
@@ -65,6 +70,8 @@ const ERROS = {
   PASSWORD_TOO_SHORT: 'A senha precisa ter pelo menos 8 caracteres.',
   INVALID_TOKEN: 'Esse link é inválido ou já foi usado. Peça um novo.',
   TOKEN_EXPIRED: 'Esse link expirou. Peça um novo.',
+  MISSING_RESPONSE: 'Confirme que você não é um robô.',
+  VERIFICATION_FAILED: 'Não foi possível confirmar que você não é um robô. Tente de novo.',
 };
 
 function traduzErro(dados, status) {
@@ -75,16 +82,17 @@ function traduzErro(dados, status) {
   return 'Algo deu errado. Tente de novo.';
 }
 
-export async function signUp({ name, email, password }) {
+export async function signUp({ name, email, password, captchaToken }) {
   await apiAuth('sign-up/email', {
     body: { name, email, password, callbackURL: `${location.origin}/` },
+    captchaToken,
   });
   // Com verificação de e-mail obrigatória, o cadastro não loga direto:
   // o jogador precisa confirmar o e-mail primeiro.
 }
 
-export async function signIn({ email, password }) {
-  const dados = await apiAuth('sign-in/email', { body: { email, password } });
+export async function signIn({ email, password, captchaToken }) {
+  const dados = await apiAuth('sign-in/email', { body: { email, password }, captchaToken });
   state.user = dados.user;
   return dados.user;
 }
@@ -99,9 +107,10 @@ export async function signOut() {
   state.user = null;
 }
 
-export async function requestPasswordReset(email) {
+export async function requestPasswordReset(email, captchaToken) {
   await apiAuth('request-password-reset', {
     body: { email, redirectTo: `${location.origin}/reset-password.html` },
+    captchaToken,
   });
 }
 

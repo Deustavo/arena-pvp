@@ -149,8 +149,8 @@ diferente do assumido e a configuração precisa ser revista.
 
 1. **Secrets no Cloud Run** (não configurados): `TURSO_DATABASE_URL`,
    `TURSO_AUTH_TOKEN`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GMAIL_USER`,
-   `GMAIL_APP_PASSWORD`. Sem eles o servidor sobe, mas usa banco local efêmero
-   e não envia e-mail.
+   `GMAIL_APP_PASSWORD`, `TURNSTILE_SECRET_KEY`. Sem eles o servidor sobe, mas
+   usa banco local efêmero, não envia e-mail e fica sem captcha.
 2. **`FRONTEND_ORIGIN`** precisa bater com a URL real da Vercel, senão o CORS
    das rotas de auth bloqueia o front.
 3. **Migrations em produção**: rodar `npm run db:migrate` apontando para o
@@ -288,8 +288,27 @@ Notas pensando no ranking futuro:
 | `BETTER_AUTH_URL` | URL pública (Cloud Run) — base dos links de e-mail |
 | `GMAIL_USER` | Endereço Gmail remetente (conta dedicada do jogo) |
 | `GMAIL_APP_PASSWORD` | Senha de app do Gmail (requer 2FA na conta) |
+| `TURNSTILE_SECRET_KEY` | Secret key do Cloudflare Turnstile — habilita o plugin `captcha` do Better Auth (cadastro, login e pedido de reset). Sem ela definida o plugin nem é montado, e o captcha fica desativado. |
 
 Local: arquivo `.env` (Node 20 suporta `--env-file`, sem dependência nova). Produção: secrets do Cloud Run (Secret Manager), referenciados no `cloudbuild.yaml`.
+
+### 3.4 Captcha: Cloudflare Turnstile
+
+Gratuito, sem limite de requisições. Protege `sign-up/email`, `sign-in/email` e
+`request-password-reset` (endpoints padrão do plugin `captcha` do Better Auth,
+ver `src/server/auth.js`).
+
+- Site key (pública) fica hardcoded em `public/js/config.js`
+  (`TURNSTILE_SITE_KEY`) — não há build step para injetar env vars no client.
+- Secret key (privada) fica em `TURNSTILE_SECRET_KEY` no servidor.
+- As duas chaves são criadas juntas no [dashboard do Cloudflare](https://dash.cloudflare.com/?to=/:account/turnstile),
+  associadas ao(s) domínio(s) do front (Vercel + `localhost` para dev).
+- Cliente: widget renderizado em `#authTurnstile` (`public/js/authScreens.js`),
+  token enviado no header `x-captcha-response` (`public/js/auth.js`).
+- **Sem as duas chaves configuradas (site key real + `TURNSTILE_SECRET_KEY`),
+  o captcha fica todo desativado** — nem o servidor exige o header nem o
+  widget tem uma site key válida para renderizar de verdade. As duas
+  precisam ser trocadas juntas.
 
 ---
 

@@ -1286,6 +1286,10 @@
   .auth-field input:disabled {
     opacity: 0.5;
   }
+  #authTurnstile {
+    display: flex;
+    justify-content: center;
+  }
   #authFeedback, #resetFeedback {
     display: none;
     font-size: 13px;

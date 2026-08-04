@@ -1,5 +1,5 @@
 import { betterAuth } from 'better-auth';
-import { bearer } from 'better-auth/plugins';
+import { bearer, captcha } from 'better-auth/plugins';
 import { APIError } from 'better-auth/api';
 import { LibsqlDialect } from '@libsql/kysely-libsql';
 import { db } from './db.js';
@@ -122,5 +122,15 @@ export const auth = betterAuth({
   // que faria do cookie de sessão um cookie de terceiros — bloqueado por
   // padrão em vários navegadores. Com o plugin bearer o cliente guarda o token
   // e o envia no header Authorization, sem depender de cookie cross-site.
-  plugins: [bearer()],
+  //
+  // O plugin captcha protege cadastro, login e pedido de reset de senha
+  // (endpoints padrão) contra bots. Sem TURNSTILE_SECRET_KEY configurada, o
+  // Better Auth lançaria erro ao validar options — então em desenvolvimento
+  // sem a env var o plugin fica de fora e o captcha simplesmente não roda.
+  plugins: [
+    bearer(),
+    ...(process.env.TURNSTILE_SECRET_KEY
+      ? [captcha({ provider: 'cloudflare-turnstile', secretKey: process.env.TURNSTILE_SECRET_KEY })]
+      : []),
+  ],
 });

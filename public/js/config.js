@@ -11,3 +11,9 @@ export const BACKEND_URL = rodandoLocal
 export const WS_URL = rodandoLocal
   ? `ws://${location.host}`
   : `wss://${BACKEND_HOST}`;
+
+// Site key do Cloudflare Turnstile. É pública por natureza (vai no HTML), só
+// a secret key fica no servidor. Sem chave configurada aqui, o servidor
+// também não recebe TURNSTILE_SECRET_KEY, então o captcha fica desativado por
+// completo — útil para rodar localmente sem depender do Cloudflare.
+export const TURNSTILE_SITE_KEY = '0x4AAAAAAEFonFtv5EFGlvDJ';

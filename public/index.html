@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Arena PVP - 1x1</title>
 <link rel="stylesheet" href="css/style.css">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body>
   <canvas id="menuBg"></canvas>
@@ -64,6 +65,7 @@
           <label for="authPassword">Senha</label>
           <input type="password" id="authPassword" autocomplete="current-password" placeholder="Mínimo de 8 caracteres">
         </div>
+        <div id="authTurnstile"></div>
         <button type="submit" id="btnAuthSubmit">Entrar</button>
       </form>
       <div id="authFeedback"></div>
