@@ -66,10 +66,13 @@ function timestamp(indiceDaPartida, totalDePartidas) {
   return new Date(Date.now() - minutosAtras * UM_MINUTO_MS).toISOString();
 }
 
-// Quantas vezes cada par de jogadores se enfrenta. Com 9 jogadores (36 pares)
-// isso dá ~3 partidas por par, ou seja ~24 partidas no histórico de cada um —
-// o bastante para a lista do perfil rolar.
-const CONFRONTOS_POR_PAR = 3;
+// Quantas vezes cada par de jogadores se enfrenta. Com 9 jogadores cada um
+// enfrenta 8 adversários, então isso dá 8 × CONFRONTOS_POR_PAR partidas no
+// histórico de cada perfil (+ as contra convidado e contra as contas reais).
+// Precisa ficar bem acima do tamanho da página do histórico (20) para dar para
+// testar o carregamento por scroll do perfil: com 8, são ~64 por perfil, ou
+// seja umas 4 páginas.
+const CONFRONTOS_POR_PAR = 8;
 const CONVIDADOS = ['Anônimo', 'guest_42', 'PassavaPorAqui', 'xX_dark_Xx'];
 
 // Quem ganha: o mais forte, exceto quando a conta dá empate (múltiplo de 7) ou
