@@ -151,9 +151,15 @@ async function submeter(evento) {
     if (view === 'signup') {
       await auth.signUp({ name: nome, email, password: senha, captchaToken });
       authFormEl.reset();
+      // O Better Auth responde 200 mesmo quando o e-mail já tem conta (é uma
+      // proteção contra enumeração de e-mail: assim ninguém descobre por
+      // tentativa quais e-mails já estão cadastrados). Por isso a mensagem
+      // não pode afirmar "conta criada" — quem já tem conta não recebe e-mail
+      // nenhum e precisa ser avisado a tentar entrar ou recuperar a senha.
       mostrarApenasAviso(
-        `Conta criada! Enviamos um link de confirmação para ${email}. `
-        + 'Confirme o e-mail para poder entrar (olhe também a caixa de spam).',
+        `Se ${email} ainda não tem conta, acabamos de enviar um link de confirmação `
+        + '(olhe também a caixa de spam). Se você já tem conta com esse e-mail, '
+        + 'tente entrar ou usar "Esqueci minha senha".',
       );
       return;
     }
