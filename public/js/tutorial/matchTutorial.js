@@ -7,7 +7,7 @@
 // "Como jogar" do menu (ver forceNextMatchTutorial).
 
 import { matchTutorialBannerEl } from '../dom.js';
-import { playTutorialStepSound } from '../audio.js';
+import { playTutorialStepSound, playTutorialCompleteSound } from '../audio.js';
 
 const MATCH_TUTORIAL_SEEN_KEY = 'jogoDoAno.tutorialPartidaVisto';
 
@@ -114,6 +114,9 @@ function advanceStep() {
     hideTimer = setTimeout(stopMatchTutorial, FINAL_STEP_HIDE_MS);
     return;
   }
+  // O último passo (`action: null`) é a mensagem de "boa sorte": chegar nele
+  // significa que o jogador completou mover, atirar e escudar.
+  if (STEPS[stepIndex].action === null) playTutorialCompleteSound();
   renderStep();
 }
 

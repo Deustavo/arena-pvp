@@ -6,7 +6,7 @@ import {
 } from './overlays.js';
 import { updateHud, isShieldAvailable, initHearts } from './hud.js';
 import { recordGameOver } from './gameOver.js';
-import { playStartSound } from './audio.js';
+import { playStartSound, playMatchFoundSound } from './audio.js';
 import { reconcilePrediction } from './prediction.js';
 import { WS_URL } from './config.js';
 import { getToken } from './auth.js';
@@ -89,6 +89,9 @@ function handleOnlineMessage(msg, onBackToMenu) {
       // o relógio já aparece cheio durante a contagem regressiva.
       atualizarCronometro(msg.matchDurationMs ?? MATCH_DURATION_MS, false);
       updateGameScale();
+      // `init` é o momento em que o oponente apareceu: a contagem regressiva
+      // (com seus próprios bipes) começa logo depois.
+      playMatchFoundSound();
       showCountdown(msg.countdownMs, msg.players.map((p) => p.name));
       break;
     case 'start':

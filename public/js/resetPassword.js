@@ -3,6 +3,7 @@
 
 import { resetPassword } from './auth.js';
 import { initPasswordToggles } from './passwordToggle.js';
+import { playFormErrorSound, playFormSuccessSound } from './audio.js';
 
 initPasswordToggles();
 
@@ -20,6 +21,9 @@ const erroNoLink = params.get('error');
 function mostrarFeedback(texto, tipo) {
   feedbackEl.textContent = texto;
   feedbackEl.className = texto ? `visible ${tipo}` : '';
+  if (!texto) return;
+  if (tipo === 'erro') playFormErrorSound();
+  else if (tipo === 'sucesso') playFormSuccessSound();
 }
 
 function desabilitarFormulario() {

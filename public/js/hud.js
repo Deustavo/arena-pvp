@@ -4,6 +4,7 @@ import {
 } from './dom.js';
 import { state } from './state.js';
 import { checkDeathExplosion } from './explosions.js';
+import { playHitSound, playShieldBlockSound, playShieldBreakSound } from './audio.js';
 import { getClass } from '../../shared/classes.js';
 
 export const HEART_PIXELS = [
@@ -34,6 +35,10 @@ let prevLives = [0, 0];
 export let hitFlashUntil = [0, 0];
 let prevClassIds = [null, null];
 let shieldsEls = [[], []];
+// Cargas de escudo do tick anterior, por slot visual. É a comparação com elas
+// que revela um bloqueio: nem o servidor nem a simulação avisam "bloqueou", só
+// mandam o estado novo. `null` = ainda não há partida para comparar.
+let prevShieldCharges = [null, null];
 
 function updateClassIcon(el, nameEl, row, classId) {
   if (!el || classId === prevClassIds[row]) return;
@@ -122,6 +127,7 @@ export function initHearts(maxLives = [10, 10]) {
   const maxShields = [state.shieldMaxHits[state.playerIndex], state.shieldMaxHits[oppIndex]];
   shieldsEls[0] = createShieldsRow(shieldsP0El, maxShields[0]);
   shieldsEls[1] = createShieldsRow(shieldsP1El, maxShields[1]);
+  prevShieldCharges = [maxShields[0], maxShields[1]];
 }
 
 // Limpa tudo que o HUD acumulou da partida anterior (corações, escudos, nomes,
@@ -133,6 +139,7 @@ export function resetHud() {
   heartsEls = [[], []];
   shieldsEls = [[], []];
   prevLives = [0, 0];
+  prevShieldCharges = [null, null];
   prevClassIds = [null, null];
   hitFlashUntil = [0, 0];
   livesP0El.innerHTML = '';
@@ -177,6 +184,10 @@ function updateHeartsRow(row, lives, rawIndex) {
       if (hearts[i]) triggerHeartBlink(hearts[i]);
     }
     hitFlashUntil[rawIndex] = Date.now() + HIT_FLASH_DURATION;
+    // No hit que zera as vidas quem toca é a explosão (explosions.js) — os dois
+    // sons juntos só embolam. Vale para os dois jogadores e também para o
+    // último coração drenado no desempate.
+    if (lives > 0) playHitSound();
   }
   prevLives[row] = lives;
 }
@@ -187,6 +198,14 @@ function updateShieldsRow(row, charges) {
   for (let i = 0; i < shields.length; i++) {
     shields[i].classList.toggle('lost', i >= charges);
   }
+  // Perdeu carga = bloqueou um tiro. Quando foi a última, o som é o de escudo
+  // quebrando em vez do de bloqueio: avisa que não há mais proteção.
+  const prev = prevShieldCharges[row];
+  if (prev !== null && charges < prev) {
+    if (charges <= 0) playShieldBreakSound();
+    else playShieldBlockSound();
+  }
+  prevShieldCharges[row] = charges;
 }
 
 export function shieldCharges(index) {

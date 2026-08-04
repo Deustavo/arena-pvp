@@ -1,6 +1,7 @@
 import { gameOverOverlayEl, gameOverMessageEl, btnPlayAgain, btnSwapClasses } from './dom.js';
 import { state } from './state.js';
 import { wasMatchTutorial, stopMatchTutorial } from './tutorial/matchTutorial.js';
+import { playVictorySound, playDefeatSound } from './audio.js';
 
 const WINNER_EMOJIS = ['😆', '🤣', '😂', '😅', '😘', '😜', '🤪', '😢', '🤫', '😹', '👻', '🤡', '👀'];
 
@@ -37,6 +38,10 @@ export function recordGameOver(result) {
   state.winnerEmoji = state.winnerIndex !== null ? randomWinnerEmoji() : null;
 }
 
+// O jingle toca aqui e não em recordGameOver de propósito: a partida acaba com
+// a explosão do jogador, e os dois sons no mesmo instante só embolam. O overlay
+// aparece GAMEOVER_OVERLAY_DELAY depois (render.js), quando a explosão já
+// terminou.
 export function showGameOverOverlay() {
   state.overlayShown = true;
   gameOverOverlayEl.classList.remove('win', 'lose');
@@ -44,12 +49,16 @@ export function showGameOverOverlay() {
   if (state.lastResult === 'win') {
     text = 'Você ganhou';
     gameOverOverlayEl.classList.add('win');
+    playVictorySound();
   } else if (state.lastResult === 'lose') {
     text = 'Você perdeu';
     gameOverOverlayEl.classList.add('lose');
+    playDefeatSound();
   } else if (state.lastResult === 'draw') {
     // Único jeito de empatar: os dois zerarem no mesmo passo do desempate.
     text = 'Empate';
+    // Empate usa o som de derrota: em nenhum dos dois casos o jogador ganhou.
+    playDefeatSound();
   } else {
     text = 'Partida encerrada';
   }

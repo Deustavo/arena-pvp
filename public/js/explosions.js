@@ -1,5 +1,6 @@
 import { ctx } from './dom.js';
 import { state } from './state.js';
+import { playExplosionSound } from './audio.js';
 import { getClass } from '../../shared/classes.js';
 
 const EXPLOSION_PARTICLE_COUNT = 26;
@@ -44,6 +45,7 @@ export function updateAndDrawExplosions(now) {
 export function checkDeathExplosion(rawIndex, playerState) {
   if (state.prevAlive[rawIndex] && !playerState.alive) {
     spawnExplosion(playerState.classId, playerState.x + state.playerSize / 2, playerState.y + state.playerSize / 2);
+    playExplosionSound();
   }
   state.prevAlive[rawIndex] = playerState.alive;
 }

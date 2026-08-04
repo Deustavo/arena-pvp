@@ -8,12 +8,31 @@
 
 import { matchTimerEl } from './dom.js';
 import { state } from './state.js';
+import { playTimerTickSound, playSuddenDeathSound } from './audio.js';
 import { MATCH_DURATION_MS, formatarTempo } from '../../shared/matchTimer.js';
 
 // A partir daqui o relógio fica amarelo, avisando que o tempo está no fim.
 const AVISO_MS = 15000;
 
+// Últimos segundos com tique sonoro, um por segundo.
+const TIQUES_FINAIS_S = 10;
+
 const TEXTO_DESEMPATE = 'DESEMPATE';
+
+// Último segundo já anunciado, para o tique tocar uma vez por segundo e não a
+// cada atualização (que chega a 60x por segundo, do servidor ou do loop local).
+let ultimoTique = null;
+
+function tocarTiqueSeVirouSegundo(restanteMs) {
+  const segundos = Math.ceil(restanteMs / 1000);
+  if (segundos > TIQUES_FINAIS_S) {
+    ultimoTique = null;
+    return;
+  }
+  if (segundos <= 0 || segundos === ultimoTique) return;
+  ultimoTique = segundos;
+  playTimerTickSound(segundos);
+}
 
 export function atualizarCronometro(restanteMs, desempate) {
   // Ao congelar a partida o jogador pode estar com teclas pressionadas; sem
@@ -22,7 +41,9 @@ export function atualizarCronometro(restanteMs, desempate) {
   if (desempate && !state.desempate) {
     state.input.up = state.input.down = state.input.left = state.input.right = false;
     state.input.shield = false;
+    playSuddenDeathSound();
   }
+  if (!desempate) tocarTiqueSeVirouSegundo(restanteMs);
   state.remainingMs = restanteMs;
   state.desempate = desempate;
   renderizarCronometro();
@@ -35,6 +56,7 @@ export function renderizarCronometro() {
 }
 
 export function resetMatchTimer() {
+  ultimoTique = null;
   state.remainingMs = MATCH_DURATION_MS;
   state.desempate = false;
   renderizarCronometro();

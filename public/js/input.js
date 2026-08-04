@@ -6,6 +6,8 @@ import { botShoot } from './bot.js';
 import { backToMenu } from './menu.js';
 import { rerollWinnerEmoji } from './gameOver.js';
 import { notifyMatchTutorial } from './tutorial/matchTutorial.js';
+import { playShieldUpSound, playUnavailableSound } from './audio.js';
+import { getClass } from '../../shared/classes.js';
 
 const keyMap = {
   KeyW: 'up', ArrowUp: 'up',
@@ -20,6 +22,15 @@ const ESC_CONFIRM_TEXT = 'Aperte ESC novamente para sair';
 
 let escArmed = false;
 let escResetTimer = null;
+
+// Só para escolher o som do clique de tiro: quem manda no cooldown é o lado
+// autoritativo (servidor ou simulação do bot). `lastShot` vem do último
+// snapshot, é a mesma conta que a barra de cooldown do HUD já faz.
+function tiroPronto() {
+  const me = state.latestState.players[state.playerIndex];
+  if (!me) return true;
+  return Date.now() - (me.lastShot || 0) >= getClass(me.classId).shotCooldownMs;
+}
 
 export function resetEscHint() {
   escArmed = false;
@@ -52,10 +63,16 @@ export function initInput() {
     if (!state.mode) return;
     if (e.code === 'Space') {
       e.preventDefault();
-      if (!state.input.shield && state.matchStarted && !state.gameOver && !state.desempate && isShieldAvailable()) {
+      const emPartida = state.matchStarted && !state.gameOver && !state.desempate;
+      if (!state.input.shield && emPartida && isShieldAvailable()) {
         state.input.shield = true;
         sendInput();
+        playShieldUpSound();
         notifyMatchTutorial('shield');
+      } else if (emPartida && !isShieldAvailable()) {
+        // Escudo esgotado. O keydown repete enquanto a tecla fica pressionada,
+        // mas o efeito tem janela anti-repetição própria (audio.js).
+        playUnavailableSound();
       }
       return;
     }
@@ -104,7 +121,13 @@ export function initInput() {
     // Em modo de defesa o jogador não atira. A regra é aplicada de novo do lado
     // autoritativo (`escudoAtivo` em wsServer/bot); aqui é só para o clique não
     // consumir cooldown nem avançar o tutorial à toa.
-    if (state.input.shield && isShieldAvailable()) return;
+    if (state.input.shield && isShieldAvailable()) {
+      playUnavailableSound();
+      return;
+    }
+    // O clique continua sendo enviado mesmo em cooldown (é o lado autoritativo
+    // que decide se sai tiro); aqui o som só avisa que ainda não recarregou.
+    if (!tiroPronto()) playUnavailableSound();
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;

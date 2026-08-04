@@ -15,6 +15,7 @@ import * as auth from './auth.js';
 import { TURNSTILE_SITE_KEY } from './config.js';
 import { isValidAccountName, filterAccountNameChars, ACCOUNT_NAME_ERROR } from '../../shared/nickname.js';
 import { initPasswordToggles } from './passwordToggle.js';
+import { playFormErrorSound, playFormSuccessSound } from './audio.js';
 
 // 'login' | 'signup' | 'forgot'
 let view = 'login';
@@ -70,9 +71,14 @@ const VIEWS = {
   },
 };
 
+// Funil único do aviso do modal — e, por consequência, do som de erro/sucesso
+// de formulário. `mostrarFeedback('', '')` só limpa a mensagem e não toca nada.
 function mostrarFeedback(texto, tipo) {
   authFeedbackEl.textContent = texto;
   authFeedbackEl.className = texto ? `visible ${tipo}` : '';
+  if (!texto) return;
+  if (tipo === 'erro') playFormErrorSound();
+  else if (tipo === 'sucesso') playFormSuccessSound();
 }
 
 // Depois de cadastrar ou pedir o link de nova senha não há mais o que
@@ -178,6 +184,9 @@ async function submeter(evento) {
     if (view === 'login') {
       await auth.signIn({ email, password: senha, captchaToken });
       atualizarBarraDeConta();
+      // Entrar não mostra aviso nenhum (o modal fecha), então o som de sucesso
+      // precisa ser disparado aqui e não pelo mostrarFeedback.
+      playFormSuccessSound();
       fechar();
       return;
     }

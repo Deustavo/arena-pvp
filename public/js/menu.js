@@ -10,6 +10,7 @@ import { commitNickname } from './nickname.js';
 import { resetEscHint } from './input.js';
 import { resetHud } from './hud.js';
 import { resetMatchTimer } from './matchTimer.js';
+import { resetNearMiss } from './nearMiss.js';
 import { openBotClassSelect } from './botClassSelect.js';
 import { updateGameScale } from './gameScale.js';
 import { startMenuBackground, stopMenuBackground } from './menuBackground.js';
@@ -49,6 +50,7 @@ function prepareNewMatch() {
   hideCountdown();
   resetHud();
   resetMatchTimer();
+  resetNearMiss();
   resetEscHint();
   stopMatchTutorial();
   resetMatchTutorialFlag();

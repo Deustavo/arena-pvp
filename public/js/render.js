@@ -3,6 +3,7 @@ import { state, screenXToWorld } from './state.js';
 import { isShieldAvailable, hitFlashUntil, updateCooldownBars } from './hud.js';
 import { advancePrediction, getRenderState } from './prediction.js';
 import { updateAndDrawExplosions } from './explosions.js';
+import { checkNearMiss } from './nearMiss.js';
 import { showGameOverOverlay } from './gameOver.js';
 import { getClass } from '../../shared/classes.js';
 
@@ -219,6 +220,7 @@ export function render() {
     } else {
       if (state.mode === 'online') advancePrediction();
       const renderState = getRenderState();
+      checkNearMiss(renderState, now);
 
       // state.viewFlipped é decidido uma única vez no início da partida (ver
       // network.js/bot.js) com base na posição inicial dos jogadores — não é

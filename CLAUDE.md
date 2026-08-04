@@ -218,6 +218,53 @@ conecta event listeners de UI aos módulos.
     inicia uma partida de bot, reabrindo o tutorial mesmo que já tenha sido
     visto antes.
 
+#### Efeitos sonoros (`public/js/audio.js`)
+
+Todo o som do jogo é **sintetizado na hora** com a Web Audio API — não existe
+nenhum arquivo de áudio no projeto, e não deve passar a existir sem uma boa
+razão. `audio.js` é só a camada de síntese: helpers privados (`nota`, `ruido`,
+`sequencia`, `envelope`) e uma função exportada por efeito (`playHitSound`,
+`playExplosionSound`, …). Quem decide *quando* tocar é o módulo que já conhece o
+evento.
+
+- **Um único `AudioContext`** para todo o jogo, criado no primeiro efeito e
+  nunca fechado. Um contexto por som (como era antes) estoura o limite do
+  navegador (~6 ativos) assim que os sons de combate entram.
+- Enquanto o navegador não liberou o áudio (antes do primeiro gesto do
+  usuário), `ctx()` devolve `null` e o efeito é **descartado**, não agendado —
+  num contexto suspenso o tempo não corre e tudo tocaria de uma vez quando ele
+  fosse liberado.
+- Cada efeito tem uma **janela anti-repetição** própria (`efeito(id, janelaMs,
+  …)`): dois eventos podem cair no mesmo tick (os dois jogadores perdendo um
+  coração no desempate, os 3 projéteis do mago no escudo) e o mesmo som
+  sobreposto satura o áudio. É também o que segura o som de "ação
+  indisponível" enquanto a tecla fica pressionada (keydown repete).
+- Falha de áudio nunca pode atrapalhar a partida: todo efeito roda dentro de um
+  `try/catch` silencioso.
+
+Dano e bloqueio **não** são detectados pelo input local — senão o jogador não
+ouviria nada do que o oponente faz, e o modo online não teria como saber. Os dois
+saem da comparação de snapshots dentro do HUD (`hud.js`): `updateHeartsRow` toca
+o som de dano quando as vidas caem, e `updateShieldsRow` compara as cargas de
+escudo com as do tick anterior (`prevShieldCharges`) — perdeu carga = bloqueou,
+e se era a última o som é o de escudo quebrando. Isso vale de graça para os dois
+modos, porque `updateHud` é chamado tanto por `network.js` (mensagem `state`)
+quanto por `bot.js` (`publicarEstadoBot`), e também para o dreno de corações do
+desempate, que é justamente vida caindo.
+
+Outros pontos de disparo: `explosions.js` (explosão, no mesmo lugar que dispara
+as partículas), `gameOver.js` (vitória/derrota — no **overlay**, não em
+`recordGameOver`, para o jingle não competir com a explosão; empate usa o som de
+derrota), `matchTimer.js` (tique dos últimos 10s, um por segundo, e buzina do
+desempate), `input.js` (escudo erguido e ação indisponível), `nearMiss.js`
+(projétil que passou raspando, detectado por frame pela distância mínima, já que
+os projéteis do snapshot não têm id) e `uiSounds.js` (hover/clique, delegados no
+`document` — tudo clicável no jogo é um `<button>`).
+
+Ainda não têm som: os **tiros** (um timbre por classe) e os efeitos de
+ambiente. Falta também expor **volume/mudo** na interface — o `GainNode` master
+já está no lugar, só não há controle nem preferência salva.
+
 #### Loading skeleton na tela inicial
 
 Qualquer elemento da tela de menu que depende de uma resposta assíncrona antes de
