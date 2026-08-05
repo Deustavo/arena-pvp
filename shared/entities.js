@@ -18,6 +18,10 @@ export function createPlayerState(index, classId = DEFAULT_CLASS_ID) {
     alive: true,
     shielding: false,
     shieldHits: 0,
+    // Direção que o personagem olha (1 = direita, -1 = esquerda), em espaço
+    // de mundo. Segue a mira do jogador (mouse) ou, no caso do bot, a
+    // posição do adversário — ver shared/botStrategy.js#computeBotFacing.
+    facing: 1,
   };
 }
 

@@ -172,7 +172,9 @@ export function updateCharacterAnimator(slot, classId, player, hitFlashUntilForS
   const dx = st.prevX === null ? 0 : player.x - st.prevX;
   const dy = st.prevY === null ? 0 : player.y - st.prevY;
   const moving = dtMs > 0 && Math.hypot(dx, dy) / dtMs > MOVE_EPSILON_PER_MS;
-  if (Math.abs(dx) > 0.01) st.facing = dx > 0 ? 1 : -1;
+  // A direção segue a mira (mouse do jogador, ou o alvo do bot), não o
+  // movimento — ver shared/entities.js `facing` e computeFacing/state.js.
+  if (player.facing === 1 || player.facing === -1) st.facing = player.facing;
 
   const justHurt = st.prevHitFlashUntil !== hitFlashUntilForSlot && hitFlashUntilForSlot > nowMs;
   const justShot = st.prevLastShot !== null && player.lastShot && player.lastShot !== st.prevLastShot;

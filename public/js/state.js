@@ -70,6 +70,11 @@ export const state = {
   input: { up: false, down: false, left: false, right: false, shield: false },
   mouse: { x: 0, y: 0 },
 
+  // Direção que o personagem local olha (1 = direita, -1 = esquerda), em
+  // espaço de mundo — segue o mouse (ver computeFacing/input.js). Enviado ao
+  // servidor no modo online para o oponente ver a mesma direção.
+  facing: 1,
+
   // Se o jogador local está do lado direito do adversário, a cena inteira é
   // espelhada horizontalmente na renderização para que ele sempre apareça à
   // esquerda na tela (ver render.js). A posição/física reais não mudam.
@@ -105,6 +110,13 @@ export function getWorldInput() {
   return { ...state.input, left: state.input.right, right: state.input.left };
 }
 
+// Direção (1/-1) que o personagem deveria olhar para encarar `worldMouseX`
+// (já em espaço de mundo, ver screenXToWorld) a partir do centro de um
+// jogador em `playerX` (canto esquerdo do hitbox, espaço de mundo).
+export function computeFacing(worldMouseX, playerX) {
+  return worldMouseX >= playerX + PLAYER_SIZE / 2 ? 1 : -1;
+}
+
 // Reseta os campos de uma sessão de partida (chamado ao entrar em uma nova
 // partida ou voltar ao menu). Efeitos colaterais de DOM ficam por conta de
 // quem chama.
@@ -126,6 +138,7 @@ export function resetMatchState() {
   state.remainingMs = MATCH_DURATION_MS;
   state.desempate = false;
   state.input.up = state.input.down = state.input.left = state.input.right = state.input.shield = false;
+  state.facing = 1;
   state.gameOverAt = 0;
   state.overlayShown = false;
   state.lastResult = null;

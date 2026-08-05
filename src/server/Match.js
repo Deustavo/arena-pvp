@@ -37,6 +37,7 @@ function playerSnapshot(p) {
     classId: p.classId,
     name: p.name,
     lastShot: p.lastShot,
+    facing: p.facing,
   };
 }
 

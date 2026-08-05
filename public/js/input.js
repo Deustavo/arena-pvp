@@ -1,4 +1,4 @@
-import { state, screenXToWorld } from './state.js';
+import { state, screenXToWorld, computeFacing } from './state.js';
 import { canvas, escHintEl } from './dom.js';
 import { isShieldAvailable } from './hud.js';
 import { sendInput, sendShoot } from './network.js';
@@ -29,6 +29,24 @@ function tiroPronto() {
   const me = state.latestState.players[state.playerIndex];
   if (!me) return true;
   return Date.now() - (me.lastShot || 0) >= getClass(me.classId).shotCooldownMs;
+}
+
+// O personagem olha para onde o mouse está mirando. `facing` só muda de
+// sinal quando o mouse cruza o centro do jogador, então isto é barato de
+// chamar a cada mousemove — na prática só dispara `sendInput` nas raras
+// vezes em que a direção realmente vira.
+function updateFacingFromMouse() {
+  if (!state.mode || state.playerIndex === null) return;
+  const me = state.mode === 'bot'
+    ? state.bot?.players[0]
+    : state.latestState.players[state.playerIndex];
+  if (!me) return;
+  const worldMouseX = screenXToWorld(state.mouse.x);
+  const newFacing = computeFacing(worldMouseX, me.x);
+  if (newFacing !== state.facing) {
+    state.facing = newFacing;
+    if (state.mode === 'online') sendInput();
+  }
 }
 
 export function resetEscHint() {
@@ -107,6 +125,7 @@ export function initInput() {
     const scaleY = canvas.height / rect.height;
     state.mouse.x = (e.clientX - rect.left) * scaleX;
     state.mouse.y = (e.clientY - rect.top) * scaleY;
+    updateFacingFromMouse();
   });
 
   window.addEventListener('click', (e) => {

@@ -126,7 +126,7 @@ function handleOnlineMessage(msg, onBackToMenu) {
 
 export function sendInput() {
   if (state.mode === 'online' && state.ws && state.ws.readyState === WebSocket.OPEN && state.playerIndex !== null) {
-    state.ws.send(JSON.stringify({ type: 'input', ...getWorldInput() }));
+    state.ws.send(JSON.stringify({ type: 'input', ...getWorldInput(), facing: state.facing }));
   }
 }
 

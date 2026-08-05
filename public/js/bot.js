@@ -12,7 +12,7 @@ import { playStartSound } from './audio.js';
 import { getBotDifficulty } from '../../shared/botDifficulty.js';
 import {
   createBotAiState, computeBotMovement, computeAimTarget, markAttack,
-  classDodgeChance, classShieldChance, findIncomingThreat,
+  classDodgeChance, classShieldChance, findIncomingThreat, computeBotFacing,
 } from '../../shared/botStrategy.js';
 import { updateGameScale } from './gameScale.js';
 import {
@@ -45,6 +45,7 @@ function snapshotPlayers(players) {
     classId: p.classId,
     name: i === 0 ? (state.nickname || 'Você') : BOT_NAME,
     lastShot: p.lastShot,
+    facing: p.facing,
   }));
 }
 
@@ -111,6 +112,8 @@ function updateBotAI() {
   const me = bot.players[0];
   const enemy = bot.players[1];
   if (!enemy.alive) return;
+
+  enemy.facing = computeBotFacing(enemy, me);
 
   const now = Date.now();
   const enemyCls = getClass(enemy.classId);
@@ -230,6 +233,7 @@ function botTick() {
   }
 
   bot.players[0].input = getWorldInput();
+  bot.players[0].facing = state.facing;
   bot.players[0].shielding = state.input.shield && bot.players[0].shieldHits < bot.players[0].shieldMaxHits;
   updateBotAI();
 

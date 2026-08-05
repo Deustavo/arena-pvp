@@ -12,7 +12,7 @@ import { createShotProjectiles } from '../../shared/entities.js';
 import { getBotDifficulty } from '../../shared/botDifficulty.js';
 import {
   createBotAiState, computeBotMovement, computeAimTarget, markAttack,
-  classDodgeChance, classShieldChance, findIncomingThreat,
+  classDodgeChance, classShieldChance, findIncomingThreat, computeBotFacing,
 } from '../../shared/botStrategy.js';
 
 export function createBotState(difficultyId) {
@@ -42,6 +42,8 @@ export function tickBot(match) {
   const player = match.players[0];
   const bot = match.players[1];
   if (!bot.alive) return;
+
+  bot.facing = computeBotFacing(bot, player);
 
   const now = Date.now();
   const botCls = getClass(bot.classId);

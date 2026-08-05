@@ -166,6 +166,12 @@ function drawPlayers(renderState, now) {
     if (state.mode === 'online' && i === state.playerIndex && state.predicted.initialized) {
       p = { ...p, x: state.predicted.x, y: state.predicted.y };
     }
+    // Direção do próprio jogador é aplicada direto do mouse local, sem
+    // esperar o round-trip do servidor — senão o personagem giraria com
+    // o mesmo atraso da predição/interpolação de rede.
+    if (i === state.playerIndex) {
+      p = { ...p, facing: state.facing };
+    }
 
     const cls = getClass(p.classId);
     const sprite = hasCharacterSprite(p.classId)

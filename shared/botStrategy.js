@@ -82,6 +82,12 @@ export function markAttack(classId, aiState, now) {
   if (classId === 'assassino') aiState.retreatUntil = now + ASSASSINO_RETREAT_MS;
 }
 
+// Bot não tem mouse: olha sempre para o jogador, que é o alvo de todo
+// posicionamento/mira dele (ver computeBotMovement/computeAimTarget acima).
+export function computeBotFacing(bot, player) {
+  return (player.x + PLAYER_SIZE / 2) >= (bot.x + PLAYER_SIZE / 2) ? 1 : -1;
+}
+
 // Classes com só 1 carga de escudo (vidro) preferem desviar a arriscar a
 // única chance de bloqueio; classes com escudo robusto usam-no à vontade.
 export function classShieldChance(botCls, diff) {
