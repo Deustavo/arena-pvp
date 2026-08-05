@@ -19,7 +19,7 @@ const PREVIEW_HEART_PIXEL = 1.6;
 const PREVIEW_SHIELD_PIXEL = 1.6;
 
 const OWN_SHOT_COLOR = '#facc15';
-const PROJECTILE_SIZE_SCALE = 0.9;
+const PROJECTILE_SIZE_SCALE = 1.27;
 
 const WORLD_SPEED_PX_MS = PROJECTILE_SPEED / TICK_MS;
 // Tempo para atravessar uma largura de arena inteira, na velocidade real do
@@ -38,7 +38,7 @@ const TARGET_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><ci
 // aquela regra, é o que converte o desvio vertical do canvas (SPRITE_OFFSET_Y
 // em characterSprites.js, em px de exibição de 220x220) para o tamanho real
 // do sprite aqui no preview.
-const PREVIEW_SPRITE_BOX = 92;
+const PREVIEW_SPRITE_BOX = 130;
 const PREVIEW_SPRITE_ZOOM = 1.9;
 
 export function createClassPreview(containerEl) {
@@ -132,8 +132,11 @@ export function createClassPreview(containerEl) {
     const label = document.createElement('div');
     label.className = 'class-preview-damage';
     label.textContent = `-${damage}`;
-    const stagger = spread * 34;
+    const stagger = spread * 48;
     label.style.left = `${dummy.offsetLeft + dummy.offsetWidth / 2 + stagger}px`;
+    // Acima do topo do alvo, não na altura do centro — senão o número nasce
+    // por cima do ícone em vez de flutuar sobre ele.
+    label.style.top = `${dummy.offsetTop - 6}px`;
     character.appendChild(label);
     setTimeout(() => label.remove(), 950);
   }
@@ -152,15 +155,19 @@ export function createClassPreview(containerEl) {
     const travelWorldPx = hits ? DUMMY_WORLD_DISTANCE : Math.min(finiteRange, ARENA.w);
     const flightMs = FULL_WIDTH_FLIGHT_MS * (travelWorldPx / ARENA.w);
     const dotSize = Math.max(3, cls.projectileSize * PROJECTILE_SIZE_SCALE);
+    // Alcança o centro real do boneco (posição no DOM), não uma distância
+    // derivada da proporção do mundo — essa proporção não sabe quanto do
+    // quadro do sprite é espaço vazio ao redor do personagem, então o tiro
+    // sempre parava um pouco antes do alvo.
+    const hitDxPx = dummy.offsetLeft + dummy.offsetWidth / 2 - startLeft;
 
     playAttack(cls.id);
 
     for (let i = 0; i < count; i++) {
       const t = count === 1 ? 0 : i / (count - 1) - 0.5;
       const angle = t * spreadRad;
-      const dxWorld = Math.cos(angle) * travelWorldPx;
+      const dxPx = hits ? hitDxPx * Math.cos(angle) : (Math.cos(angle) * travelWorldPx / ARENA.w) * boxWidth;
       const dyWorld = Math.sin(angle) * travelWorldPx;
-      const dxPx = (dxWorld / ARENA.w) * boxWidth;
       const dyPx = (dyWorld / ARENA.w) * boxWidth;
 
       const el = document.createElement('div');

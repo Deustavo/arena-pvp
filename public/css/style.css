@@ -1133,7 +1133,7 @@
   #classPreview {
     position: relative;
     flex: 1;
-    min-height: 132px;
+    min-height: 170px;
     box-sizing: border-box;
     overflow: hidden;
     background: var(--cor-superficie-icone);
@@ -1156,10 +1156,11 @@
     flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
+    height: 100%;
+    margin-left: 12px;
   }
   .class-preview-fighter.class-sprite {
-    --sprite-box: 92px;
+    --sprite-box: 130px;
     --sprite-anchor: 0.5;
   }
   /* Fallback de classe sem sprite próprio: o quadrado colorido antigo. */
@@ -1197,8 +1198,8 @@
   }
   .class-preview-dummy {
     flex: none;
-    width: 24px;
-    height: 24px;
+    width: 34px;
+    height: 34px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -1209,8 +1210,8 @@
     color: var(--cor-texto-suave);
   }
   .class-preview-dummy svg {
-    width: 14px;
-    height: 14px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -1224,8 +1225,7 @@
   }
   .class-preview-damage {
     position: absolute;
-    top: 50%;
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--cor-erro-texto);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
@@ -1234,9 +1234,9 @@
     animation: classPreviewDamageFloat 0.9s ease-out forwards;
   }
   @keyframes classPreviewDamageFloat {
-    0% { opacity: 0; transform: translate(-50%, -22px); }
+    0% { opacity: 0; transform: translate(-50%, 0); }
     15% { opacity: 1; }
-    100% { opacity: 0; transform: translate(-50%, -38px); }
+    100% { opacity: 0; transform: translate(-50%, -16px); }
   }
   #menuDivider {
     width: 100%;
@@ -1960,6 +1960,6 @@
       flex: 1 1 45%;
     }
     .class-preview-fighter.class-sprite {
-      --sprite-box: 64px;
+      --sprite-box: 90px;
     }
   }
