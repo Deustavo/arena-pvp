@@ -1,5 +1,5 @@
-// Sprites animados por classe. Hoje atirador, tank e assassino têm arte
-// própria — as demais classes continuam desenhadas como quadrado colorido em render.js
+// Sprites animados por classe. Hoje atirador, tank, assassino e duelista têm
+// arte própria — as demais classes continuam desenhadas como quadrado colorido em render.js
 // (hasCharacterSprite retorna false pra elas e o fallback antigo se aplica).
 //
 // Cada spritesheet é uma tira horizontal de quadros FRAME_SIZE x FRAME_SIZE.
@@ -32,6 +32,20 @@ const SPRITE_SHEETS = {
     hurt: { src: '/assets/sprites/assassino/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/assassino/death.png', frames: 4, frameMs: 120, loop: false },
   },
+  duelista: {
+    idle: { src: '/assets/sprites/duelista/idle.png', frames: 6, frameMs: 150, loop: true },
+    walk: { src: '/assets/sprites/duelista/walk.png', frames: 8, frameMs: 90, loop: true },
+    // O Demon_E tem 3 golpes diferentes no pacote de sprites — alterna entre
+    // eles a cada tiro (ver attackVariantIndex) em vez de repetir sempre o
+    // mesmo, pra parecer uma sequência de combo em vez de um único golpe.
+    attack: [
+      { src: '/assets/sprites/duelista/attack1.png', frames: 8, frameMs: 35, loop: false },
+      { src: '/assets/sprites/duelista/attack2.png', frames: 13, frameMs: 35, loop: false },
+      { src: '/assets/sprites/duelista/attack3.png', frames: 8, frameMs: 35, loop: false },
+    ],
+    hurt: { src: '/assets/sprites/duelista/hurt.png', frames: 4, frameMs: 80, loop: false },
+    death: { src: '/assets/sprites/duelista/death.png', frames: 4, frameMs: 120, loop: false },
+  },
 };
 
 // state.js importa este módulo (pra resetar o animador em resetMatchState) e
@@ -54,7 +68,10 @@ function loadImage(src) {
 // vazio no primeiro tiro/dano da partida.
 if (hasDom) {
   for (const sheets of Object.values(SPRITE_SHEETS)) {
-    for (const sheet of Object.values(sheets)) loadImage(sheet.src);
+    for (const sheet of Object.values(sheets)) {
+      if (Array.isArray(sheet)) sheet.forEach((variant) => loadImage(variant.src));
+      else loadImage(sheet.src);
+    }
   }
 }
 
@@ -78,6 +95,7 @@ function createAnimatorState() {
     prevY: null,
     prevLastShot: null,
     prevHitFlashUntil: 0,
+    attackVariantIndex: -1,
   };
 }
 
@@ -122,6 +140,12 @@ export function updateCharacterAnimator(slot, classId, player, hitFlashUntilForS
   else if (st.anim === 'attack' && !st.finished) target = 'attack';
   else target = moving ? 'walk' : 'idle';
 
+  // O golpe muda a cada novo tiro (não a cada frame), pra variar durante o
+  // combo mas manter o mesmo golpe do início ao fim de uma única animação.
+  if (justShot && Array.isArray(sheets.attack)) {
+    st.attackVariantIndex = (st.attackVariantIndex + 1) % sheets.attack.length;
+  }
+
   if (target !== st.anim) {
     st.anim = target;
     st.frame = 0;
@@ -129,7 +153,10 @@ export function updateCharacterAnimator(slot, classId, player, hitFlashUntilForS
     st.finished = false;
   }
 
-  const sheet = sheets[st.anim];
+  const animSheet = sheets[st.anim];
+  const sheet = st.anim === 'attack' && Array.isArray(animSheet)
+    ? animSheet[Math.max(st.attackVariantIndex, 0)]
+    : animSheet;
   if (!st.finished) {
     st.frameElapsedMs += dtMs;
     while (st.frameElapsedMs >= sheet.frameMs) {
