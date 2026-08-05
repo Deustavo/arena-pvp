@@ -344,6 +344,7 @@
     -webkit-text-stroke: 1px #000;
     text-stroke: 1px #000;
     animation: logoBrilhoPulsante 4s ease-in-out infinite;
+    perspective: 400px;
   }
   .title-letter {
     display: inline-block;
@@ -368,6 +369,40 @@
     }
     50% {
       transform: translateY(-4px);
+    }
+  }
+  #menuTitle .title-letter.title-letter-hover {
+    animation: tituloGirar 1s linear;
+  }
+  @keyframes tituloGirar {
+    0% {
+      transform: rotateY(0deg);
+    }
+    70% {
+      transform: rotateY(420deg);
+    }
+    90% {
+      transform: rotateY(340deg);
+    }
+    100% {
+      transform: rotateY(360deg);
+    }
+  }
+  #menuTitle .title-letter.flip-letter.title-letter-hover {
+    animation-name: tituloGirarInvertido;
+  }
+  @keyframes tituloGirarInvertido {
+    0% {
+      transform: scaleX(-1) rotateY(0deg);
+    }
+    70% {
+      transform: scaleX(-1) rotateY(420deg);
+    }
+    90% {
+      transform: scaleX(-1) rotateY(340deg);
+    }
+    100% {
+      transform: scaleX(-1) rotateY(360deg);
     }
   }
   @keyframes tituloFlutuarInvertido {

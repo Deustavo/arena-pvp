@@ -18,12 +18,14 @@ import { initUiSounds } from './uiSounds.js';
 import { initSoundSettings } from './soundSettings.js';
 import { initParallax } from './parallax.js';
 import { initFireCursor } from './fireCursor.js';
+import { initTitleFire } from './titleFire.js';
 
 initInput();
 initUiSounds();
 initSoundSettings();
 initParallax();
 initFireCursor();
+initTitleFire();
 initNicknameInput();
 initOnlineClassSelect();
 initBotClassSelect();

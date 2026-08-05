@@ -50,6 +50,25 @@ function spawnParticles(now) {
   }
 }
 
+// Usado por titleFire.js para soltar chamas em pontos específicos da tela
+// (letras do título em hover), reaproveitando o mesmo canvas/loop de
+// partículas do rastro do mouse em vez de duplicar a lógica de fogo.
+export function spawnFireBurst(x, y, count = 2) {
+  if (!particles) return;
+  const now = Date.now();
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: x + (Math.random() - 0.5) * 10,
+      y: y + (Math.random() - 0.5) * 10,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: -0.7 - Math.random() * 1,
+      size: PIXEL * (1 + Math.floor(Math.random() * 2)),
+      startTime: now,
+      life: PARTICLE_LIFE_MS * (0.6 + Math.random() * 0.6),
+    });
+  }
+}
+
 function drawParticles(now) {
   particles = particles.filter((p) => now - p.startTime < p.life);
   for (const p of particles) {
