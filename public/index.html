@@ -207,7 +207,18 @@
         <button id="btnBackToMenu">Menu inicial</button>
       </div>
       <div id="waitingOverlay">
-        <span class="loader"></span>
+        <span class="loader">
+          <span class="loader-orbit">
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+          </span>
+          <svg class="loader-pentagrama" viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M50,5 L76.5,86.4 L7.2,36.1 L92.8,36.1 L23.5,86.4 Z" />
+          </svg>
+        </span>
         <h2 id="waitingMessage">Aguardando oponente...</h2>
         <p id="noOpponentsMessage">Poucos jogadores online, experimente o modo treino</p>
         <div class="overlay-buttons">

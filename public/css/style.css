@@ -1073,7 +1073,9 @@
     overflow-wrap: anywhere;
   }
   #waitingOverlay h2 {
-    animation: blink 1.2s ease-in-out infinite;
+    color: var(--cor-vermelho-destaque);
+    text-shadow: 0 0 16px var(--cor-vermelho-destaque);
+    animation: waiting-pulse-texto 1.6s ease-in-out infinite;
   }
   #noOpponentsMessage {
     display: none;
@@ -1083,41 +1085,51 @@
     color: var(--cor-texto-suave);
     font-size: 15px;
   }
+  /* 5 bolinhas orbitando um pentagrama no centro, no lugar do spinner verde
+     antigo — ecoa o brilho vermelho do número da contagem regressiva e o
+     clima oculto do jogo, em vez de um loader genérico. As bolinhas giram
+     no sentido contrário ao do pentagrama, senão os dois girando junto
+     pareceriam um objeto só em vez de duas camadas independentes. */
   #waitingOverlay .loader {
-    --color-1: var(--cor-branco);
-    --color-2: var(--cor-sucesso);
     --size: 1px;
 
     width: calc(48 * var(--size));
     height: calc(48 * var(--size));
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
-    border: calc(2 * var(--size)) solid var(--color-1);
-    box-sizing: border-box;
-    animation: rotation 2s linear infinite;
   }
-  #waitingOverlay .loader::after,
-  #waitingOverlay .loader::before {
-    content: '';
-    box-sizing: border-box;
+  #waitingOverlay .loader-orbit {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    border: calc(2 * var(--size)) solid var(--color-2);
-    width: calc(38 * var(--size));
-    height: calc(38 * var(--size));
-    animation: rotationBack 1.5s linear infinite;
-    transform-origin: center center;
+    inset: 0;
+    animation: rotation 3s linear infinite;
   }
-  #waitingOverlay .loader::before {
-    width: calc(28 * var(--size));
-    height: calc(28 * var(--size));
-    border-color: var(--color-1);
-    box-sizing: border-box;
-    animation: rotation 1s linear infinite;
+  #waitingOverlay .loader-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(6 * var(--size));
+    height: calc(6 * var(--size));
+    margin: calc(-3 * var(--size));
+    border-radius: 50%;
+    background: var(--cor-vermelho-destaque);
+    box-shadow: 0 0 4px var(--cor-vermelho-destaque);
+  }
+  #waitingOverlay .loader-dot:nth-child(1) { transform: rotate(0deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-dot:nth-child(2) { transform: rotate(72deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-dot:nth-child(3) { transform: rotate(144deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-dot:nth-child(4) { transform: rotate(216deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-dot:nth-child(5) { transform: rotate(288deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-pentagrama {
+    width: calc(30 * var(--size));
+    height: calc(30 * var(--size));
+    fill: none;
+    stroke: var(--cor-vermelho-destaque);
+    stroke-width: 4;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 4px var(--cor-vermelho-destaque));
+    animation: rotationBack 6s linear infinite;
   }
   @keyframes rotation {
     0% { transform: rotate(0deg); }
@@ -1127,9 +1139,9 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(-360deg); }
   }
-  @keyframes blink {
+  @keyframes waiting-pulse-texto {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.25; }
+    50% { opacity: 0.4; }
   }
   #gameOverOverlay.win h2 {
     color: var(--cor-sucesso);
