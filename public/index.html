@@ -26,9 +26,14 @@
     </div>
   </div>
   <div id="menu">
-    <h1 id="menuTitle">Demo<span class="flip-letter">N</span> Aren<span class="flip-letter">A</span></h1>
+    <h1 id="menuTitle"><span class="title-letter">D</span><span class="title-letter">e</span><span class="title-letter">m</span><span class="title-letter">o</span><span class="title-letter flip-letter">N</span> <span class="title-letter">A</span><span class="title-letter">r</span><span class="title-letter">e</span><span class="title-letter">n</span><span class="title-letter flip-letter">A</span></h1>
     <div id="menuContent">
       <div id="menuBody">
+        <div id="nicknameField">
+          <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
+          <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
+          <div id="nicknameError">Digite um nickname para jogar</div>
+        </div>
         <div id="accountBar" class="skeleton-loading">
           <div id="accountLoggedIn">
             <span id="accountGreeting">Jogando como <strong id="accountName"></strong></span>
@@ -42,11 +47,6 @@
             <span class="account-sep">ou</span>
             <button type="button" id="btnSignup" class="link-button">criar conta</button>
           </div>
-        </div>
-        <div id="nicknameField">
-          <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
-          <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
-          <div id="nicknameError">Digite um nickname para jogar</div>
         </div>
         <button id="btnOnline">Jogar Online</button>
         <button id="btnBot">Modo treino</button>
