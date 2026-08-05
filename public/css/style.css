@@ -169,7 +169,7 @@
     align-items: flex-start;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 40px;
   }
   #rankingPanel {
     display: flex;
@@ -183,7 +183,8 @@
     background: rgba(38, 35, 34, 0.78);
     border-radius: 16px;
     backdrop-filter: blur(6px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 2px solid #8b0000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
   }
   #rankingPanel h2 {
     margin: 0;
@@ -276,7 +277,8 @@
     background: rgba(38, 35, 34, 0.78);
     border-radius: 16px;
     backdrop-filter: blur(6px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 2px solid #8b0000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
   }
   #menu button:not(.class-card) {
     font-size: 20px;
@@ -1048,9 +1050,11 @@
     z-index: 10;
   }
   #botClassOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: rgba(38, 35, 34, 0.78);
+    border: 2px solid #8b0000;
     border-radius: 10px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     padding: 20px 24px;
     width: 420px;
     display: flex;
@@ -1221,9 +1225,11 @@
     z-index: 10;
   }
   #onlineClassOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: rgba(38, 35, 34, 0.78);
+    border: 2px solid #8b0000;
     border-radius: 10px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     padding: 20px 24px;
     width: 540px;
     max-width: calc(100vw - 32px);
@@ -1334,9 +1340,11 @@
     display: flex;
   }
   #authOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: rgba(38, 35, 34, 0.78);
+    border: 2px solid #8b0000;
     border-radius: 10px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     padding: 20px 24px;
     width: 360px;
     max-width: calc(100vw - 32px);
@@ -1496,9 +1504,11 @@
     display: flex;
   }
   #profileOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: rgba(38, 35, 34, 0.78);
+    border: 2px solid #8b0000;
     border-radius: 10px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     padding: 20px 24px;
     width: 460px;
     max-width: calc(100vw - 32px);
