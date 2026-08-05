@@ -20,8 +20,8 @@ const AIM_PREVIEW_COLOR = '#9ca3af';
 // pixel de tela, virando um cinza quase invisível dependendo do tamanho da
 // janela. Desenhada em pixels de canvas ela escala junto com a arena e nunca
 // desaparece.
-const ARENA_BG_COLOR = '#242437';
-const ARENA_BORDER_COLOR = '#8f8fb4';
+const ARENA_BG_COLOR = '#3a3a3a';
+const ARENA_BORDER_COLOR = '#8b0000';
 const ARENA_BORDER_WIDTH = 4;
 
 function drawArenaBackground() {

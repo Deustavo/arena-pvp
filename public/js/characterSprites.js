@@ -59,6 +59,20 @@ const SPRITE_SHEETS = {
     hurt: { src: '/assets/sprites/duelista/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/duelista/death.png', frames: 4, frameMs: 120, loop: false },
   },
+  mago: {
+    idle: { src: '/assets/sprites/mago/idle.png', frames: 6, frameMs: 150, loop: true },
+    walk: { src: '/assets/sprites/mago/walk.png', frames: 8, frameMs: 90, loop: true },
+    // A Demoness_A tem 3 golpes diferentes no pacote de sprites — alterna
+    // entre eles a cada tiro (ver attackVariantIndex), mesmo esquema do
+    // duelista/tank/sniper.
+    attack: [
+      { src: '/assets/sprites/mago/attack1.png', frames: 9, frameMs: 35, loop: false },
+      { src: '/assets/sprites/mago/attack2.png', frames: 15, frameMs: 35, loop: false },
+      { src: '/assets/sprites/mago/attack3.png', frames: 16, frameMs: 35, loop: false },
+    ],
+    hurt: { src: '/assets/sprites/mago/hurt.png', frames: 4, frameMs: 80, loop: false },
+    death: { src: '/assets/sprites/mago/death.png', frames: 4, frameMs: 120, loop: false },
+  },
   sniper: {
     idle: { src: '/assets/sprites/sniper/idle.png', frames: 6, frameMs: 150, loop: true },
     walk: { src: '/assets/sprites/sniper/walk.png', frames: 6, frameMs: 90, loop: true },
