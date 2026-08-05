@@ -13,7 +13,6 @@ import { resetMatchTimer } from './matchTimer.js';
 import { resetNearMiss } from './nearMiss.js';
 import { openBotClassSelect } from './botClassSelect.js';
 import { updateGameScale } from './gameScale.js';
-import { startMenuBackground, stopMenuBackground } from './menuBackground.js';
 import { stopMatchTutorial, shouldStartMatchTutorial, resetMatchTutorialFlag } from './tutorial/matchTutorial.js';
 
 export function showMenu() {
@@ -23,7 +22,6 @@ export function showMenu() {
   hideWaitingOverlay();
   startOnlineCountPolling();
   startRankingPolling();
-  startMenuBackground();
 }
 
 export function showGame() {
@@ -32,7 +30,6 @@ export function showGame() {
   document.body.classList.add('game-active');
   stopOnlineCountPolling();
   stopRankingPolling();
-  stopMenuBackground();
   updateGameScale();
 }
 

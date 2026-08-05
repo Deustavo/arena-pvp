@@ -95,14 +95,6 @@
     background-size: 400% 100%;
     animation: skeleton-shimmer 1.4s ease infinite;
   }
-  #menuBg {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    pointer-events: none;
-  }
   /* ----- Controle de volume -----
      Fixo no canto da tela porque vale tanto para o menu quanto para uma
      partida em andamento — o jogador não deveria ter que voltar ao menu para
