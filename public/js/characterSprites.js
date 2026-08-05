@@ -1,5 +1,5 @@
-// Sprites animados por classe. Hoje atirador e tank têm arte própria — as
-// demais classes continuam desenhadas como quadrado colorido em render.js
+// Sprites animados por classe. Hoje atirador, tank e assassino têm arte
+// própria — as demais classes continuam desenhadas como quadrado colorido em render.js
 // (hasCharacterSprite retorna false pra elas e o fallback antigo se aplica).
 //
 // Cada spritesheet é uma tira horizontal de quadros FRAME_SIZE x FRAME_SIZE.
@@ -14,7 +14,7 @@ const SPRITE_SHEETS = {
   atirador: {
     idle: { src: '/assets/sprites/atirador/idle.png', frames: 6, frameMs: 150, loop: true },
     walk: { src: '/assets/sprites/atirador/walk.png', frames: 8, frameMs: 90, loop: true },
-    attack: { src: '/assets/sprites/atirador/attack.png', frames: 9, frameMs: 55, loop: false },
+    attack: { src: '/assets/sprites/atirador/attack.png', frames: 9, frameMs: 35, loop: false },
     hurt: { src: '/assets/sprites/atirador/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/atirador/death.png', frames: 4, frameMs: 120, loop: false },
   },
@@ -24,6 +24,13 @@ const SPRITE_SHEETS = {
     attack: { src: '/assets/sprites/tank/attack.png', frames: 11, frameMs: 20, loop: false },
     hurt: { src: '/assets/sprites/tank/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/tank/death.png', frames: 4, frameMs: 120, loop: false },
+  },
+  assassino: {
+    idle: { src: '/assets/sprites/assassino/idle.png', frames: 6, frameMs: 150, loop: true },
+    walk: { src: '/assets/sprites/assassino/walk.png', frames: 6, frameMs: 90, loop: true },
+    attack: { src: '/assets/sprites/assassino/attack.png', frames: 8, frameMs: 35, loop: false },
+    hurt: { src: '/assets/sprites/assassino/hurt.png', frames: 4, frameMs: 80, loop: false },
+    death: { src: '/assets/sprites/assassino/death.png', frames: 4, frameMs: 120, loop: false },
   },
 };
 
