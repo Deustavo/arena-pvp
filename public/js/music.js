@@ -4,7 +4,8 @@
 // tempo, só a faixa atual.
 import {
   musicPlayerEl, btnMusicToggle, musicPanelEl, btnMusicPlayPause,
-  btnMusicPrev, btnMusicNext, btnMusicMute, musicTrackNameEl, musicVolumeInput,
+  btnMusicPrev, btnMusicNext, btnMusicMute, musicTrackNameEl, musicCopiedMsgEl,
+  musicVolumeInput,
 } from './dom.js';
 
 // Sem endpoint pra listar o diretório em runtime (servidor estático puro) —
@@ -32,7 +33,7 @@ const FAIXAS = [
 const VOLUME_MUSICA_KEY = 'jogoDoAno.volumeMusica';
 
 function nomeDeExibicao(arquivo) {
-  return arquivo.replace(/\.mp3$/, '').replace(/ - Jeremy Black$/, '');
+  return arquivo.replace(/\.mp3$/, '').replace(/ - /, ' — ');
 }
 
 // Fisher-Yates: ordem nova a cada abertura do jogo, como pedido — não
@@ -107,6 +108,21 @@ function alternarMute() {
   atualizarIconeMute();
 }
 
+let timeoutMsgCopiado = null;
+
+function mostrarMsgCopiado() {
+  clearTimeout(timeoutMsgCopiado);
+  musicCopiedMsgEl.classList.add('visible');
+  timeoutMsgCopiado = setTimeout(() => {
+    musicCopiedMsgEl.classList.remove('visible');
+  }, 1500);
+}
+
+function copiarNomeDaFaixa() {
+  const nome = nomeDeExibicao(faixaAtual());
+  navigator.clipboard.writeText(nome).then(mostrarMsgCopiado).catch(() => {});
+}
+
 // Toca sozinho ao carregar a página. Navegadores bloqueiam áudio com som
 // antes de qualquer gesto do usuário — se `play()` for rejeitado por isso,
 // tenta de novo no primeiro clique/tecla em qualquer lugar da página, sem
@@ -165,6 +181,7 @@ export function initMusicPlayer() {
   btnMusicPrev.addEventListener('click', faixaAnterior);
   btnMusicNext.addEventListener('click', proximaFaixa);
   btnMusicMute.addEventListener('click', alternarMute);
+  musicTrackNameEl.addEventListener('click', copiarNomeDaFaixa);
 
   musicVolumeInput.addEventListener('input', () => {
     volumeMusica = Number(musicVolumeInput.value);

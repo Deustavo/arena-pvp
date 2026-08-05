@@ -29,6 +29,7 @@ export const musicPlayerEl = document.getElementById('musicPlayer');
 export const btnMusicToggle = document.getElementById('btnMusicToggle');
 export const musicPanelEl = document.getElementById('musicPanel');
 export const musicTrackNameEl = document.getElementById('musicTrackName');
+export const musicCopiedMsgEl = document.getElementById('musicCopiedMsg');
 export const btnMusicPrev = document.getElementById('btnMusicPrev');
 export const btnMusicPlayPause = document.getElementById('btnMusicPlayPause');
 export const btnMusicNext = document.getElementById('btnMusicNext');

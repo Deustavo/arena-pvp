@@ -444,6 +444,7 @@
   #musicPanel {
     display: none;
     position: absolute;
+    /* âncora para #musicCopiedMsg, que é posicionado relativo ao painel */
     top: calc(100% + 8px);
     right: 0;
     min-width: 240px;
@@ -470,6 +471,36 @@
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 10px;
+    padding: 4px 6px;
+    margin-left: -6px;
+    margin-right: -6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  #musicTrackName:hover {
+    background: var(--cor-superficie-hover);
+    color: var(--cor-texto);
+  }
+  #musicCopiedMsg {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    font-size: 12px;
+    color: var(--cor-sucesso);
+    background: rgba(29, 29, 29, 0.92);
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    padding: 4px 10px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  #musicCopiedMsg.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
   #musicControls {
     display: flex;
