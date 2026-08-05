@@ -889,7 +889,8 @@
      centro: é o texto mais importante da primeira partida e precisa ser lido
      sem tirar os olhos da ação. Não vai no centro exato porque os dois
      jogadores nascem na metade vertical da arena e ficariam cobertos. */
-  #matchTutorialBanner {
+  #matchTutorialBanner,
+  #escLeaveBanner {
     position: absolute;
     top: 4%;
     left: 50%;
@@ -907,12 +908,18 @@
     opacity: 0;
     transition: opacity 0.25s ease, background-color 0.2s ease, border-color 0.2s ease;
   }
-  #matchTutorialBanner.visible {
+  #matchTutorialBanner.visible,
+  #escLeaveBanner.visible {
     opacity: 1;
   }
   #matchTutorialBanner.success {
     background: rgba(45, 138, 86, 0.9);
     border-color: var(--cor-sucesso);
+  }
+  /* Mesmo aviso do ESC ficaria estranho com a cor neutra do tutorial —
+     usa o vermelho de destaque para deixar claro que é um alerta. */
+  #escLeaveBanner {
+    border-color: var(--cor-vermelho-destaque);
   }
   /* Teclas desenhadas no balão do tutorial: cada passo mostra exatamente as
      teclas que o jogador precisa apertar. Cinza = ainda não apertada,

@@ -1,5 +1,5 @@
 import { state, screenXToWorld, computeFacing } from './state.js';
-import { canvas, escHintEl } from './dom.js';
+import { canvas, escHintEl, escLeaveBannerEl } from './dom.js';
 import { isShieldAvailable } from './hud.js';
 import { sendInput, sendShoot } from './network.js';
 import { botShoot } from './bot.js';
@@ -57,6 +57,7 @@ export function resetEscHint() {
   escResetTimer = null;
   escHintEl.textContent = ESC_DEFAULT_TEXT;
   escHintEl.classList.remove('armed');
+  escLeaveBannerEl.classList.remove('visible');
 }
 
 function handleEscPress() {
@@ -69,6 +70,10 @@ function handleEscPress() {
   escArmed = true;
   escHintEl.textContent = ESC_CONFIRM_TEXT;
   escHintEl.classList.add('armed');
+  // Mesmo aviso do texto pequeno embaixo da arena, mas também como faixa
+  // flutuante no mesmo padrão visual do tutorial — é o alerta mais importante
+  // do momento (o jogador está prestes a sair da partida sem querer).
+  escLeaveBannerEl.classList.add('visible');
   clearTimeout(escResetTimer);
   escResetTimer = setTimeout(resetEscHint, ESC_CONFIRM_WINDOW_MS);
 }

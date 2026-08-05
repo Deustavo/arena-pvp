@@ -27,6 +27,7 @@ export const menuEl = document.getElementById('menu');
 export const gameWrapEl = document.getElementById('game-wrap');
 export const escHintEl = document.getElementById('escHint');
 export const matchTutorialBannerEl = document.getElementById('matchTutorialBanner');
+export const escLeaveBannerEl = document.getElementById('escLeaveBanner');
 export const canvasWrapEl = document.getElementById('canvas-wrap');
 export const tutorialClickHintEl = document.getElementById('tutorialClickHint');
 export const btnOnline = document.getElementById('btnOnline');
