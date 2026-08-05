@@ -12,6 +12,7 @@ import { initOnlineClassSelect, openOnlineClassSelect } from './onlineClassSelec
 import { initBotClassSelect, openBotClassSelect } from './botClassSelect.js';
 import { initAuthScreens, atualizarBarraDeConta } from './authScreens.js';
 import { initProfile } from './profile.js';
+import { initCredits } from './credits.js';
 import { loadSession } from './auth.js';
 import { initRanking, refreshRankingHighlight } from './ranking.js';
 import { initUiSounds } from './uiSounds.js';
@@ -33,6 +34,7 @@ initOnlineClassSelect();
 initBotClassSelect();
 initAuthScreens();
 initProfile();
+initCredits();
 initRanking();
 
 // Restaura a sessão do token guardado. Não bloqueia a tela: o menu já aparece

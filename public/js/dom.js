@@ -105,6 +105,10 @@ export const onlineCountValueEl = document.getElementById('onlineCountValue');
 
 export const rankingListEl = document.getElementById('rankingList');
 
+export const btnCredits = document.getElementById('btnCredits');
+export const creditsOverlayEl = document.getElementById('creditsOverlay');
+export const btnCreditsClose = document.getElementById('btnCreditsClose');
+
 export const classListEl = document.getElementById('classList');
 export const classPreviewEl = document.getElementById('classPreview');
 export const classDetailsEl = document.getElementById('classDetails');

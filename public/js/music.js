@@ -36,15 +36,19 @@ function nomeDeExibicao(arquivo) {
   return arquivo.replace(/\.mp3$/, '').replace(/ - /, ' — ');
 }
 
+// Faixa que sempre abre a playlist, antes do embaralhamento do resto.
+const FAIXA_ABERTURA = 'Cooler Heads - Jeremy Black.mp3';
+
 // Fisher-Yates: ordem nova a cada abertura do jogo, como pedido — não
-// persiste em localStorage de propósito.
+// persiste em localStorage de propósito. FAIXA_ABERTURA fica de fora do
+// embaralhamento e é sempre a primeira da lista.
 function embaralhar(lista) {
-  const copia = lista.slice();
-  for (let i = copia.length - 1; i > 0; i--) {
+  const resto = lista.filter((faixa) => faixa !== FAIXA_ABERTURA);
+  for (let i = resto.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [copia[i], copia[j]] = [copia[j], copia[i]];
+    [resto[i], resto[j]] = [resto[j], resto[i]];
   }
-  return copia;
+  return [FAIXA_ABERTURA, ...resto];
 }
 
 function lerVolumeSalvo() {
