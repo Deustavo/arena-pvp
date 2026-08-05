@@ -10,6 +10,13 @@
     margin: 0;
     height: 100%;
     background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), #1d1d2b url('../assets/backgrounds/dungeon_brick_wall_grey.png') repeat;
+    /* Paralaxe da tela inicial (public/js/parallax.js): desloca só a camada
+       da textura (segunda posição) pelo mouse via variáveis CSS; a camada do
+       gradiente escuro (primeira posição) fica parada em 0 0. Sem transição
+       de background-position durante a partida, porque `body.game-active`
+       nunca tem essas variáveis atualizadas — o fundo já fica parado. */
+    background-position: 0 0, var(--parallax-x, 0px) var(--parallax-y, 0px);
+    transition: background-position 0.2s ease-out;
     display: flex;
     align-items: center;
     justify-content: center;

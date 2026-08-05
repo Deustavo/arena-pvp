@@ -28,6 +28,8 @@ export function showGame() {
   menuEl.style.display = 'none';
   gameWrapEl.style.display = 'flex';
   document.body.classList.add('game-active');
+  document.body.style.removeProperty('--parallax-x');
+  document.body.style.removeProperty('--parallax-y');
   stopOnlineCountPolling();
   stopRankingPolling();
   updateGameScale();

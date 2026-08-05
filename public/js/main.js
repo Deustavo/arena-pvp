@@ -16,10 +16,12 @@ import { loadSession } from './auth.js';
 import { initRanking, refreshRankingHighlight } from './ranking.js';
 import { initUiSounds } from './uiSounds.js';
 import { initSoundSettings } from './soundSettings.js';
+import { initParallax } from './parallax.js';
 
 initInput();
 initUiSounds();
 initSoundSettings();
+initParallax();
 initNicknameInput();
 initOnlineClassSelect();
 initBotClassSelect();

@@ -1,5 +1,6 @@
-// Sprites animados por classe. Hoje atirador, tank, assassino e duelista têm
-// arte própria — as demais classes continuam desenhadas como quadrado colorido em render.js
+// Sprites animados por classe. Hoje atirador, tank, assassino, duelista e
+// sniper têm arte própria — as demais classes continuam desenhadas como
+// quadrado colorido em render.js
 // (hasCharacterSprite retorna false pra elas e o fallback antigo se aplica).
 //
 // Cada spritesheet é uma tira horizontal de quadros FRAME_SIZE x FRAME_SIZE.
@@ -21,14 +22,26 @@ const SPRITE_SHEETS = {
   tank: {
     idle: { src: '/assets/sprites/tank/idle.png', frames: 6, frameMs: 150, loop: true },
     walk: { src: '/assets/sprites/tank/walk.png', frames: 8, frameMs: 90, loop: true },
-    attack: { src: '/assets/sprites/tank/attack.png', frames: 11, frameMs: 20, loop: false },
+    // O Demon_D também tem 3 golpes diferentes no pacote de sprites — mesma
+    // alternância por tiro usada no duelista/Demon_E (ver attackVariantIndex).
+    attack: [
+      { src: '/assets/sprites/tank/attack1.png', frames: 11, frameMs: 20, loop: false },
+      { src: '/assets/sprites/tank/attack2.png', frames: 18, frameMs: 20, loop: false },
+      { src: '/assets/sprites/tank/attack3.png', frames: 12, frameMs: 20, loop: false },
+    ],
     hurt: { src: '/assets/sprites/tank/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/tank/death.png', frames: 4, frameMs: 120, loop: false },
   },
   assassino: {
     idle: { src: '/assets/sprites/assassino/idle.png', frames: 6, frameMs: 150, loop: true },
     walk: { src: '/assets/sprites/assassino/walk.png', frames: 6, frameMs: 90, loop: true },
-    attack: { src: '/assets/sprites/assassino/attack.png', frames: 8, frameMs: 35, loop: false },
+    // A Demoness_B tem 2 golpes diferentes no pacote de sprites — alterna
+    // entre eles a cada tiro (ver attackVariantIndex), mesmo esquema do
+    // tank/duelista.
+    attack: [
+      { src: '/assets/sprites/assassino/attack1.png', frames: 8, frameMs: 35, loop: false },
+      { src: '/assets/sprites/assassino/attack2.png', frames: 8, frameMs: 35, loop: false },
+    ],
     hurt: { src: '/assets/sprites/assassino/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/assassino/death.png', frames: 4, frameMs: 120, loop: false },
   },
@@ -45,6 +58,18 @@ const SPRITE_SHEETS = {
     ],
     hurt: { src: '/assets/sprites/duelista/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/duelista/death.png', frames: 4, frameMs: 120, loop: false },
+  },
+  sniper: {
+    idle: { src: '/assets/sprites/sniper/idle.png', frames: 6, frameMs: 150, loop: true },
+    walk: { src: '/assets/sprites/sniper/walk.png', frames: 6, frameMs: 90, loop: true },
+    // O Demon_C tem 2 golpes diferentes no pacote de sprites — alterna entre
+    // eles a cada tiro (ver attackVariantIndex), mesmo esquema do duelista/tank.
+    attack: [
+      { src: '/assets/sprites/sniper/attack1.png', frames: 6, frameMs: 35, loop: false },
+      { src: '/assets/sprites/sniper/attack2.png', frames: 6, frameMs: 35, loop: false },
+    ],
+    hurt: { src: '/assets/sprites/sniper/hurt.png', frames: 4, frameMs: 80, loop: false },
+    death: { src: '/assets/sprites/sniper/death.png', frames: 4, frameMs: 120, loop: false },
   },
 };
 
