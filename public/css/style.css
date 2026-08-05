@@ -951,7 +951,7 @@
   .class-card {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
     width: 100%;
     box-sizing: border-box;
     text-align: left;
@@ -972,6 +972,8 @@
   }
   .class-card .class-sprite {
     --sprite-box: 36px;
+    --sprite-zoom: 3;
+    margin: -6px 0px 6px 0px;
   }
   .class-card .class-name {
     font-size: 14px;
