@@ -329,13 +329,26 @@
   }
   #menuTitle {
     margin: 0;
+    font-size: 92px;
     text-align: center;
+    color: var(--cor-vermelho);
+    -webkit-text-stroke: 1px #000;
+    text-stroke: 1px #000;
+    animation: logoBrilhoPulsante 4s ease-in-out infinite;
   }
-  #menuTitle img {
-    width: 220px;
-    max-width: 100%;
-    height: auto;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+  .flip-letter {
+    display: inline-block;
+    transform: scaleX(-1);
+  }
+  @keyframes logoBrilhoPulsante {
+    0%, 100% {
+      color: var(--cor-vermelho);
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 8px var(--cor-vermelho);
+    }
+    50% {
+      color: var(--cor-vermelho-destaque);
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 22px var(--cor-vermelho-destaque);
+    }
   }
   #menuContent {
     display: flex;
@@ -2021,8 +2034,8 @@
   }
 
   @media (max-width: 700px) {
-    #menuTitle img {
-      width: 160px;
+    #menuTitle {
+      font-size: 44px;
     }
     #menu button:not(.class-card):not(.ranking-nome) {
       min-width: 0;
