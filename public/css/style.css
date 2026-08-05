@@ -329,13 +329,13 @@
   }
   #menuTitle {
     margin: 0;
-    font-size: 64px;
     text-align: center;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   }
-  .flip-letter {
-    display: inline-block;
-    transform: scaleX(-1);
+  #menuTitle img {
+    width: 220px;
+    max-width: 100%;
+    height: auto;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
   }
   #menuContent {
     display: flex;
@@ -1995,8 +1995,12 @@
   }
   .standalone-card h1 {
     margin: 0;
-    font-size: 24px;
     text-align: center;
+  }
+  .standalone-card h1 img {
+    width: 120px;
+    max-width: 100%;
+    height: auto;
   }
   .standalone-card h2 {
     margin: 0;
@@ -2017,8 +2021,8 @@
   }
 
   @media (max-width: 700px) {
-    #menuTitle {
-      font-size: 40px;
+    #menuTitle img {
+      width: 160px;
     }
     #menu button:not(.class-card):not(.ranking-nome) {
       min-width: 0;
