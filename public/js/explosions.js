@@ -1,13 +1,13 @@
 import { ctx } from './dom.js';
 import { state } from './state.js';
 import { playExplosionSound } from './audio.js';
-import { getClass } from '../../shared/classes.js';
 
 const EXPLOSION_PARTICLE_COUNT = 26;
 const EXPLOSION_LIFE_MS = 800;
+const EXPLOSION_COLOR = '#ff4d4d';
 
-export function spawnExplosion(classId, cx, cy) {
-  const color = getClass(classId).color || '#ffffff';
+export function spawnExplosion(cx, cy) {
+  const color = EXPLOSION_COLOR;
   const now = Date.now();
   for (let i = 0; i < EXPLOSION_PARTICLE_COUNT; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -44,7 +44,7 @@ export function updateAndDrawExplosions(now) {
 // Dispara a explosão no instante em que um jogador passa de vivo para morto.
 export function checkDeathExplosion(rawIndex, playerState) {
   if (state.prevAlive[rawIndex] && !playerState.alive) {
-    spawnExplosion(playerState.classId, playerState.x + state.playerSize / 2, playerState.y + state.playerSize / 2);
+    spawnExplosion(playerState.x + state.playerSize / 2, playerState.y + state.playerSize / 2);
     playExplosionSound();
   }
   state.prevAlive[rawIndex] = playerState.alive;

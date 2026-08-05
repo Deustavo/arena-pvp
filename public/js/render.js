@@ -14,6 +14,7 @@ const GAMEOVER_OVERLAY_DELAY = 2000;
 const HIT_FLASH_DURATION = 400;
 const OWN_PLAYER_BORDER_COLOR = '#facc15';
 const OWN_SHOT_COLOR = '#facc15';
+const ENEMY_SHOT_COLOR = '#ff4d4d';
 const AIM_PREVIEW_COLOR = '#9ca3af';
 const HITBOX_DEBUG_COLOR = '#22ff22';
 
@@ -249,11 +250,10 @@ function drawHitbox(x, y) {
 function drawProjectiles(renderState) {
   for (const proj of renderState.projectiles) {
     const size = proj.size ?? state.projectileSize;
-    const owner = renderState.players[proj.ownerIndex];
     if (proj.ownerIndex === state.playerIndex) {
       ctx.fillStyle = OWN_SHOT_COLOR;
     } else {
-      ctx.fillStyle = owner ? getClass(owner.classId).color : '#ffffff';
+      ctx.fillStyle = ENEMY_SHOT_COLOR;
     }
     ctx.beginPath();
     ctx.arc(proj.x, proj.y, size / 2, 0, Math.PI * 2);
