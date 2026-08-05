@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Arena PVP - 1x1</title>
+<title>Demon Arena</title>
+<link rel="icon" type="image/png" href="assets/icons/logo.png">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body>
-  <canvas id="menuBg"></canvas>
   <div id="soundSettings">
     <button type="button" id="btnSoundSettings" aria-haspopup="true" aria-expanded="false" aria-label="Configurações de som" title="Configurações de som">
       <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
@@ -26,46 +26,48 @@
     </div>
   </div>
   <div id="menu">
-    <div id="menuBody">
-      <h1>Arena PVP</h1>
-      <div id="accountBar" class="skeleton-loading">
-        <div id="accountLoggedIn">
-          <span id="accountGreeting">Jogando como <strong id="accountName"></strong></span>
-          <div id="accountActions">
-            <button type="button" id="btnProfile" class="link-button">Perfil</button>
-            <button type="button" id="btnLogout" class="link-button">Sair</button>
+    <h1 id="menuTitle"><span class="title-letter">D</span><span class="title-letter">e</span><span class="title-letter">m</span><span class="title-letter">o</span><span class="title-letter flip-letter">N</span> <span class="title-letter">A</span><span class="title-letter">r</span><span class="title-letter">e</span><span class="title-letter">n</span><span class="title-letter flip-letter">A</span></h1>
+    <div id="menuContent">
+      <div id="menuBody">
+        <div id="nicknameField">
+          <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
+          <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
+          <div id="nicknameError">Digite um nickname para jogar</div>
+        </div>
+        <div id="accountBar" class="skeleton-loading">
+          <div id="accountLoggedIn">
+            <span id="accountGreeting">Jogando como <strong id="accountName"></strong></span>
+            <div id="accountActions">
+              <button type="button" id="btnProfile" class="link-button">Perfil</button>
+              <button type="button" id="btnLogout" class="link-button">Sair</button>
+            </div>
+          </div>
+          <div id="accountLoggedOut">
+            <button type="button" id="btnLogin" class="link-button">Entrar</button>
+            <span class="account-sep">ou</span>
+            <button type="button" id="btnSignup" class="link-button">criar conta</button>
           </div>
         </div>
-        <div id="accountLoggedOut">
-          <button type="button" id="btnLogin" class="link-button">Entrar</button>
-          <span class="account-sep">ou</span>
-          <button type="button" id="btnSignup" class="link-button">criar conta</button>
+        <button id="btnOnline">Jogar Online</button>
+        <button id="btnBot">Modo treino</button>
+        <hr id="menuDivider">
+        <button id="btnHowToPlay">Como jogar</button>
+        <div id="onlineCount" class="skeleton-loading">● <span id="onlineCountValue">--</span> jogador(es) online</div>
+      </div>
+      <div id="rankingPanel">
+        <h2>Ranking</h2>
+        <div id="rankingHeader">
+          <span>Jogador</span>
+          <span>Vitórias</span>
         </div>
+        <ol id="rankingList">
+          <li class="skeleton-row"></li>
+          <li class="skeleton-row"></li>
+          <li class="skeleton-row"></li>
+          <li class="skeleton-row"></li>
+          <li class="skeleton-row"></li>
+        </ol>
       </div>
-      <div id="nicknameField">
-        <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
-        <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
-        <div id="nicknameError">Digite um nickname para jogar</div>
-      </div>
-      <button id="btnOnline">Jogar Online</button>
-      <button id="btnBot">Modo treino</button>
-      <hr id="menuDivider">
-      <button id="btnHowToPlay">Como jogar</button>
-      <div id="onlineCount" class="skeleton-loading">● <span id="onlineCountValue">--</span> jogador(es) online</div>
-    </div>
-    <div id="rankingPanel">
-      <h2>Ranking</h2>
-      <div id="rankingHeader">
-        <span>Jogador</span>
-        <span>Vitórias</span>
-      </div>
-      <ol id="rankingList">
-        <li class="skeleton-row"></li>
-        <li class="skeleton-row"></li>
-        <li class="skeleton-row"></li>
-        <li class="skeleton-row"></li>
-        <li class="skeleton-row"></li>
-      </ol>
     </div>
   </div>
 
@@ -117,7 +119,7 @@
   <div id="onlineClassOverlay">
     <div class="modal">
       <div id="onlineClassHeader">
-        <h2>Escolha sua classe</h2>
+        <h2>Escolha seu demonio</h2>
         <button id="btnOnlineClassClose" type="button" title="Fechar (Esc)" aria-label="Fechar">✕</button>
       </div>
       <div id="classArea">
@@ -134,21 +136,21 @@
   <div id="botClassOverlay">
     <div class="modal">
       <div id="botClassHeader">
-        <h2>Escolha as classes</h2>
+        <h2>Escolha os demonios</h2>
         <button id="btnBotClassClose" type="button" title="Fechar (Esc)" aria-label="Fechar">✕</button>
       </div>
       <div id="botClassColumns">
         <div class="class-select-col">
-          <h3>Sua classe</h3>
+          <h3>Seu demonio</h3>
           <div id="modalPlayerClassList" class="class-mini-list"></div>
         </div>
         <div class="class-select-col">
-          <h3>Classe do bot</h3>
+          <h3>Demonio inimigo</h3>
           <div id="botClassList" class="class-mini-list"></div>
         </div>
       </div>
       <div id="botDifficultyCol">
-        <h3>Dificuldade do bot</h3>
+        <h3>Dificuldade do inimigo</h3>
         <div id="botDifficultyDropdown" class="dropdown">
           <button type="button" id="botDifficultyToggle" class="dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
             <span id="botDifficultyValue"></span>
@@ -194,6 +196,8 @@
     <div id="canvas-wrap">
       <canvas id="game" width="800" height="600"></canvas>
       <div id="matchTutorialBanner"></div>
+      <div id="escLeaveBanner">Aperte ESC novamente para sair</div>
+      <div id="tutorialClickHint"></div>
       <div id="gameOverOverlay">
         <h2 id="gameOverMessage"></h2>
         <div class="overlay-buttons">
@@ -203,7 +207,18 @@
         <button id="btnBackToMenu">Menu inicial</button>
       </div>
       <div id="waitingOverlay">
-        <span class="loader"></span>
+        <span class="loader">
+          <span class="loader-orbit">
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+          </span>
+          <svg class="loader-pentagrama" viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M50,5 L76.5,86.4 L7.2,36.1 L92.8,36.1 L23.5,86.4 Z" />
+          </svg>
+        </span>
         <h2 id="waitingMessage">Aguardando oponente...</h2>
         <p id="noOpponentsMessage">Poucos jogadores online, experimente o modo treino</p>
         <div class="overlay-buttons">

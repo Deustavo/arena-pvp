@@ -2,7 +2,7 @@ import {
   btnOnline, btnBot, btnHowToPlay, btnLeaveQueue, btnTryTrainingMode, btnPlayAgain, btnBackToMenu, btnSwapClasses,
 } from './dom.js';
 import { state } from './state.js';
-import { forceNextMatchTutorial } from './tutorial/matchTutorial.js';
+import { forceNextMatchTutorial, shouldStartMatchTutorial } from './tutorial/matchTutorial.js';
 import { initInput } from './input.js';
 import { leaveQueue as leaveNetworkQueue } from './network.js';
 import { showMenu, startOnline, startBot, backToMenu } from './menu.js';
@@ -16,10 +16,16 @@ import { loadSession } from './auth.js';
 import { initRanking, refreshRankingHighlight } from './ranking.js';
 import { initUiSounds } from './uiSounds.js';
 import { initSoundSettings } from './soundSettings.js';
+import { initParallax } from './parallax.js';
+import { initFireCursor } from './fireCursor.js';
+import { initTitleFire } from './titleFire.js';
 
 initInput();
 initUiSounds();
 initSoundSettings();
+initParallax();
+initFireCursor();
+initTitleFire();
 initNicknameInput();
 initOnlineClassSelect();
 initBotClassSelect();
@@ -36,9 +42,22 @@ loadSession().then(() => {
 
 btnOnline.addEventListener('click', () => {
   if (!commitNickname()) return;
+  // Primeiro acesso: pula a modal de seleção de classe e cai direto no
+  // tutorial interativo (startOnline já redireciona pra partida de bot
+  // nesse caso — ver shouldStartMatchTutorial em menu.js).
+  if (shouldStartMatchTutorial()) {
+    startOnline();
+    return;
+  }
   openOnlineClassSelect(startOnline);
 });
-btnBot.addEventListener('click', () => openBotClassSelect(startBot));
+btnBot.addEventListener('click', () => {
+  if (shouldStartMatchTutorial()) {
+    startBot();
+    return;
+  }
+  openBotClassSelect(startBot);
+});
 btnHowToPlay.addEventListener('click', () => {
   forceNextMatchTutorial();
   startBot();

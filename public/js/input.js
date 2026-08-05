@@ -1,11 +1,12 @@
-import { state, screenXToWorld } from './state.js';
-import { canvas, escHintEl } from './dom.js';
+import { state, screenXToWorld, computeFacing } from './state.js';
+import { canvas, escHintEl, escLeaveBannerEl } from './dom.js';
 import { isShieldAvailable } from './hud.js';
 import { sendInput, sendShoot } from './network.js';
 import { botShoot } from './bot.js';
 import { backToMenu } from './menu.js';
-import { rerollWinnerEmoji } from './gameOver.js';
-import { notifyMatchTutorial } from './tutorial/matchTutorial.js';
+import {
+  notifyMatchTutorial, startTutorialShieldHold, cancelTutorialShieldHold,
+} from './tutorial/matchTutorial.js';
 import { playShieldUpSound, playUnavailableSound } from './audio.js';
 import { getClass } from '../../shared/classes.js';
 
@@ -32,12 +33,31 @@ function tiroPronto() {
   return Date.now() - (me.lastShot || 0) >= getClass(me.classId).shotCooldownMs;
 }
 
+// O personagem olha para onde o mouse está mirando. `facing` só muda de
+// sinal quando o mouse cruza o centro do jogador, então isto é barato de
+// chamar a cada mousemove — na prática só dispara `sendInput` nas raras
+// vezes em que a direção realmente vira.
+function updateFacingFromMouse() {
+  if (!state.mode || state.playerIndex === null) return;
+  const me = state.mode === 'bot'
+    ? state.bot?.players[0]
+    : state.latestState.players[state.playerIndex];
+  if (!me) return;
+  const worldMouseX = screenXToWorld(state.mouse.x);
+  const newFacing = computeFacing(worldMouseX, me.x);
+  if (newFacing !== state.facing) {
+    state.facing = newFacing;
+    if (state.mode === 'online') sendInput();
+  }
+}
+
 export function resetEscHint() {
   escArmed = false;
   clearTimeout(escResetTimer);
   escResetTimer = null;
   escHintEl.textContent = ESC_DEFAULT_TEXT;
   escHintEl.classList.remove('armed');
+  escLeaveBannerEl.classList.remove('visible');
 }
 
 function handleEscPress() {
@@ -50,6 +70,10 @@ function handleEscPress() {
   escArmed = true;
   escHintEl.textContent = ESC_CONFIRM_TEXT;
   escHintEl.classList.add('armed');
+  // Mesmo aviso do texto pequeno embaixo da arena, mas também como faixa
+  // flutuante no mesmo padrão visual do tutorial — é o alerta mais importante
+  // do momento (o jogador está prestes a sair da partida sem querer).
+  escLeaveBannerEl.classList.add('visible');
   clearTimeout(escResetTimer);
   escResetTimer = setTimeout(resetEscHint, ESC_CONFIRM_WINDOW_MS);
 }
@@ -68,7 +92,10 @@ export function initInput() {
         state.input.shield = true;
         sendInput();
         playShieldUpSound();
-        notifyMatchTutorial('shield');
+        // O passo do tutorial exige segurar Espaço por 1s (ver
+        // startTutorialShieldHold); escudar no jogo em si continua
+        // instantâneo, o "segurar" é só o gesto que o tutorial valida.
+        startTutorialShieldHold();
       } else if (emPartida && !isShieldAvailable()) {
         // Escudo esgotado. O keydown repete enquanto a tecla fica pressionada,
         // mas o efeito tem janela anti-repetição própria (audio.js).
@@ -81,7 +108,9 @@ export function initInput() {
     if (dir && !state.input[dir] && !state.desempate) {
       state.input[dir] = true;
       sendInput();
-      notifyMatchTutorial('move');
+      // O tutorial precisa saber *qual* direção foi apertada: o passo de
+      // movimento só termina depois das quatro teclas.
+      notifyMatchTutorial('move', dir);
     }
   });
 
@@ -89,6 +118,7 @@ export function initInput() {
     if (!state.mode) return;
     if (e.code === 'Space') {
       e.preventDefault();
+      cancelTutorialShieldHold();
       if (state.input.shield) {
         state.input.shield = false;
         sendInput();
@@ -108,13 +138,13 @@ export function initInput() {
     const scaleY = canvas.height / rect.height;
     state.mouse.x = (e.clientX - rect.left) * scaleX;
     state.mouse.y = (e.clientY - rect.top) * scaleY;
+    updateFacingFromMouse();
   });
 
   window.addEventListener('click', (e) => {
     if (e.target.closest('button, a, input, select, textarea')) return;
     if (!state.mode) return;
     if (state.gameOver) {
-      rerollWinnerEmoji();
       return;
     }
     if (!state.matchStarted || state.desempate) return;

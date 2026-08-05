@@ -3,7 +3,7 @@
 // app.brevo.com/senders). Trocar de provedor de novo não afeta o resto do servidor.
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
-const BREVO_SENDER_NOME = 'Arena PVP';
+const BREVO_SENDER_NOME = 'Demon Arena';
 
 // Sem credenciais configuradas (ex.: rodando testes locais), loga no console
 // em vez de quebrar — o fluxo de auth continua utilizável em desenvolvimento.
@@ -47,8 +47,8 @@ function layout({ titulo, mensagem, textoBotao, url }) {
 export async function enviarVerificacaoEmail({ to, url }) {
   await enviar({
     to,
-    subject: 'Confirme seu e-mail — Arena PVP',
-    text: `Confirme seu e-mail para ativar sua conta no Arena PVP: ${url}`,
+    subject: 'Confirme seu e-mail — Demon Arena',
+    text: `Confirme seu e-mail para ativar sua conta no Demon Arena: ${url}`,
     html: layout({
       titulo: 'Confirme seu e-mail',
       mensagem: 'Falta pouco para entrar na arena! Confirme seu e-mail para ativar sua conta.',
@@ -61,8 +61,8 @@ export async function enviarVerificacaoEmail({ to, url }) {
 export async function enviarResetSenha({ to, url }) {
   await enviar({
     to,
-    subject: 'Redefinir sua senha — Arena PVP',
-    text: `Use este link para criar uma nova senha no Arena PVP (expira em 1 hora): ${url}`,
+    subject: 'Redefinir sua senha — Demon Arena',
+    text: `Use este link para criar uma nova senha no Demon Arena (expira em 1 hora): ${url}`,
     html: layout({
       titulo: 'Redefinir sua senha',
       mensagem: 'Recebemos um pedido para redefinir sua senha. O link abaixo expira em 1 hora.',

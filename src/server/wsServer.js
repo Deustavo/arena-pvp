@@ -37,7 +37,11 @@ export function createWsServer(httpServer) {
     if (ws.readyState !== ws.OPEN) return;
 
     ws.userId = userId;
-    handleConnection(ws, nickname, classIdFromRequest(req));
+    // Convidado (sem conta) só pode jogar com o atirador — o cadeado do menu
+    // (public/js/onlineClassSelect.js) é só visual, então o servidor também
+    // precisa recusar qualquer outra classe vinda direto na query string.
+    const classId = userId ? classIdFromRequest(req) : DEFAULT_CLASS_ID;
+    handleConnection(ws, nickname, classId);
   });
 
   return wss;
@@ -66,10 +70,13 @@ function handleMessage(ws, raw) {
   }
 }
 
-function handleInput(ws, { up, down, left, right, shield }) {
+function handleInput(ws, { up, down, left, right, shield, facing }) {
   const player = ws.player;
   player.input = { up: !!up, down: !!down, left: !!left, right: !!right };
   player.shielding = !!shield && player.shieldHits < player.shieldMaxHits;
+  // O cliente já decide a direção olhando pro mouse (espaço de mundo); aqui
+  // só sanitiza pra não aceitar qualquer valor arbitrário do socket.
+  if (facing === 1 || facing === -1) player.facing = facing;
 }
 
 function handleShoot(ws, msg) {

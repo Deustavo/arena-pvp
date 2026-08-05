@@ -19,7 +19,7 @@ const TIQUES_FINAIS_S = 10;
 
 // Marcas de tempo restante que disparam um aviso sonoro uma única vez cada,
 // antes dos tiques finais de `TIQUES_FINAIS_S`.
-const MARCAS_AVISO_MS = [60000, 30000];
+const MARCAS_AVISO_MS = [30000];
 
 const TEXTO_DESEMPATE = 'DESEMPATE';
 

@@ -9,6 +9,7 @@ import {
 import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 import { DEFAULT_BOT_DIFFICULTY } from '../../shared/botDifficulty.js';
 import { MATCH_DURATION_MS } from '../../shared/matchTimer.js';
+import { resetCharacterAnimators } from './characterSprites.js';
 
 export const state = {
   mode: null, // 'online' | 'bot'
@@ -59,16 +60,23 @@ export const state = {
   gameOverAt: 0,
   overlayShown: false,
   lastResult: null, // 'win' | 'lose' | 'draw'
-  winnerIndex: null, // índice do jogador vencedor (null em empate), para exibir o emoji
-  winnerEmoji: null,
+  winnerIndex: null, // índice do jogador vencedor (null em empate)
   prevAlive: [true, true],
   explosionParticles: [],
+  // Coração/escudo quebrado que sobe sobre a cabeça do jogador ao perder uma
+  // vida ou o escudo (ver public/js/floatingIcons.js).
+  floatingIcons: [],
 
   bot: null,
   botInterval: null,
 
   input: { up: false, down: false, left: false, right: false, shield: false },
   mouse: { x: 0, y: 0 },
+
+  // Direção que o personagem local olha (1 = direita, -1 = esquerda), em
+  // espaço de mundo — segue o mouse (ver computeFacing/input.js). Enviado ao
+  // servidor no modo online para o oponente ver a mesma direção.
+  facing: 1,
 
   // Se o jogador local está do lado direito do adversário, a cena inteira é
   // espelhada horizontalmente na renderização para que ele sempre apareça à
@@ -105,6 +113,13 @@ export function getWorldInput() {
   return { ...state.input, left: state.input.right, right: state.input.left };
 }
 
+// Direção (1/-1) que o personagem deveria olhar para encarar `worldMouseX`
+// (já em espaço de mundo, ver screenXToWorld) a partir do centro de um
+// jogador em `playerX` (canto esquerdo do hitbox, espaço de mundo).
+export function computeFacing(worldMouseX, playerX) {
+  return worldMouseX >= playerX + PLAYER_SIZE / 2 ? 1 : -1;
+}
+
 // Reseta os campos de uma sessão de partida (chamado ao entrar em uma nova
 // partida ou voltar ao menu). Efeitos colaterais de DOM ficam por conta de
 // quem chama.
@@ -126,12 +141,14 @@ export function resetMatchState() {
   state.remainingMs = MATCH_DURATION_MS;
   state.desempate = false;
   state.input.up = state.input.down = state.input.left = state.input.right = state.input.shield = false;
+  state.facing = 1;
   state.gameOverAt = 0;
   state.overlayShown = false;
   state.lastResult = null;
   state.winnerIndex = null;
-  state.winnerEmoji = null;
   state.prevAlive = [true, true];
   state.explosionParticles = [];
+  state.floatingIcons = [];
   state.viewFlipped = false;
+  resetCharacterAnimators();
 }

@@ -1,21 +1,167 @@
+  /* ===== Fontes =====
+     Self-hosted (sem dependência de CDN externo): Chakra Petch é a fonte-base
+     da interface (legível em tamanho pequeno pro HUD) e Metal Mania é só pros
+     títulos (h1/h2 de menu, painéis, modais e fim de jogo), pela temática de
+     demônios/arena. Arquivos em public/assets/fonts/, dois subsets cada
+     (latin + latin-ext, pro acento do português) via unicode-range. */
+  @font-face {
+    font-family: 'Metal Mania';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/metal-mania-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  }
+  @font-face {
+    font-family: 'Metal Mania';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/metal-mania-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-024F, U+1E00-1EFF, U+2020, U+2113;
+  }
+  @font-face {
+    font-family: 'Chakra Petch';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/chakra-petch-400-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  }
+  @font-face {
+    font-family: 'Chakra Petch';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/chakra-petch-400-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-024F, U+1E00-1EFF, U+2020, U+2113;
+  }
+  @font-face {
+    font-family: 'Chakra Petch';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../assets/fonts/chakra-petch-600-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  }
+  @font-face {
+    font-family: 'Chakra Petch';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../assets/fonts/chakra-petch-600-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-024F, U+1E00-1EFF, U+2020, U+2113;
+  }
+
+  /* ===== Paleta =====
+     Fonte única das cores da interface: nenhuma regra abaixo deve escrever um
+     hex literal — use uma variável daqui (ou crie uma, se a cor for realmente
+     nova). Cores iguais ou quase iguais foram unificadas na mesma variável de
+     propósito: antes existiam vários cinzas levemente diferentes (#2b2b3d,
+     #2e2e2e, #2f2f40…) que apareciam misturados na mesma tela.
+
+     Toda a interface é escala de cinza + o vermelho da identidade. Os cinzas
+     eram azulados/arroxeados (#2b2b3d, #9a9ab0, #52527a…) e foram
+     neutralizados; azul só sobrou onde a cor é *informação* e não decoração
+     (`--cor-azul-*`, `--class-color` de cada classe em shared/classes.js). */
+  :root {
+    /* Neutros: superfícies, da mais funda para a mais alta */
+    --cor-fundo: #1d1d1d;
+    --cor-fundo-arena: #202020;
+    /* Véu translúcido da contagem regressiva sobre a arena (deixa os
+       jogadores visíveis atrás do número) — mesmo tom de --cor-fundo-arena. */
+    --cor-fundo-arena-veu: rgba(32, 32, 32, 0.85);
+    --cor-superficie-baixa: #1c1c1c;
+    --cor-superficie-icone: #242424;
+    --cor-superficie: #2a2a2a;
+    --cor-superficie-alta: #2e2e2e;
+    --cor-superficie-forte: #333;
+    --cor-superficie-forte-hover: #222;
+    --cor-superficie-elevada: #3a3a3a;
+    --cor-superficie-hover: #3f3f3f;
+    --cor-superficie-hover-alta: #4a4a4a;
+    --cor-modal-fundo: #262322;
+    --cor-painel-fundo: rgba(38, 35, 34, 0.78);
+    /* Painéis "de pedra" (menu principal e ranking): cinza bem escuro e opaco,
+       sem textura, pra lerem como um bloco de pedra sólido. */
+    --cor-painel-pedra-veu: #100f0e;
+    --cor-pedra-borda: #100f0e;
+
+    /* Neutros: bordas e cinzas médios */
+    --cor-borda: #444;
+    --cor-borda-media: #555;
+    --cor-borda-clara: #666;
+    --cor-borda-hover: #777;
+    --cor-cinza-medio: #6b6b6b;
+    --cor-cinza-claro: #8a8a8a;
+
+    /* Texto */
+    --cor-branco: #fff;
+    --cor-texto: #eee;
+    --cor-texto-suave: #ccc;
+    --cor-texto-medio: #bbb;
+    --cor-texto-fraco: #9a9a9a;
+
+    /* Identidade vermelha (botões, bordas de modal, seleção, foco) */
+    --cor-vermelho: #8b0000;
+    --cor-vermelho-hover: #6e0000;
+    --cor-vermelho-selecao: #6e2020;
+    --cor-vermelho-destaque: #ff4d4d;
+
+    /* Feedback: erro, sucesso, tempo/ouro, empate */
+    --cor-erro: #e63946;
+    --cor-erro-forte: #c0392b;
+    --cor-erro-forte-hover: #a5322a;
+    --cor-erro-fundo: #a12a35;
+    --cor-erro-claro: #ff8b93;
+    --cor-erro-texto: #ff6b6b;
+    --cor-sucesso: #4ade80;
+    --cor-sucesso-claro: #7fd8a4;
+    --cor-ouro: #facc15;
+    --cor-ouro-suave: #f4c542;
+    --cor-empate: #d0c07f;
+
+    /* Azuis: só onde a cor carrega informação (classe no HUD, escudo, links) */
+    --cor-azul-classe: #7dd3fc;
+    --cor-azul-escudo: #4aa8ff;
+    --cor-azul-link: #7fb2d0;
+    --cor-azul-ranking: #9ecbff;
+
+    /* Sombras repetidas */
+    --sombra-modal: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    --sombra-flutuante: 0 8px 20px rgba(0, 0, 0, 0.35);
+    --sombra-foco-vermelho: 0 0 6px 1px rgba(255, 0, 0, 0.4);
+    /* Bloco de pedra saltando da tela: sombra externa funda pra separar do
+       fundo + bisel interno (claro em cima, escuro embaixo) simulando a borda
+       desgastada de uma laje de pedra. */
+    --sombra-pedra: 0 20px 44px rgba(55, 55, 55, 0.35), 0 4px 12px rgba(55, 55, 55, 0.25),
+      inset 0 2px 0 rgba(255, 255, 255, 0.06), inset 0 -5px 10px rgba(0, 0, 0, 0.7),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+  }
   /* O flex centralizado é só do body. O html fica um bloco comum de altura
      100% — é o overflow dele que a viewport usa para rolar, então ele não pode
      centralizar nem prender o conteúdo (era o que impedia o menu mais alto que
      a tela de ser rolado). */
   html {
     height: 100%;
-    background: #1d1d2b;
+    background: var(--cor-fundo);
   }
   body {
     margin: 0;
     height: 100%;
-    background: #1d1d2b;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), var(--cor-fundo) url('../assets/backgrounds/dungeon_brick_wall_grey.png') repeat;
+    /* Paralaxe da tela inicial (public/js/parallax.js): desloca só a camada
+       da textura (segunda posição) pelo mouse via variáveis CSS; a camada do
+       gradiente escuro (primeira posição) fica parada em 0 0. Sem transição
+       de background-position durante a partida, porque `body.game-active`
+       nunca tem essas variáveis atualizadas — o fundo já fica parado. */
+    background-position: 0 0, var(--parallax-x, 0px) var(--parallax-y, 0px);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    font-family: sans-serif;
-    color: #eee;
+    font-family: 'Chakra Petch', sans-serif;
+    color: var(--cor-texto);
     overflow-x: hidden;
     user-select: none;
     -webkit-user-select: none;
@@ -24,9 +170,47 @@
     user-select: text;
     -webkit-user-select: text;
   }
+  /* Botões não herdam a fonte do body por padrão (fonte de UI do navegador) —
+     precisa declarar explicitamente. */
+  button {
+    font-family: 'Chakra Petch', sans-serif;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  }
+  /* Hover "levanta" o botão com leve escala/brilho/sombra — exceto os que já
+     têm semântica própria de hover (link de texto sublinhado, item de lista
+     de classe/ranking, cujo destaque é a borda/fundo da linha inteira). */
+  button:not(:disabled):not(.link-button):not(.class-card):not(.ranking-nome):hover {
+    transform: translateY(-2px) scale(1.03);
+    filter: brightness(1.08);
+    box-shadow: var(--sombra-flutuante);
+  }
+  button:not(:disabled):not(.link-button):not(.class-card):not(.ranking-nome):active {
+    transform: translateY(0) scale(0.98);
+    filter: brightness(0.97);
+    box-shadow: none;
+  }
+  /* Metal Mania é só pros títulos (menu, painéis, modais, fim de jogo) — em
+     texto corrido ou números pequenos (HUD, cronômetro) ela vira ilegível. */
+  h1, h2 {
+    font-family: 'Metal Mania', cursive;
+    letter-spacing: 0.5px;
+  }
+  /* Canvas do rastro de fogo do cursor (public/js/fireCursor.js): fixo por
+     cima de tudo e sem capturar clique/hover, porque é puramente decorativo
+     e fica em cima de botões e modais da tela inicial. Some sozinho durante a
+     partida (o próprio módulo checa `body.game-active` a cada frame). */
+  #fireCursorCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent; /* sobrescreve a regra genérica `canvas { background: var(--cor-superficie-elevada) }` mais abaixo */
+    pointer-events: none;
+    z-index: 999;
+  }
   * {
     scrollbar-width: thin;
-    scrollbar-color: #52527a #1d1d2b00;
+    scrollbar-color: var(--cor-cinza-medio) transparent;
   }
   *::-webkit-scrollbar {
     width: 10px;
@@ -36,13 +220,13 @@
     background: transparent;
   }
   *::-webkit-scrollbar-thumb {
-    background-color: #52527a;
+    background-color: var(--cor-cinza-medio);
     border-radius: 8px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background-color: #6b6b9c;
+    background-color: var(--cor-cinza-claro);
   }
   *::-webkit-scrollbar-corner {
     background: transparent;
@@ -84,24 +268,57 @@
     position: absolute;
     inset: 0;
     border-radius: 6px;
-    background: linear-gradient(90deg, #2b2b3d 25%, #3a3a52 37%, #2b2b3d 63%);
+    background: linear-gradient(90deg, var(--cor-superficie-alta) 25%, var(--cor-superficie-hover) 37%, var(--cor-superficie-alta) 63%);
     background-size: 400% 100%;
     animation: skeleton-shimmer 1.4s ease infinite;
   }
   .skeleton-row {
     height: 14px;
     border-radius: 6px;
-    background: linear-gradient(90deg, #2b2b3d 25%, #3a3a52 37%, #2b2b3d 63%);
+    background: linear-gradient(90deg, var(--cor-superficie-alta) 25%, var(--cor-superficie-hover) 37%, var(--cor-superficie-alta) 63%);
     background-size: 400% 100%;
     animation: skeleton-shimmer 1.4s ease infinite;
   }
-  #menuBg {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    pointer-events: none;
+  /* ----- Animações de entrada -----
+     Padrão para qualquer elemento que "aparece" na tela (menu, modais,
+     overlays de partida, HUD, listas): fade leve + pequeno movimento/escala
+     em vez de surgir seco. Curto o bastante (150–400ms) pra não atrasar a
+     resposta ao clique. Como são `animation` (não `transition`), reaparecem
+     sozinhos toda vez que o elemento volta de `display: none` pra visível —
+     não precisa de nenhum gatilho extra em JS. */
+  @keyframes entrada-fade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes entrada-pop {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes overlay-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  /* Reverso de entrada-pop/overlay-fade, para o fechar da modal não ser um
+     corte seco (display: none na hora do clique). Quem fecha (JS) adiciona
+     `.closing`, espera o `animationend` do overlay e só então esconde o
+     elemento — ver closeBotClassSelect/closeOnlineClassSelect/fechar() em
+     authScreens.js e profile.js. */
+  @keyframes saida-pop {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.92); }
+  }
+  @keyframes overlay-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  .modal.closing {
+    animation: saida-pop 0.15s ease forwards;
+  }
+  #botClassOverlay.closing,
+  #onlineClassOverlay.closing,
+  #authOverlay.visible.closing,
+  #profileOverlay.visible.closing {
+    animation: overlay-fade-out 0.15s ease forwards;
   }
   /* ----- Controle de volume -----
      Fixo no canto da tela porque vale tanto para o menu quanto para uma
@@ -117,9 +334,9 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 1px solid #444;
-    background: rgba(29, 29, 43, 0.72);
-    color: #eee;
+    border: 1px solid var(--cor-borda);
+    background: rgba(29, 29, 29, 0.72);
+    color: var(--cor-texto);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,7 +344,7 @@
     backdrop-filter: blur(6px);
   }
   #soundSettings button:hover {
-    background: rgba(58, 58, 82, 0.85);
+    background: rgba(63, 63, 63, 0.85);
   }
   #soundSettingsMute {
     display: none;
@@ -147,10 +364,10 @@
     min-width: 200px;
     padding: 14px 16px;
     box-sizing: border-box;
-    background: rgba(29, 29, 43, 0.92);
-    border: 1px solid #444;
+    background: rgba(29, 29, 29, 0.92);
+    border: 1px solid var(--cor-borda);
     border-radius: 10px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--sombra-flutuante);
     backdrop-filter: blur(6px);
   }
   #soundSettings.open #soundSettingsPanel {
@@ -163,35 +380,131 @@
     font-size: 13px;
   }
   .sound-settings-row label {
-    color: #ccc;
+    color: var(--cor-texto-suave);
   }
   .sound-settings-row input[type="range"] {
     width: 100%;
-    accent-color: #457b9d;
+    accent-color: var(--cor-vermelho);
   }
   #menu {
     position: relative;
     z-index: 1;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  #menuTitle {
+    margin: 0;
+    font-size: 92px;
+    text-align: center;
+    color: var(--cor-vermelho);
+    -webkit-text-stroke: 1px #000;
+    text-stroke: 1px #000;
+    animation: logoBrilhoPulsante 4s ease-in-out infinite;
+    perspective: 400px;
+  }
+  .title-letter {
+    display: inline-block;
+    animation: tituloFlutuar 3s ease-in-out infinite;
+  }
+  .flip-letter {
+    animation-name: tituloFlutuarInvertido;
+  }
+  #menuTitle .title-letter:nth-child(1) { animation-duration: 4.6s; animation-delay: -0.1s; }
+  #menuTitle .title-letter:nth-child(2) { animation-duration: 5.4s; animation-delay: -2.4s; }
+  #menuTitle .title-letter:nth-child(3) { animation-duration: 4.9s; animation-delay: -1.1s; }
+  #menuTitle .title-letter:nth-child(4) { animation-duration: 5.8s; animation-delay: -3.5s; }
+  #menuTitle .title-letter:nth-child(5) { animation-duration: 5.1s; animation-delay: -1.9s; }
+  #menuTitle .title-letter:nth-child(6) { animation-duration: 5.6s; animation-delay: -0.7s; }
+  #menuTitle .title-letter:nth-child(7) { animation-duration: 4.7s; animation-delay: -3s; }
+  #menuTitle .title-letter:nth-child(8) { animation-duration: 6s; animation-delay: -1.6s; }
+  #menuTitle .title-letter:nth-child(9) { animation-duration: 5.1s; animation-delay: -4.1s; }
+  #menuTitle .title-letter:nth-child(10) { animation-duration: 5.4s; animation-delay: -0.4s; }
+  @keyframes tituloFlutuar {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+  #menuTitle .title-letter.title-letter-hover {
+    animation: tituloGirar 1s linear;
+  }
+  @keyframes tituloGirar {
+    0% {
+      transform: rotateY(0deg);
+    }
+    70% {
+      transform: rotateY(420deg);
+    }
+    90% {
+      transform: rotateY(340deg);
+    }
+    100% {
+      transform: rotateY(360deg);
+    }
+  }
+  #menuTitle .title-letter.flip-letter.title-letter-hover {
+    animation-name: tituloGirarInvertido;
+  }
+  @keyframes tituloGirarInvertido {
+    0% {
+      transform: scaleX(-1) rotateY(0deg);
+    }
+    70% {
+      transform: scaleX(-1) rotateY(420deg);
+    }
+    90% {
+      transform: scaleX(-1) rotateY(340deg);
+    }
+    100% {
+      transform: scaleX(-1) rotateY(360deg);
+    }
+  }
+  @keyframes tituloFlutuarInvertido {
+    0%, 100% {
+      transform: scaleX(-1) translateY(0);
+    }
+    50% {
+      transform: scaleX(-1) translateY(-4px);
+    }
+  }
+  @keyframes logoBrilhoPulsante {
+    0%, 100% {
+      color: var(--cor-vermelho);
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 8px var(--cor-vermelho);
+    }
+    50% {
+      color: var(--cor-vermelho-destaque);
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 22px var(--cor-vermelho-destaque);
+    }
+  }
+  #menuContent {
+    display: flex;
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 40px;
   }
   #rankingPanel {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    width: 280px;
+    width: 300px;
     max-width: 100%;
     max-height: 500px;
     box-sizing: border-box;
-    padding: 24px 16px;
-    background: rgba(29, 29, 43, 0.72);
+    padding: 16px 24px 24px 16px;
+    background: var(--cor-painel-pedra-veu);
     border-radius: 16px;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--cor-pedra-borda);
+    box-shadow: var(--sombra-pedra);
+    /* Entra um instante depois de #menuBody, pra guiar o olho da esquerda pra
+       direita em vez de tudo aparecer junto. */
+    animation: entrada-fade 0.5s ease 0.12s both;
   }
   #rankingPanel h2 {
     margin: 0;
@@ -207,7 +520,7 @@
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
   }
   #rankingList {
     margin: 0;
@@ -224,9 +537,25 @@
     align-items: baseline;
     gap: 8px;
     font-size: 14px;
+    /* Fade puro (sem translateY): o deslocamento de entrada-fade empurrava a
+       última linha para fora da área visível por um instante, fazendo a
+       lista (overflow-y: auto) mostrar uma barra de rolagem passageira. */
+    animation: overlay-fade 0.35s ease both;
   }
+  /* Stagger: cada linha entra um pouco depois da anterior. A lista é
+     reescrita inteira a cada poll (ranking.js), então isso também dá uma
+     pista visual sutil de "atualizou" a cada 30s. */
+  #rankingList li:nth-child(1) { animation-delay: 0s; }
+  #rankingList li:nth-child(2) { animation-delay: 0.04s; }
+  #rankingList li:nth-child(3) { animation-delay: 0.08s; }
+  #rankingList li:nth-child(4) { animation-delay: 0.12s; }
+  #rankingList li:nth-child(5) { animation-delay: 0.16s; }
+  #rankingList li:nth-child(6) { animation-delay: 0.2s; }
+  #rankingList li:nth-child(7) { animation-delay: 0.24s; }
+  #rankingList li:nth-child(8) { animation-delay: 0.28s; }
+  #rankingList li:nth-child(n+9) { animation-delay: 0.32s; }
   #rankingList .ranking-posicao {
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 12px;
     text-align: right;
   }
@@ -255,10 +584,10 @@
     text-decoration: underline;
   }
   #menu #rankingList .ranking-nome-proprio {
-    color: #ffd54f;
+    color: var(--cor-ouro);
   }
   #rankingList .ranking-vitorias {
-    color: #9ecbff;
+    color: var(--cor-azul-ranking);
     font-weight: bold;
     flex-shrink: 0;
   }
@@ -266,10 +595,7 @@
     margin: 0;
     font-size: 14px;
     text-align: center;
-    color: #aaa;
-  }
-  #menu h1 {
-    margin: 0 0 8px 0;
+    color: var(--cor-texto-medio);
   }
   #menuBody {
     display: flex;
@@ -280,11 +606,12 @@
     width: 340px;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 24px 16px;
-    background: rgba(29, 29, 43, 0.72);
+    padding: 24px;
+    background: var(--cor-painel-pedra-veu);
     border-radius: 16px;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--cor-pedra-borda);
+    box-shadow: var(--sombra-pedra);
+    animation: entrada-fade 0.5s ease both;
   }
   #menu button:not(.class-card) {
     font-size: 20px;
@@ -292,13 +619,13 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #457b9d;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
     width: 100%;
     box-sizing: border-box;
   }
   #menu button:not(.class-card):hover {
-    background: #3a6a89;
+    background: var(--cor-vermelho-hover);
   }
   #nicknameField {
     display: flex;
@@ -306,42 +633,46 @@
     align-items: stretch;
     gap: 6px;
     width: 100%;
+    margin-bottom: -16px;
   }
   #nicknameLabel {
     font-size: 13px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    text-align: center;
   }
   #nicknameInput {
     font-size: 18px;
     padding: 10px 14px;
     border-radius: 8px;
-    border: 2px solid #444;
-    background: #2b2b3d;
-    color: #eee;
+    border: 2px solid var(--cor-branco);
+    background: var(--cor-superficie-elevada);
+    color: var(--cor-texto);
     width: 100%;
     box-sizing: border-box;
     text-align: center;
   }
   #nicknameInput:focus {
     outline: none;
-    border-color: #457b9d;
+    border-color: var(--cor-vermelho-destaque);
+    box-shadow: var(--sombra-foco-vermelho);
   }
   #nicknameError {
     visibility: hidden;
-    color: #e63946;
+    color: var(--cor-erro);
     font-size: 13px;
     line-height: 16px;
+    text-align: center;
   }
   #nicknameError.visible {
     visibility: visible;
   }
-  #menu button#btnOnline {
-    background: #2a9d5c;
+  #menu button#btnBot {
+    background: var(--cor-erro-forte);
   }
-  #menu button#btnOnline:hover {
-    background: #23854e;
+  #menu button#btnBot:hover {
+    background: var(--cor-erro-forte-hover);
   }
   /* A largura é definida por gameScale.js (é a largura da arena depois de
      caber na tela); 800px é só o valor natural antes dele rodar. */
@@ -359,7 +690,15 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
+    box-sizing: border-box;
     font-size: 18px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    /* #game-wrap (pai) alterna display none/flex a cada partida (menu.js,
+       showGame), então essa animação replaya sozinha em toda partida nova. */
+    animation: entrada-fade 0.4s ease;
   }
   /* Em tela estreita as duas colunas do HUD não cabem lado a lado sem reduzir o
      texto a ponto de não dar para ler. Empilhadas, cada linha tem a largura
@@ -389,26 +728,26 @@
      fluxo normal ele ficaria fora do centro da arena. */
   #matchTimer {
     position: absolute;
-    top: 0;
+    top: 6px;
     left: 50%;
     transform: translateX(-50%);
     padding: 2px 12px;
     border-radius: 6px;
-    background: #22222f;
-    border: 1px solid #444;
-    color: #e8e8f0;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-texto);
     font-size: 22px;
     font-variant-numeric: tabular-nums;
     letter-spacing: 1px;
   }
   #matchTimer.warning {
-    color: #f4c542;
-    border-color: #f4c542;
+    color: var(--cor-ouro-suave);
+    border-color: var(--cor-ouro-suave);
   }
   #matchTimer.desempate {
-    color: #fff;
-    background: #a12a35;
-    border-color: #e63946;
+    color: var(--cor-branco);
+    background: var(--cor-erro-fundo);
+    border-color: var(--cor-erro);
     font-size: 16px;
     letter-spacing: 0;
     animation: desempatePulse 0.8s ease-in-out infinite;
@@ -441,14 +780,14 @@
   }
   .hud-name {
     font-size: 14px;
-    color: #ccc;
+    color: var(--cor-texto-suave);
   }
   #nameP0 {
-    color: #facc15;
+    color: var(--cor-ouro);
   }
   .hud-class-name {
     font-size: 11px;
-    color: #7dd3fc;
+    color: var(--cor-azul-classe);
     opacity: 0.8;
   }
   .hud-class-icon {
@@ -459,9 +798,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #22222f;
-    border: 1px solid #444;
-    color: #7dd3fc;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-azul-classe);
   }
   .hud-class-icon svg {
     width: 20px;
@@ -486,27 +825,27 @@
     width: 100%;
     height: 6px;
     border-radius: 3px;
-    background: #22222f;
-    border: 1px solid #444;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--cor-borda);
     overflow: hidden;
   }
   .cooldown-fill {
     height: 100%;
     width: 0%;
-    background: #7dd3fc;
+    background: var(--cor-azul-classe);
     transition: background-color 0.15s;
   }
   .cooldown-fill.ready {
-    background: #4ade80;
+    background: var(--cor-sucesso);
   }
   .heart {
     position: relative;
     width: 21px;
     height: 18px;
-    color: #e63946;
+    color: var(--cor-erro);
   }
   .heart.lost {
-    color: #555;
+    color: var(--cor-borda-media);
   }
   .heart-pixel {
     position: absolute;
@@ -515,7 +854,7 @@
     background: currentColor;
   }
   .heart.half .heart-pixel-right {
-    color: #555;
+    color: var(--cor-borda-media);
   }
   .heart.blink {
     animation: heartBlink 0.4s steps(1, start) 3;
@@ -528,10 +867,10 @@
     position: relative;
     width: 21px;
     height: 24px;
-    color: #4aa8ff;
+    color: var(--cor-azul-escudo);
   }
   .shield.lost {
-    color: #555;
+    color: var(--cor-borda-media);
   }
   .shield-pixel {
     position: absolute;
@@ -540,7 +879,7 @@
     background: currentColor;
   }
   canvas {
-    background: #2b2b3d;
+    background: var(--cor-superficie-elevada);
     border: none;
     display: block;
   }
@@ -549,7 +888,7 @@
      CSS para caber na tela (gameScale.js) e uma borda CSS fina desapareceria
      nessa redução. */
   #game {
-    background: #242437;
+    background: var(--cor-superficie-elevada);
   }
   #canvas-wrap {
     position: relative;
@@ -558,23 +897,24 @@
   #escHint {
     margin-top: 8px;
     font-size: 13px;
-    color: #777;
+    color: var(--cor-borda-hover);
   }
   /* Fica na faixa de cima da arena, mas bem afastado da borda e perto do
      centro: é o texto mais importante da primeira partida e precisa ser lido
      sem tirar os olhos da ação. Não vai no centro exato porque os dois
      jogadores nascem na metade vertical da arena e ficariam cobertos. */
-  #matchTutorialBanner {
+  #matchTutorialBanner,
+  #escLeaveBanner {
     position: absolute;
-    top: 12%;
+    top: 4%;
     left: 50%;
     transform: translateX(-50%);
     max-width: 82%;
     padding: 16px 28px;
-    background: rgba(20, 20, 30, 0.9);
-    border: 1px solid #555;
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid var(--cor-borda-media);
     border-radius: 10px;
-    color: #f1f1f6;
+    color: var(--cor-texto);
     font-size: clamp(18px, 4.6vw, 24px);
     line-height: 1.35;
     text-align: center;
@@ -582,15 +922,114 @@
     opacity: 0;
     transition: opacity 0.25s ease, background-color 0.2s ease, border-color 0.2s ease;
   }
-  #matchTutorialBanner.visible {
+  #matchTutorialBanner.visible,
+  #escLeaveBanner.visible {
     opacity: 1;
   }
   #matchTutorialBanner.success {
     background: rgba(45, 138, 86, 0.9);
-    border-color: #4ade80;
+    border-color: var(--cor-sucesso);
+  }
+  /* Mesmo aviso do ESC ficaria estranho com a cor neutra do tutorial —
+     usa o vermelho de destaque para deixar claro que é um alerta. */
+  #escLeaveBanner {
+    border-color: var(--cor-vermelho-destaque);
+  }
+  /* Teclas desenhadas no balão do tutorial: cada passo mostra exatamente as
+     teclas que o jogador precisa apertar. Cinza = ainda não apertada,
+     vermelho (`.done`) = já apertada. */
+  .tutorial-teclas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .tutorial-teclas-linha {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tutorial-tecla {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 10px;
+    border: 2px solid var(--cor-borda-media);
+    border-radius: 8px;
+    background: var(--cor-superficie);
+    color: var(--cor-texto-fraco);
+    font-size: 18px;
+    font-weight: 700;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+  .tutorial-tecla.larga {
+    min-width: 180px;
+    font-size: 16px;
+  }
+  .tutorial-tecla.done {
+    border-color: var(--cor-vermelho-destaque);
+    color: var(--cor-vermelho-destaque);
+    background: var(--cor-superficie-alta);
+    transform: translateY(2px);
+  }
+  /* Tecla de segurar (Espaço, no passo de escudo): a barra preenche por
+     dentro conforme o jogador segura, em vez de só acender ao apertar. */
+  .tutorial-tecla-hold {
+    position: relative;
+    overflow: hidden;
+  }
+  .tutorial-tecla-hold-fill {
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    background: var(--cor-vermelho-destaque);
+    opacity: 0.45;
+    transition: width 0.05s linear;
+  }
+  .tutorial-tecla-hold-label {
+    position: relative;
+  }
+  /* Dá evidência ao nome da tecla dentro do texto do passo. */
+  .tutorial-tecla-nome {
+    color: var(--cor-vermelho-destaque);
+    font-weight: 700;
+  }
+  /* Anel pulsando em volta do cursor no passo de atirar: induz o clique sem
+     esconder a arena (pointer-events: none e centralizado no ponteiro). */
+  #tutorialClickHint {
+    position: absolute;
+    left: 50%;
+    top: 55%;
+    width: 44px;
+    height: 44px;
+    margin: -22px 0 0 -22px;
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+  }
+  #tutorialClickHint.visible {
+    display: block;
+  }
+  #tutorialClickHint::before, #tutorialClickHint::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--cor-vermelho-destaque);
+    border-radius: 50%;
+    animation: tutorial-click-pulse 1.4s ease-out infinite;
+  }
+  #tutorialClickHint::after {
+    animation-delay: 0.7s;
+  }
+  @keyframes tutorial-click-pulse {
+    0% { transform: scale(0.35); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 0; }
   }
   #escHint.armed {
-    color: #f4c542;
+    color: var(--cor-ouro-suave);
   }
   #gameOverOverlay, #waitingOverlay, #countdownOverlay {
     display: none;
@@ -600,15 +1039,16 @@
     align-items: center;
     justify-content: center;
     gap: 20px;
-    background: #2b2b3d;
+    background: var(--cor-fundo-arena);
+    animation: entrada-pop 0.22s ease;
   }
   #countdownOverlay {
-    background: rgba(43, 43, 61, 0.85);
+    background: var(--cor-fundo-arena-veu);
   }
   #countdownOverlay h2 {
     margin: 0;
     font-size: 18px;
-    color: #bbb;
+    color: var(--cor-ouro-suave);
   }
   /* Os textos dos overlays da partida têm tamanho próprio, limitado pela
      largura da tela: a arena é redimensionada por CSS (ver gameScale.js) e não
@@ -623,21 +1063,21 @@
     max-width: 92%;
     font-size: clamp(28px, 8vw, 72px);
     font-weight: bold;
-    color: #fff;
+    color: var(--cor-branco);
     text-align: center;
     overflow-wrap: anywhere;
   }
   #countdownVs {
     font-size: clamp(18px, 4vw, 32px);
     font-weight: normal;
-    color: #999;
+    color: var(--cor-texto-fraco);
   }
   #countdownNumber {
-    font-family: 'Courier New', 'Consolas', monospace;
+    font-variant-numeric: tabular-nums;
     font-size: clamp(56px, 15vw, 120px);
     font-weight: bold;
-    color: #4ade80;
-    text-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
+    color: var(--cor-vermelho-destaque);
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 24px var(--cor-vermelho-destaque);
   }
   #gameOverOverlay h2, #waitingOverlay h2 {
     margin: 0;
@@ -647,51 +1087,63 @@
     overflow-wrap: anywhere;
   }
   #waitingOverlay h2 {
-    animation: blink 1.2s ease-in-out infinite;
+    color: var(--cor-vermelho-destaque);
+    text-shadow: 0 0 16px var(--cor-vermelho-destaque);
+    animation: waiting-pulse-texto 1.6s ease-in-out infinite;
   }
   #noOpponentsMessage {
     display: none;
     margin: 0;
     max-width: 320px;
     text-align: center;
-    color: #ccc;
+    color: var(--cor-texto-suave);
     font-size: 15px;
   }
+  /* 5 bolinhas orbitando um pentagrama no centro, no lugar do spinner verde
+     antigo — ecoa o brilho vermelho do número da contagem regressiva e o
+     clima oculto do jogo, em vez de um loader genérico. As bolinhas giram
+     no sentido contrário ao do pentagrama, senão os dois girando junto
+     pareceriam um objeto só em vez de duas camadas independentes. */
   #waitingOverlay .loader {
-    --color-1: #fff;
-    --color-2: #4ade80;
     --size: 1px;
 
     width: calc(48 * var(--size));
     height: calc(48 * var(--size));
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
-    border: calc(2 * var(--size)) solid var(--color-1);
-    box-sizing: border-box;
-    animation: rotation 2s linear infinite;
   }
-  #waitingOverlay .loader::after,
-  #waitingOverlay .loader::before {
-    content: '';
-    box-sizing: border-box;
+  #waitingOverlay .loader-orbit {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    border: calc(2 * var(--size)) solid var(--color-2);
-    width: calc(38 * var(--size));
-    height: calc(38 * var(--size));
-    animation: rotationBack 1.5s linear infinite;
-    transform-origin: center center;
+    inset: 0;
+    animation: rotation 3s linear infinite;
   }
-  #waitingOverlay .loader::before {
-    width: calc(28 * var(--size));
-    height: calc(28 * var(--size));
-    border-color: var(--color-1);
-    box-sizing: border-box;
-    animation: rotation 1s linear infinite;
+  #waitingOverlay .loader-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(6 * var(--size));
+    height: calc(6 * var(--size));
+    margin: calc(-3 * var(--size));
+    border-radius: 50%;
+    background: var(--cor-vermelho-destaque);
+    box-shadow: 0 0 4px var(--cor-vermelho-destaque);
+  }
+  #waitingOverlay .loader-dot:nth-child(1) { transform: rotate(0deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-dot:nth-child(2) { transform: rotate(72deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-dot:nth-child(3) { transform: rotate(144deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-dot:nth-child(4) { transform: rotate(216deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-dot:nth-child(5) { transform: rotate(288deg) translateX(calc(21 * var(--size))); }
+  #waitingOverlay .loader-pentagrama {
+    width: calc(30 * var(--size));
+    height: calc(30 * var(--size));
+    fill: none;
+    stroke: var(--cor-vermelho-destaque);
+    stroke-width: 4;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 4px var(--cor-vermelho-destaque));
+    animation: rotationBack 6s linear infinite;
   }
   @keyframes rotation {
     0% { transform: rotate(0deg); }
@@ -701,15 +1153,15 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(-360deg); }
   }
-  @keyframes blink {
+  @keyframes waiting-pulse-texto {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.25; }
+    50% { opacity: 0.4; }
   }
   #gameOverOverlay.win h2 {
-    color: #4ade80;
+    color: var(--cor-sucesso);
   }
   #gameOverOverlay.lose h2 {
-    color: #e63946;
+    color: var(--cor-erro);
   }
   #gameOverOverlay .overlay-buttons, #waitingOverlay .overlay-buttons {
     display: flex;
@@ -723,43 +1175,45 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #457b9d;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
   }
   #gameOverOverlay button:hover, #waitingOverlay button:hover {
-    background: #3a6a89;
+    background: var(--cor-vermelho-hover);
   }
   #waitingOverlay button#btnLeaveQueue {
-    background: #555;
+    background: var(--cor-borda-media);
   }
   #waitingOverlay button#btnLeaveQueue:hover {
-    background: #444;
+    background: var(--cor-borda);
   }
   #gameOverOverlay button#btnBackToMenu {
     background: transparent;
-    border: 2px solid #555;
+    border: 2px solid var(--cor-borda-media);
     font-size: 14px;
     padding: 8px 18px;
   }
   #gameOverOverlay button#btnBackToMenu:hover {
-    background: #3d3d52;
-    border-color: #777;
+    background: var(--cor-superficie-hover);
+    border-color: var(--cor-borda-hover);
   }
   #waitingOverlay button#btnTryTrainingMode {
     display: none;
   }
   #gameOverOverlay button#btnSwapClasses {
     display: none;
-    background: #555;
+    background: var(--cor-borda-media);
   }
   #gameOverOverlay button#btnSwapClasses:hover {
-    background: #444;
+    background: var(--cor-borda);
   }
   #onlineCount {
     margin-top: 4px;
     font-size: 14px;
-    color: #4ade80;
+    color: var(--cor-sucesso);
   }
+  /* Modal de escolha de classe (online): lista vertical das 6 classes à
+     esquerda, preview animado + painel de detalhes empilhados à direita. */
   #classArea {
     display: flex;
     align-items: stretch;
@@ -781,27 +1235,98 @@
   .class-card {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
     width: 100%;
     box-sizing: border-box;
     text-align: left;
-    background: #2b2b3d;
-    border: 2px solid #444;
+    background: var(--cor-superficie-alta);
+    border: 2px solid var(--cor-borda);
     border-radius: 8px;
     padding: 8px 10px;
     cursor: pointer;
-    color: #eee;
+    color: var(--cor-texto);
     font: inherit;
   }
   .class-card:hover {
-    border-color: #666;
+    border-color: var(--cor-borda-clara);
   }
   .class-card.selected {
-    border-color: #4ade80;
-    box-shadow: 0 0 0 1px #4ade80;
+    border-color: var(--cor-vermelho-destaque);
+    box-shadow: 0 0 0 1px var(--cor-vermelho-destaque);
   }
-  .class-card .class-name {
+  /* Cartão bloqueado (classe exige conta): só um cadeado no canto, continua
+     clicável — o jogador pode ver as características de qualquer classe. Quem
+     realmente impede de jogar é o botão "Jogar" (#btnOnlineClassConfirm). */
+  .class-card.locked {
+    position: relative;
+  }
+  .class-card-lock {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 18px;
+    height: 18px;
+    color: var(--cor-texto-fraco);
+  }
+  .class-card-lock svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  /* Botão "Jogar" bloqueado: o próprio texto vira a mensagem de bloqueio, sem
+     tooltip. Usa cor sólida (não `opacity`) para não desbotar o cadeado. */
+  #btnOnlineClassConfirm.locked {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: not-allowed;
+    background: var(--cor-superficie-alta);
+    color: var(--cor-texto-fraco);
     font-size: 14px;
+  }
+  #btnOnlineClassConfirm.locked:hover {
+    background: var(--cor-superficie-alta);
+  }
+  .btn-lock-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .btn-lock-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .class-card .class-sprite {
+    --sprite-box: 36px;
+    --sprite-zoom: 3;
+    margin: -6px 0px 6px 0px;
+  }
+  .class-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+  .class-demon-name {
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .class-name-secondary {
+    font-size: 12px;
+    color: var(--cor-texto-fraco);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -812,6 +1337,8 @@
   .class-dropdown-toggle .class-name {
     flex: 1;
     text-align: left;
+  }
+  .class-dropdown-toggle .class-demon-name {
     font-size: 15px;
   }
   .class-dropdown-item {
@@ -820,7 +1347,50 @@
     gap: 10px;
   }
   .class-dropdown-item.selected {
-    box-shadow: inset 0 0 0 1px #4ade80;
+    box-shadow: inset 0 0 0 1px var(--cor-vermelho-destaque);
+  }
+  /* Sprite de personagem fora do canvas (ver public/js/classSprite.js): a tira
+     de quadros 100x100 é o `background-image` e a animação anda os quadros em
+     `steps()`. O JS só escreve `--sprite-frames`/`--sprite-duration` e a
+     imagem; o enquadramento é aqui.
+     `--sprite-zoom` aproxima a arte (o personagem ocupa menos da metade do
+     quadro) e `--sprite-anchor` é a altura do centro do corpo dentro do
+     quadro (0 = topo, 1 = base) — sem isso o personagem fica pequeno e caído
+     para baixo na miniatura. Nas miniaturas (0.4) é só estética; no preview
+     da modal (`--sprite-anchor: 0.5` mais abaixo) precisa bater exatamente
+     com a altura em que o tiro sai, então usa o centro geométrico do quadro —
+     é o mesmo ponto usado por render.js (`cy`) para centralizar o sprite no
+     canvas, e `--sprite-shot-offset` (escrito por classPreview.js a partir de
+     `getSpriteOffsetY`) corrige a mesma folga vertical que assassino/sniper
+     já recebem no canvas por terem uma pose mais agachada/alongada. */
+  .class-sprite {
+    --sprite-box: 48px;
+    --sprite-zoom: 1.9;
+    --sprite-anchor: 0.4;
+    --sprite-shot-offset: 0px;
+    --sprite-frames: 6;
+    --sprite-duration: 900ms;
+    --sprite-frame: calc(var(--sprite-box) * var(--sprite-zoom));
+    --sprite-x0: calc((var(--sprite-box) - var(--sprite-frame)) / 2);
+    flex: none;
+    width: var(--sprite-box);
+    height: var(--sprite-box);
+    background-repeat: no-repeat;
+    background-size: calc(var(--sprite-frames) * var(--sprite-frame)) var(--sprite-frame);
+    background-position: var(--sprite-x0)
+      calc(var(--sprite-box) / 2 - var(--sprite-frame) * var(--sprite-anchor) + var(--sprite-shot-offset));
+    image-rendering: pixelated;
+    animation: spriteStrip var(--sprite-duration) steps(var(--sprite-frames)) infinite;
+  }
+  /* Ataque/dano/morte: travam no último quadro em vez de repetir, igual ao
+     canvas (`loop: false` em characterSprites.js). */
+  .class-sprite.class-sprite-once {
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+  }
+  @keyframes spriteStrip {
+    from { background-position-x: var(--sprite-x0); }
+    to { background-position-x: calc(var(--sprite-x0) - var(--sprite-frames) * var(--sprite-frame)); }
   }
   .class-icon {
     flex: none;
@@ -830,9 +1400,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #22222f;
-    border: 1px solid var(--class-color, #444);
-    color: var(--class-color, #7dd3fc);
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--class-color, var(--cor-borda));
+    color: var(--class-color, var(--cor-azul-classe));
   }
   .class-icon svg {
     width: 18px;
@@ -849,11 +1419,17 @@
     gap: 12px;
     width: 100%;
     box-sizing: border-box;
-    background: #1c1c28;
-    border: 2px solid #444;
+    background: var(--cor-superficie-baixa);
+    border: 2px solid var(--cor-borda);
     border-radius: 8px;
     padding: 12px 14px;
     min-height: 118px;
+  }
+  /* Crossfade curto ao trocar de classe na modal online (classSelect.js
+     retrigger via reflow) — só o painel de stats, o preview animado ao lado
+     já tem sua própria troca via classPreview.js. */
+  #classDetails.class-details-fade {
+    animation: overlay-fade 0.18s ease;
   }
   #classDetails .class-icon {
     width: 44px;
@@ -867,17 +1443,19 @@
     flex: 1;
     min-width: 0;
   }
+  /* Nome e ícones de stat ficam neutros: a cor da classe aparece no
+     `.class-icon` ao lado (`--class-color`), que já é o identificador visual. */
   #classDetails h3 {
     margin: 0 0 6px 0;
     font-size: 16px;
-    color: #7dd3fc;
+    color: var(--cor-texto);
   }
   #classDetails .class-stats {
     display: flex;
     flex-direction: column;
     gap: 4px;
     font-size: 12px;
-    color: #ccc;
+    color: var(--cor-texto-suave);
   }
   #classDetails .stat-row {
     display: flex;
@@ -891,7 +1469,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #7dd3fc;
+    color: var(--cor-texto-fraco);
   }
   #classDetails .stat-icon svg {
     width: 100%;
@@ -903,32 +1481,23 @@
     stroke-linejoin: round;
   }
   #classDetails .stat-label {
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     white-space: nowrap;
   }
   #classDetails .stat-value {
     margin-left: auto;
     font-weight: 600;
-    color: #eee;
+    color: var(--cor-texto);
     white-space: nowrap;
-  }
-  #classDetails .class-traits {
-    margin: 8px 0 0 0;
-    padding-left: 18px;
-    font-size: 11px;
-    color: #9a9ab0;
-  }
-  #classDetails .class-traits li {
-    margin-bottom: 2px;
   }
   #classPreview {
     position: relative;
     flex: 1;
-    min-height: 92px;
+    min-height: 170px;
     box-sizing: border-box;
     overflow: hidden;
-    background: #22222f;
-    border: 2px solid #444;
+    background: var(--cor-superficie-icone);
+    border: 2px solid var(--cor-borda);
     border-radius: 8px;
     padding: 8px 0 0;
     display: flex;
@@ -947,14 +1516,20 @@
     flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
+    height: 100%;
+    margin-left: 12px;
   }
+  .class-preview-fighter.class-sprite {
+    --sprite-box: 130px;
+    --sprite-anchor: 0.5;
+  }
+  /* Fallback de classe sem sprite próprio: o quadrado colorido antigo. */
   .class-preview-square {
     flex: none;
     width: 22px;
     height: 22px;
     border-radius: 3px;
-    border: 2px solid #facc15;
+    border: 2px solid var(--cor-ouro);
     box-sizing: border-box;
   }
   .class-preview-spacer {
@@ -983,20 +1558,20 @@
   }
   .class-preview-dummy {
     flex: none;
-    width: 24px;
-    height: 24px;
+    width: 34px;
+    height: 34px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #4a4a5e;
-    border: 2px solid #8a8aa0;
+    background: var(--cor-superficie-hover-alta);
+    border: 2px solid var(--cor-cinza-claro);
     border-radius: 4px;
-    color: #cfcfe0;
+    color: var(--cor-texto-suave);
   }
   .class-preview-dummy svg {
-    width: 14px;
-    height: 14px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -1005,36 +1580,35 @@
     animation: classPreviewDummyHit 0.3s ease-out;
   }
   @keyframes classPreviewDummyHit {
-    0% { background: #fff; border-color: #fff; transform: scale(1.18); }
-    100% { background: #4a4a5e; border-color: #8a8aa0; transform: scale(1); }
+    0% { background: var(--cor-branco); border-color: var(--cor-branco); transform: scale(1.18); }
+    100% { background: var(--cor-superficie-hover-alta); border-color: var(--cor-cinza-claro); transform: scale(1); }
   }
   .class-preview-damage {
     position: absolute;
-    top: 50%;
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 700;
-    color: #ff6b6b;
+    color: var(--cor-erro-texto);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     pointer-events: none;
     white-space: nowrap;
     animation: classPreviewDamageFloat 0.9s ease-out forwards;
   }
   @keyframes classPreviewDamageFloat {
-    0% { opacity: 0; transform: translate(-50%, -22px); }
+    0% { opacity: 0; transform: translate(-50%, 0); }
     15% { opacity: 1; }
-    100% { opacity: 0; transform: translate(-50%, -38px); }
+    100% { opacity: 0; transform: translate(-50%, -16px); }
   }
   #menuDivider {
     width: 100%;
     border: none;
-    border-top: 1px solid #444;
+    border-top: 1px solid var(--cor-borda);
     margin: 4px 0;
   }
-  #btnHowToPlay {
-    background: #333;
+  #menu button#btnHowToPlay {
+    background: var(--cor-superficie-forte);
   }
-  #btnHowToPlay:hover {
-    background: #222;
+  #menu button#btnHowToPlay:hover {
+    background: var(--cor-superficie-forte-hover);
   }
   /* ----- Regra comum a todas as modais -----
      Cada modal define a própria largura, mas a altura é sempre limitada à
@@ -1045,20 +1619,28 @@
     max-height: calc(100vh - 32px);
     max-height: calc(100dvh - 32px);
     overflow-y: auto;
+    animation: entrada-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   #botClassOverlay {
     display: none;
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
+    animation: overlay-fade 0.15s ease;
     align-items: center;
     justify-content: center;
     z-index: 10;
   }
+  /* Modal do modo treino: fundo opaco (o menu atrás competia com o conteúdo) e
+     sem scroll próprio — o conteúdo é curto e os dropdowns são `position: fixed`
+     (ver dropdownPosition.js), então nada aqui precisa rolar. */
   #botClassOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: var(--cor-modal-fundo);
+    max-height: none;
+    overflow: visible;
+    border: 2px solid var(--cor-vermelho);
     border-radius: 10px;
+    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 420px;
     display: flex;
@@ -1081,15 +1663,15 @@
     padding: 0;
     border-radius: 6px;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 15px;
     line-height: 1;
     border: none;
     cursor: pointer;
   }
   #btnBotClassClose:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   #botClassColumns {
     display: flex;
@@ -1105,7 +1687,7 @@
   .class-select-col h3 {
     margin: 0;
     font-size: 13px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -1122,7 +1704,7 @@
   #botDifficultyCol h3 {
     margin: 0;
     font-size: 13px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -1136,30 +1718,32 @@
     width: 100%;
     padding: 10px 14px;
     border-radius: 8px;
-    border: 2px solid #444;
-    background: #23233a;
-    color: #eee;
+    border: 2px solid var(--cor-branco);
+    background: var(--cor-superficie-elevada);
+    color: var(--cor-texto);
     font-size: 14px;
     font-family: inherit;
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s;
   }
   .dropdown-toggle:hover {
-    background: #2f2f4a;
+    background: var(--cor-superficie-hover-alta);
   }
   .dropdown-toggle:focus-visible {
     outline: none;
-    border-color: #457b9d;
+    border-color: var(--cor-vermelho-destaque);
+    box-shadow: var(--sombra-foco-vermelho);
   }
   .dropdown-arrow {
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     flex: none;
     margin-left: 10px;
     transition: transform 0.15s;
   }
   .dropdown.open .dropdown-toggle {
-    border-color: #457b9d;
-    background: #2f2f4a;
+    border-color: var(--cor-vermelho-destaque);
+    background: var(--cor-superficie-hover-alta);
+    box-shadow: var(--sombra-foco-vermelho);
   }
   .dropdown.open .dropdown-arrow {
     transform: rotate(180deg);
@@ -1172,10 +1756,10 @@
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    background: #2b2b3d;
-    border: 2px solid #444;
+    background: var(--cor-superficie-alta);
+    border: 2px solid var(--cor-borda);
     border-radius: 8px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--sombra-flutuante);
     z-index: 20;
     display: flex;
     flex-direction: column;
@@ -1195,17 +1779,17 @@
   .dropdown-item {
     padding: 9px 10px;
     border-radius: 6px;
-    color: #cfcfe0;
+    color: var(--cor-texto-suave);
     font-size: 14px;
     cursor: pointer;
   }
   .dropdown-item:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   .dropdown-item.selected {
-    background: #35506b;
-    color: #fff;
+    background: var(--cor-vermelho-selecao);
+    color: var(--cor-branco);
   }
   #btnBotClassConfirm {
     font-size: 16px;
@@ -1213,11 +1797,11 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #457b9d;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
   }
   #btnBotClassConfirm:hover {
-    background: #3a6a89;
+    background: var(--cor-vermelho-hover);
   }
   #onlineClassOverlay {
     display: none;
@@ -1227,11 +1811,13 @@
     align-items: center;
     justify-content: center;
     z-index: 10;
+    animation: overlay-fade 0.15s ease;
   }
   #onlineClassOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: var(--cor-modal-fundo);
+    border: 2px solid var(--cor-vermelho);
     border-radius: 10px;
+    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 540px;
     max-width: calc(100vw - 32px);
@@ -1256,15 +1842,15 @@
     padding: 0;
     border-radius: 6px;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 15px;
     line-height: 1;
     border: none;
     cursor: pointer;
   }
   #btnOnlineClassClose:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   #btnOnlineClassConfirm {
     font-size: 16px;
@@ -1272,11 +1858,11 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #457b9d;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
   }
   #btnOnlineClassConfirm:hover {
-    background: #3a6a89;
+    background: var(--cor-vermelho-hover);
   }
   #botClassOverlay .modal {
     max-width: calc(100vw - 32px);
@@ -1295,7 +1881,7 @@
     align-items: baseline;
     gap: 8px;
     font-size: 14px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -1310,10 +1896,10 @@
     gap: 12px;
   }
   #accountName {
-    color: #eee;
+    color: var(--cor-texto);
   }
   .account-sep {
-    color: #6b6b80;
+    color: var(--cor-cinza-medio);
   }
   #menu button.link-button, .link-button {
     background: none;
@@ -1321,13 +1907,13 @@
     padding: 0;
     width: auto;
     font-size: 14px;
-    color: #7fb2d0;
+    color: var(--cor-texto-medio);
     cursor: pointer;
     text-decoration: underline;
   }
   #menu button.link-button:hover, .link-button:hover {
     background: none;
-    color: #a9d2e8;
+    color: var(--cor-texto);
   }
   #authOverlay {
     display: none;
@@ -1340,11 +1926,13 @@
   }
   #authOverlay.visible {
     display: flex;
+    animation: overlay-fade 0.15s ease;
   }
   #authOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: var(--cor-modal-fundo);
+    border: 2px solid var(--cor-vermelho);
     border-radius: 10px;
+    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 360px;
     max-width: calc(100vw - 32px);
@@ -1369,15 +1957,15 @@
     padding: 0;
     border-radius: 6px;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 15px;
     line-height: 1;
     border: none;
     cursor: pointer;
   }
   #btnAuthClose:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   #authForm {
     display: flex;
@@ -1391,7 +1979,7 @@
   }
   .auth-field label {
     font-size: 13px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -1399,18 +1987,28 @@
     font-size: 16px;
     padding: 10px 14px;
     border-radius: 8px;
-    border: 2px solid #444;
-    background: #22222f;
-    color: #eee;
+    border: 2px solid var(--cor-branco);
+    background: var(--cor-superficie-elevada);
+    color: var(--cor-texto);
     width: 100%;
     box-sizing: border-box;
   }
   .auth-field input:focus {
     outline: none;
-    border-color: #457b9d;
+    border-color: var(--cor-vermelho-destaque);
+    box-shadow: var(--sombra-foco-vermelho);
   }
   .auth-field input:disabled {
     opacity: 0.5;
+  }
+  .auth-field input:-webkit-autofill,
+  .auth-field input:-webkit-autofill:hover,
+  .auth-field input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--cor-texto);
+    -webkit-box-shadow: 0 0 0 1000px var(--cor-superficie-elevada) inset;
+    box-shadow: 0 0 0 1000px var(--cor-superficie-elevada) inset;
+    caret-color: var(--cor-texto);
+    transition: background-color 9999s ease-in-out 0s;
   }
   .password-field-wrap {
     position: relative;
@@ -1428,15 +2026,15 @@
     height: 32px;
     border: none;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 16px;
     line-height: 1;
     cursor: pointer;
     border-radius: 6px;
   }
   .password-toggle-btn:hover {
-    color: #eee;
-    background: #2f2f40;
+    color: var(--cor-texto);
+    background: var(--cor-superficie-alta);
   }
   .password-toggle-btn:disabled {
     opacity: 0.5;
@@ -1458,11 +2056,11 @@
   }
   #authFeedback.erro, #resetFeedback.erro {
     background: rgba(230, 57, 70, 0.15);
-    color: #ff8b93;
+    color: var(--cor-erro-claro);
   }
   #authFeedback.sucesso, #resetFeedback.sucesso {
     background: rgba(42, 157, 92, 0.15);
-    color: #7fd8a4;
+    color: var(--cor-sucesso-claro);
   }
   #btnAuthSubmit, #btnResetSubmit {
     font-size: 18px;
@@ -1470,17 +2068,17 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #2a9d5c;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
     width: 100%;
     box-sizing: border-box;
   }
   #btnAuthSubmit:hover, #btnResetSubmit:hover {
-    background: #23854e;
+    background: var(--cor-vermelho-hover);
   }
   #btnAuthSubmit:disabled, #btnResetSubmit:disabled {
-    background: #3d5a49;
-    color: #9a9ab0;
+    background: var(--cor-borda-media);
+    color: var(--cor-texto-fraco);
     cursor: default;
   }
   #authLinks {
@@ -1502,11 +2100,13 @@
   }
   #profileOverlay.visible {
     display: flex;
+    animation: overlay-fade 0.15s ease;
   }
   #profileOverlay .modal {
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: var(--cor-modal-fundo);
+    border: 2px solid var(--cor-vermelho);
     border-radius: 10px;
+    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 460px;
     max-width: calc(100vw - 32px);
@@ -1531,15 +2131,15 @@
     padding: 0;
     border-radius: 6px;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 15px;
     line-height: 1;
     border: none;
     cursor: pointer;
   }
   #btnProfileClose:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   #profileSummary {
     display: flex;
@@ -1563,20 +2163,20 @@
   }
   .resumo-item span {
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  .resultado-vitoria { color: #7fd8a4; }
-  .resultado-derrota { color: #ff8b93; }
-  .resultado-empate  { color: #d0c07f; }
+  .resultado-vitoria { color: var(--cor-sucesso-claro); }
+  .resultado-derrota { color: var(--cor-erro-claro); }
+  .resultado-empate  { color: var(--cor-empate); }
   #profileClasses:empty {
     display: none;
   }
   .profile-subtitulo {
     margin: 0 0 8px;
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -1594,12 +2194,13 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    background: #22222f;
+    background: var(--cor-superficie-forte);
     border-radius: 8px;
     padding: 8px 6px;
+    animation: entrada-pop 0.25s ease both;
   }
   .classe-usada .class-icon {
-    background: #1c1c28;
+    background: var(--cor-superficie-baixa);
   }
   .classe-usada-nome {
     font-size: 13px;
@@ -1607,7 +2208,7 @@
   }
   .classe-usada-total {
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
   }
   /* A lista tem scroll próprio (é o que dispara o infinite scroll), mas o teto
      precisa acompanhar a tela: fixo em 320px, ele sozinho já fazia a modal
@@ -1633,9 +2234,12 @@
       "resultado classes  data";
     column-gap: 10px;
     align-items: center;
-    background: #22222f;
+    /* Mais claro que o fundo da modal (`--cor-modal-fundo`), não mais escuro:
+       com um tom parecido os cartões desapareciam dentro da modal. */
+    background: var(--cor-superficie-forte);
     border-radius: 8px;
     padding: 8px 12px;
+    animation: entrada-fade 0.25s ease both;
   }
   .partida-resultado {
     grid-area: resultado;
@@ -1650,19 +2254,19 @@
   .partida-classes {
     grid-area: classes;
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
   }
   .partida-data {
     grid-area: data;
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     white-space: nowrap;
   }
   .profile-vazio {
     margin: 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-align: center;
   }
 
@@ -1678,21 +2282,25 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: var(--cor-superficie-alta);
+    border: 2px solid var(--cor-borda-media);
     border-radius: 12px;
     padding: 24px;
     box-sizing: border-box;
   }
   .standalone-card h1 {
     margin: 0;
-    font-size: 24px;
     text-align: center;
+  }
+  .standalone-card h1 img {
+    width: 120px;
+    max-width: 100%;
+    height: auto;
   }
   .standalone-card h2 {
     margin: 0;
     font-size: 18px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-align: center;
     font-weight: normal;
   }
@@ -1704,10 +2312,13 @@
   #resetBackLink {
     text-align: center;
     font-size: 14px;
-    color: #7fb2d0;
+    color: var(--cor-azul-link);
   }
 
   @media (max-width: 700px) {
+    #menuTitle {
+      font-size: 44px;
+    }
     #menu button:not(.class-card):not(.ranking-nome) {
       min-width: 0;
       width: 100%;
@@ -1730,5 +2341,8 @@
     }
     #classList .class-card {
       flex: 1 1 45%;
+    }
+    .class-preview-fighter.class-sprite {
+      --sprite-box: 90px;
     }
   }

@@ -1,11 +1,13 @@
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { PLAYER_SPEED } from '../../shared/constants.js';
 import { positionDropdownMenu, resetDropdownMenu } from './dropdownPosition.js';
+import { applyClassSprite } from './classSprite.js';
 
 // Ícones em linha (mesmo estilo dos ícones de classe) para cada estatística,
 // usados para tornar o painel de detalhes mais fácil de escanear visualmente.
 const STAT_ICONS = {
   cooldown: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+  range: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/></svg>',
   damage: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>',
   shield: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
   life: '<svg viewBox="0 0 24 24"><path d="M12 21s-8-4.8-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.2-8 11-8 11z"/></svg>',
@@ -16,8 +18,10 @@ export function statLines(cls) {
   const seconds = cls.shotCooldownMs / 1000;
   const secondsLabel = Number.isInteger(seconds) ? `${seconds}` : seconds.toFixed(1);
   const speedPct = Math.round((cls.speed / PLAYER_SPEED) * 100);
+  const rangeLabel = Number.isFinite(cls.range) ? `${cls.range}` : 'Infinito';
   return [
-    { icon: STAT_ICONS.cooldown, label: 'Tiros a cada', value: `${secondsLabel}s` },
+    { icon: STAT_ICONS.cooldown, label: 'Velocidade de ataque', value: `${secondsLabel}s` },
+    { icon: STAT_ICONS.range, label: 'Alcance', value: rangeLabel },
     { icon: STAT_ICONS.damage, label: 'Dano', value: `${cls.damage} ${cls.damage === 1 ? 'coração' : 'corações'}` },
     { icon: STAT_ICONS.shield, label: 'Escudo', value: `${cls.shieldMaxHits} ${cls.shieldMaxHits === 1 ? 'hit' : 'hits'}` },
     { icon: STAT_ICONS.life, label: 'Vidas', value: `${cls.maxLives}` },
@@ -25,22 +29,62 @@ export function statLines(cls) {
   ];
 }
 
-function createClassCard(cls) {
+// Preenche um elemento `.class-name` com o nome do demônio em destaque (linha
+// de cima) e o nome da classe em cor secundária (linha de baixo) — mesmo
+// padrão nos cartões da lista, no dropdown do modo treino e no seu toggle.
+function fillClassNameEl(el, cls) {
+  el.innerHTML = '';
+
+  const demonName = document.createElement('span');
+  demonName.className = 'class-demon-name';
+  demonName.textContent = cls.demonName || cls.name;
+  el.appendChild(demonName);
+
+  if (cls.demonName) {
+    const className = document.createElement('span');
+    className.className = 'class-name-secondary';
+    className.textContent = cls.name;
+    el.appendChild(className);
+  }
+}
+
+// Ícone de cadeado usado nos cartões e no botão bloqueados (classe exige conta).
+export const LOCK_ICON = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+// Cartão da lista vertical: sprite do personagem (ou ícone SVG, sem arte
+// própria) à esquerda e nome à direita. `locked` só marca visualmente com um
+// cadeado — o cartão continua clicável, porque o jogador precisa poder ver as
+// características de uma classe bloqueada. Quem realmente barra o jogo é o
+// botão "Jogar" (ver onlineClassSelect.js).
+function createClassCard(cls, locked = false) {
   const card = document.createElement('button');
   card.type = 'button';
   card.className = 'class-card';
   card.dataset.classId = cls.id;
   card.style.setProperty('--class-color', cls.color);
 
-  const icon = document.createElement('div');
-  icon.className = 'class-icon';
-  icon.innerHTML = cls.icon || '';
-  card.appendChild(icon);
+  const art = document.createElement('div');
+  art.className = 'class-card-art';
+  if (!applyClassSprite(art, cls.id)) {
+    // Classe sem arte própria: cai no ícone SVG.
+    art.classList.add('class-icon');
+    art.innerHTML = cls.icon || '';
+  }
+  card.appendChild(art);
 
   const title = document.createElement('span');
   title.className = 'class-name';
-  title.textContent = cls.name;
+  fillClassNameEl(title, cls);
   card.appendChild(title);
+
+  if (locked) {
+    card.classList.add('locked');
+
+    const lock = document.createElement('div');
+    lock.className = 'class-card-lock';
+    lock.innerHTML = LOCK_ICON;
+    card.appendChild(lock);
+  }
 
   return card;
 }
@@ -59,7 +103,7 @@ function createClassDropdownItem(cls) {
 
   const title = document.createElement('span');
   title.className = 'class-name';
-  title.textContent = cls.name;
+  fillClassNameEl(title, cls);
   item.appendChild(title);
 
   return item;
@@ -107,17 +151,6 @@ export function renderClassDetails(target, cls) {
   }
   info.appendChild(stats);
 
-  if (cls.traits.length) {
-    const traits = document.createElement('ul');
-    traits.className = 'class-traits';
-    for (const trait of cls.traits) {
-      const li = document.createElement('li');
-      li.textContent = trait;
-      traits.appendChild(li);
-    }
-    info.appendChild(traits);
-  }
-
   target.appendChild(info);
 }
 
@@ -127,7 +160,7 @@ export function renderClassDetails(target, cls) {
 // dropdown compacto para caber duas colunas (jogador/bot) lado a lado.
 export function createClassPicker({
   listEl, detailsEl, getSelectedId, setSelectedId, defaultId = DEFAULT_CLASS_ID, dropdown = false,
-  onPreview,
+  onPreview, isLocked = () => false,
 }) {
   if (!listEl) return { refresh() {} };
 
@@ -135,8 +168,16 @@ export function createClassPicker({
     return getClass(getSelectedId() || defaultId);
   }
 
+  // Crossfade curto ao trocar de classe: como é o mesmo elemento (só o
+  // innerHTML muda), a troca de classe CSS precisa ser forçada com um reflow
+  // no meio, senão o navegador não reconhece que a animação deve reiniciar.
   function renderDetails(cls) {
     renderClassDetails(detailsEl, cls);
+    if (detailsEl) {
+      detailsEl.classList.remove('class-details-fade');
+      void detailsEl.offsetWidth;
+      detailsEl.classList.add('class-details-fade');
+    }
     if (onPreview) onPreview(cls);
   }
 
@@ -165,18 +206,27 @@ export function createClassPicker({
       renderDetails(cls);
     }
 
-    listEl.innerHTML = '';
-    for (const cls of Object.values(CLASSES)) {
-      const card = createClassCard(cls);
-      card.addEventListener('click', () => selectClass(cls.id));
-      card.addEventListener('mouseenter', () => renderDetails(cls));
-      card.addEventListener('focus', () => renderDetails(cls));
-      card.addEventListener('mouseleave', () => renderDetails(currentClass()));
-      card.addEventListener('blur', () => renderDetails(currentClass()));
-      listEl.appendChild(card);
+    // Só o clique troca a classe mostrada: passar o mouse por cima não mexe no
+    // preview nem nos detalhes, senão a modal fica trocando de personagem
+    // enquanto o jogador só passa o mouse a caminho de outro cartão. Cartão
+    // bloqueado continua clicável — o jogador pode ver as características de
+    // qualquer classe, só não pode confirmar "Jogar" com ela (ver
+    // onlineClassSelect.js).
+    //
+    // Os cartões são reconstruídos a cada `refresh()` (não só na criação do
+    // picker), porque `isLocked` depende do estado de login, que pode mudar
+    // entre uma abertura da modal e outra.
+    function buildCards() {
+      listEl.innerHTML = '';
+      for (const cls of Object.values(CLASSES)) {
+        const card = createClassCard(cls, isLocked(cls));
+        card.addEventListener('click', () => selectClass(cls.id));
+        listEl.appendChild(card);
+      }
     }
 
     function refresh() {
+      buildCards();
       lockDetailsHeight();
       selectClass(getSelectedId() || defaultId);
     }
@@ -251,7 +301,7 @@ export function createClassPicker({
     setSelectedId(cls.id);
     toggleIcon.innerHTML = cls.icon || '';
     toggle.style.setProperty('--class-color', cls.color);
-    toggleName.textContent = cls.name;
+    fillClassNameEl(toggleName, cls);
     for (const item of menu.children) {
       const selected = item.dataset.classId === cls.id;
       item.classList.toggle('selected', selected);

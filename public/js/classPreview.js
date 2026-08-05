@@ -1,8 +1,8 @@
 // Preview animado da classe selecionada na modal de seleção de classe do
-// modo online: mostra o "personagem" (quadrado colorido igual ao desenhado
-// em partida por render.js) parado, atirando para a direita contra um
-// boneco de treino, com os mesmos corações e escudos em miniatura do HUD
-// (hud.js) para a classe atual.
+// modo online: mostra o personagem (o mesmo sprite desenhado em partida por
+// render.js, aqui animado por CSS — ver classSprite.js) atirando para a
+// direita contra um boneco de treino, com os mesmos corações e escudos em
+// miniatura do HUD (hud.js) para a classe atual.
 //
 // Os disparos reproduzem o comportamento real da classe em partida: cadência
 // (shotCooldownMs), quantidade e leque de projéteis (projectileCount /
@@ -10,6 +10,8 @@
 // velocidade visual de travessia da caixa é a mesma para todas as classes,
 // porque PROJECTILE_SPEED é igual para todas em shared/constants.js.
 import { createHeartsRow, createShieldsRow } from './hud.js';
+import { applyClassSprite } from './classSprite.js';
+import { getSpriteOffsetY, SPRITE_DISPLAY_SIZE } from './characterSprites.js';
 import { getClass } from '../../shared/classes.js';
 import { ARENA, PROJECTILE_SPEED, TICK_MS } from '../../shared/constants.js';
 
@@ -17,7 +19,7 @@ const PREVIEW_HEART_PIXEL = 1.6;
 const PREVIEW_SHIELD_PIXEL = 1.6;
 
 const OWN_SHOT_COLOR = '#facc15';
-const PROJECTILE_SIZE_SCALE = 0.9;
+const PROJECTILE_SIZE_SCALE = 1.27;
 
 const WORLD_SPEED_PX_MS = PROJECTILE_SPEED / TICK_MS;
 // Tempo para atravessar uma largura de arena inteira, na velocidade real do
@@ -30,6 +32,14 @@ const FULL_WIDTH_FLIGHT_MS = ARENA.w / WORLD_SPEED_PX_MS;
 const DUMMY_WORLD_DISTANCE = 220;
 
 const TARGET_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg>';
+
+// Mesma altura de quadro usada por `.class-preview-fighter.class-sprite` no
+// CSS (`--sprite-box` * `--sprite-zoom`) — precisa ficar em sincronia com
+// aquela regra, é o que converte o desvio vertical do canvas (SPRITE_OFFSET_Y
+// em characterSprites.js, em px de exibição de 220x220) para o tamanho real
+// do sprite aqui no preview.
+const PREVIEW_SPRITE_BOX = 130;
+const PREVIEW_SPRITE_ZOOM = 1.9;
 
 export function createClassPreview(containerEl) {
   if (!containerEl) return { setClass() {}, stop() {} };
@@ -49,9 +59,9 @@ export function createClassPreview(containerEl) {
   character.className = 'class-preview-character';
   containerEl.appendChild(character);
 
-  const square = document.createElement('div');
-  square.className = 'class-preview-square';
-  character.appendChild(square);
+  const fighter = document.createElement('div');
+  fighter.className = 'class-preview-fighter';
+  character.appendChild(fighter);
 
   // Espaçador com largura proporcional a DUMMY_WORLD_DISTANCE: mantém a
   // distância entre personagem e boneco fiel à escala do mundo, enquanto
@@ -69,6 +79,30 @@ export function createClassPreview(containerEl) {
   let volleyTimer = null;
   let liveShots = [];
   let dummyResetId = null;
+  let attackResetId = null;
+  let currentClassId = null;
+
+  // A linha do tiro fica na altura do centro geométrico do quadro do sprite
+  // (`--sprite-anchor: 0.5` no CSS), que é o mesmo ponto (`cy`) usado por
+  // render.js pra centralizar o sprite no canvas e de onde os projéteis
+  // realmente saem. Assassino/sniper têm uma correção nesse centro
+  // (`getSpriteOffsetY`, pose mais agachada/alongada) — sem repetir essa
+  // mesma correção aqui, o tiro sairia um pouco acima do personagem só
+  // nessas duas classes.
+  function alignFighterToShot(classId) {
+    const offsetPx = getSpriteOffsetY(classId) * (PREVIEW_SPRITE_BOX * PREVIEW_SPRITE_ZOOM) / SPRITE_DISPLAY_SIZE;
+    fighter.style.setProperty('--sprite-shot-offset', `${offsetPx}px`);
+  }
+
+  // Toca a animação de ataque do sprite junto com o disparo e volta pro idle
+  // quando ela termina — o mesmo vaivém que updateCharacterAnimator faz no
+  // canvas, aqui só com um timer, já que quem anda os quadros é o CSS.
+  function playAttack(classId) {
+    const attack = applyClassSprite(fighter, classId, 'attack');
+    if (!attack) return;
+    clearTimeout(attackResetId);
+    attackResetId = setTimeout(() => applyClassSprite(fighter, classId), attack.durationMs);
+  }
 
   function clearShots() {
     for (const { el, timeoutId } of liveShots) {
@@ -98,8 +132,15 @@ export function createClassPreview(containerEl) {
     const label = document.createElement('div');
     label.className = 'class-preview-damage';
     label.textContent = `-${damage}`;
-    const stagger = spread * 34;
+    const stagger = spread * 48;
     label.style.left = `${dummy.offsetLeft + dummy.offsetWidth / 2 + stagger}px`;
+    // Acima do topo do alvo, não na altura do centro — senão o número nasce
+    // por cima do ícone em vez de flutuar sobre ele. O tiro do meio do leque
+    // (spread 0, ex.: mago) nasce sem deslocamento horizontal, então ficaria
+    // sobreposto aos dois vizinhos que nascem na mesma altura — sobe mais um
+    // pouco para abrir espaço entre os três.
+    const midExtraLift = spread === 0 ? 14 : 0;
+    label.style.top = `${dummy.offsetTop - 18 - midExtraLift}px`;
     character.appendChild(label);
     setTimeout(() => label.remove(), 950);
   }
@@ -107,7 +148,9 @@ export function createClassPreview(containerEl) {
   function spawnVolley(cls) {
     const boxWidth = character.clientWidth || containerEl.clientWidth;
     if (!boxWidth) return;
-    const startLeft = square.offsetLeft + square.offsetWidth;
+    // O sprite é bem mais largo que o personagem desenhado nele, então o tiro
+    // nasce perto do centro da caixa (onde está o corpo) e não na borda.
+    const startLeft = fighter.offsetLeft + fighter.offsetWidth * 0.7;
 
     const count = Math.max(1, cls.projectileCount);
     const spreadRad = (cls.coneSpreadDeg * Math.PI) / 180;
@@ -116,13 +159,19 @@ export function createClassPreview(containerEl) {
     const travelWorldPx = hits ? DUMMY_WORLD_DISTANCE : Math.min(finiteRange, ARENA.w);
     const flightMs = FULL_WIDTH_FLIGHT_MS * (travelWorldPx / ARENA.w);
     const dotSize = Math.max(3, cls.projectileSize * PROJECTILE_SIZE_SCALE);
+    // Alcança o centro real do boneco (posição no DOM), não uma distância
+    // derivada da proporção do mundo — essa proporção não sabe quanto do
+    // quadro do sprite é espaço vazio ao redor do personagem, então o tiro
+    // sempre parava um pouco antes do alvo.
+    const hitDxPx = dummy.offsetLeft + dummy.offsetWidth / 2 - startLeft;
+
+    playAttack(cls.id);
 
     for (let i = 0; i < count; i++) {
       const t = count === 1 ? 0 : i / (count - 1) - 0.5;
       const angle = t * spreadRad;
-      const dxWorld = Math.cos(angle) * travelWorldPx;
+      const dxPx = hits ? hitDxPx * Math.cos(angle) : (Math.cos(angle) * travelWorldPx / ARENA.w) * boxWidth;
       const dyWorld = Math.sin(angle) * travelWorldPx;
-      const dxPx = (dxWorld / ARENA.w) * boxWidth;
       const dyPx = (dyWorld / ARENA.w) * boxWidth;
 
       const el = document.createElement('div');
@@ -153,10 +202,20 @@ export function createClassPreview(containerEl) {
     const cls = getClass(classId);
     createHeartsRow(hearts, cls.maxLives, PREVIEW_HEART_PIXEL);
     createShieldsRow(shields, cls.shieldMaxHits, PREVIEW_SHIELD_PIXEL);
-    square.style.background = cls.color;
+    currentClassId = cls.id;
+    alignFighterToShot(cls.id);
+    // Sem arte própria, o personagem continua sendo o quadrado colorido.
+    if (!applyClassSprite(fighter, cls.id)) {
+      fighter.classList.add('class-preview-square');
+      fighter.style.background = cls.color;
+    } else {
+      fighter.classList.remove('class-preview-square');
+      fighter.style.background = '';
+    }
     layoutRow();
 
     if (volleyTimer) clearInterval(volleyTimer);
+    clearTimeout(attackResetId);
     clearShots();
     spawnVolley(cls);
     volleyTimer = setInterval(() => spawnVolley(cls), cls.shotCooldownMs);
@@ -166,6 +225,10 @@ export function createClassPreview(containerEl) {
     if (volleyTimer) clearInterval(volleyTimer);
     volleyTimer = null;
     clearTimeout(dummyResetId);
+    clearTimeout(attackResetId);
+    // Volta pro idle: se a modal fechar no meio de um ataque, o sprite ficaria
+    // travado no último quadro do golpe ao reabrir.
+    if (currentClassId) applyClassSprite(fighter, currentClassId);
     clearShots();
   }
 

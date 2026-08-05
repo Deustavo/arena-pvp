@@ -12,7 +12,7 @@
 // aqui em shared/ — é a mesma função usada pelo servidor (partidas online) e
 // pelo loop do modo bot no cliente.
 
-export const MATCH_DURATION_MS = 90 * 1000;
+export const MATCH_DURATION_MS = 60 * 1000;
 // Respiro entre o fim do tempo e o começo do dreno, para o jogador entender
 // que a partida parou antes dos corações começarem a cair.
 export const DESEMPATE_DELAY_MS = 1250;

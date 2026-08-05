@@ -160,7 +160,7 @@ diferente do assumido e a configuração precisa ser revista.
 
 ## Objetivo
 
-Permitir que o jogador crie uma conta no Arena PVP com:
+Permitir que o jogador crie uma conta no Demon Arena com:
 
 - Nome do jogador vinculado à conta.
 - Histórico de partidas por conta (base para um futuro ranking global).

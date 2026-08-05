@@ -57,14 +57,28 @@ describe('wsServer', () => {
     assert.equal(getOnlineCount(), 0);
   });
 
-  test('nickname e classId são extraídos da query string da conexão', async () => {
+  test('nickname é extraído da query string da conexão', async () => {
     const serverWsPromise = nextServerConnection(wss);
-    const client = await connectClient(port, '?nickname=%20%20Foo%20%20&classId=mago');
+    const client = await connectClient(port, '?nickname=%20%20Foo%20%20');
     const serverWs = await serverWsPromise;
     await wait(20);
 
     assert.equal(serverWs.nickname, 'Foo');
-    assert.equal(serverWs.classId, 'mago');
+
+    client.close();
+    await wait(20);
+  });
+
+  // Convidado (sem token de sessão) só pode jogar com o atirador — mesmo
+  // mandando outra classe na query string na mão, o servidor ignora e força a
+  // classe padrão. O cadeado do menu (onlineClassSelect.js) é só visual.
+  test('convidado não consegue escolher outra classe pela query string', async () => {
+    const serverWsPromise = nextServerConnection(wss);
+    const client = await connectClient(port, '?classId=mago');
+    const serverWs = await serverWsPromise;
+    await wait(20);
+
+    assert.equal(serverWs.classId, 'atirador');
 
     client.close();
     await wait(20);

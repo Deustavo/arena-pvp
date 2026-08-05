@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Sobre o projeto
 
-"Arena PVP" é um jogo 1x1 online 2D (top-down shooter) em vanilla JS, sem framework
+"Demon Arena" é um jogo 1x1 online 2D (top-down shooter) em vanilla JS, sem framework
 e sem bundler. O servidor roda em Node puro (`http` + `ws`), o cliente é HTML/CSS/JS
 servido como arquivos estáticos, e há um modo offline contra bot que reusa a mesma
 lógica de simulação do servidor.
@@ -194,7 +194,31 @@ conecta event listeners de UI aos módulos.
 - `input.js` — captura teclado/mouse e atualiza `state.input`.
 - `menu.js` — transições entre tela de menu e tela de jogo, e start/stop dos dois modos.
 - `classSelect.js` / `botClassSelect.js` — seleção de classe (própria e, no modo bot,
-  também a do oponente).
+  também a do oponente). A modal do modo online (`onlineClassSelect.js`) é a
+  lista vertical de classes de sempre (`#classList`, à esquerda) ao lado do
+  preview animado + painel de stats (`#classRight`, empilhados à direita). Só o
+  **clique** num cartão da lista troca a classe mostrada — passar o mouse por
+  cima não muda nada, senão a modal ficaria trocando de personagem enquanto o
+  jogador só passa o mouse a caminho de outro cartão. O modo treino continua
+  usando os dropdowns compactos (`dropdown: true`), porque tem duas colunas
+  (jogador/bot) lado a lado.
+- `classSprite.js` — sprite de personagem desenhado em **DOM** (não no canvas):
+  reusa as spritesheets de `characterSprites.js` (via `getSpriteAnimation`) e
+  anda os quadros por CSS, com `background-position` em `steps()` sobre a tira
+  de quadros. É o que dá o personagem de verdade nos cartões de classe e no
+  preview da modal, no lugar do quadrado colorido antigo. O JS só escreve a
+  imagem e `--sprite-frames`/`--sprite-duration`; o enquadramento (zoom e
+  `--sprite-anchor`, a altura do centro do corpo dentro do quadro 100x100) fica
+  em `.class-sprite`, no CSS. Nos cartões da lista o valor é só estético
+  (0.4); no preview da modal (`.class-preview-fighter`, `--sprite-anchor:
+  0.5`) precisa bater exatamente com a altura em que o tiro sai — usa o centro
+  geométrico do quadro, o mesmo ponto (`cy`) que `render.js` usa pra
+  centralizar o sprite no canvas e de onde os projéteis realmente saem.
+  Assassino/sniper têm uma correção nesse centro no canvas
+  (`getSpriteOffsetY`, pose mais agachada/alongada); `classPreview.js` aplica
+  a mesma correção escalada pro tamanho do preview via `--sprite-shot-offset`,
+  senão o tiro sairia visivelmente acima do personagem só nessas duas
+  classes.
 - `ranking.js` / `profile.js` — ranking do menu (posição, nome e vitórias, com
   poll a cada 30s) e modal de histórico de partidas. Clicar no nome de um
   jogador do ranking abre o perfil **dele** (`abrirPerfilDeJogador`, rota
@@ -300,6 +324,40 @@ Ainda não têm som os efeitos de ambiente. Falta também expor **volume/mudo**
 na interface — o `GainNode` master já está no lugar, só não há controle nem
 preferência salva.
 
+#### Paleta de cores (`public/css/style.css`)
+
+Todas as cores da interface ficam em **variáveis CSS no `:root`**, no topo do
+`style.css`. Nenhuma regra abaixo desse bloco deve escrever um hex literal — use
+uma variável existente ou crie uma nova ali, com nome de propósito
+(`--cor-superficie-hover`, `--cor-texto-fraco`, `--cor-vermelho-destaque`…).
+Isso vale também para as sombras repetidas (`--sombra-modal`,
+`--sombra-flutuante`, `--sombra-foco-vermelho`). Antes existiam vários cinzas
+quase iguais (`#2b2b3d`, `#2e2e2e`, `#2f2f40`) e várias cópias da mesma
+`box-shadow` aparecendo lado a lado na mesma tela; cores iguais ou
+imperceptivelmente diferentes foram unificadas na mesma variável.
+
+Regras de cor do jogo:
+
+- A interface é **escala de cinza + o vermelho da identidade**. Os cinzas não
+  têm tom azulado/arroxeado — se um valor novo não for `#rgb` com os três
+  canais iguais (ou muito próximos), provavelmente está errado.
+- Azul só onde a cor **é informação**, nunca decoração: `--cor-azul-classe`
+  (classe no HUD), `--cor-azul-escudo`, `--cor-azul-ranking`, `--cor-azul-link`.
+- A cor de cada classe vem de `shared/classes.js` e chega ao CSS pela custom
+  property `--class-color`, aplicada no elemento pelo JS (`classSelect.js`,
+  `profile.js`). É o único identificador colorido de classe: textos e ícones ao
+  redor (título e stats de `#classDetails`, por exemplo) ficam neutros.
+- Seleção/foco usam vermelho (`--cor-vermelho-destaque`), não verde — verde é só
+  `--cor-sucesso` (vitória, contagem de vitórias).
+- Modais são **opacas** (`--cor-modal-fundo`); o véu translúcido que separa a
+  modal do menu é o overlay atrás dela, não a modal. Painéis da tela inicial
+  (`#rankingPanel`, `#menu`) continuam translúcidos (`--cor-painel-fundo`),
+  porque o fundo com paralaxe faz parte do visual da tela inicial.
+
+As cores desenhadas no canvas (`render.js`, `explosions.js`, `fireCursor.js`,
+`shared/classes.js`) não passam por essas variáveis — CSS não alcança o canvas.
+Lá elas ficam em constantes nomeadas no topo de cada módulo.
+
 #### Loading skeleton na tela inicial
 
 Qualquer elemento da tela de menu que depende de uma resposta assíncrona antes de
@@ -347,7 +405,7 @@ do input/mouse do jogador local.
 
 ### Tempo de partida e desempate
 
-Toda partida dura no máximo `MATCH_DURATION_MS` (1 minuto e 30 segundos). A contagem e o
+Toda partida dura no máximo `MATCH_DURATION_MS` (1 minuto). A contagem e o
 desempate são regra de jogo e vivem em `shared/matchTimer.js`, chamados a cada
 tick pelos dois donos de loop: `Match.js` (online) e `bot.js` (modo treino).
 

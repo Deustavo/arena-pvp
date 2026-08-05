@@ -3,15 +3,26 @@ import { state, screenXToWorld } from './state.js';
 import { isShieldAvailable, hitFlashUntil, updateCooldownBars } from './hud.js';
 import { advancePrediction, getRenderState } from './prediction.js';
 import { updateAndDrawExplosions } from './explosions.js';
+import { updateAndDrawFloatingIcons } from './floatingIcons.js';
 import { checkNearMiss } from './nearMiss.js';
 import { showGameOverOverlay } from './gameOver.js';
 import { getClass } from '../../shared/classes.js';
+import {
+  hasCharacterSprite, updateCharacterAnimator, drawCharacterFrame, getSpriteOffsetY,
+} from './characterSprites.js';
 
 const GAMEOVER_OVERLAY_DELAY = 2000;
 const HIT_FLASH_DURATION = 400;
 const OWN_PLAYER_BORDER_COLOR = '#facc15';
 const OWN_SHOT_COLOR = '#facc15';
+const ENEMY_SHOT_COLOR = '#ff4d4d';
 const AIM_PREVIEW_COLOR = '#9ca3af';
+const HITBOX_DEBUG_COLOR = '#22ff22';
+
+// Debug visual da caixa de colisão real de cada jogador (o mesmo retângulo
+// usado por rectsIntersect em shared/physics.js), ativado por `?debug=1` na
+// URL — não deve rodar em produção sem o parâmetro explícito.
+const HITBOX_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
 
 // Fundo e borda da arena são desenhados dentro do canvas, e não via CSS: o
 // #game-wrap inteiro recebe um transform: scale() menor que 1 (gameScale.js)
@@ -19,8 +30,8 @@ const AIM_PREVIEW_COLOR = '#9ca3af';
 // pixel de tela, virando um cinza quase invisível dependendo do tamanho da
 // janela. Desenhada em pixels de canvas ela escala junto com a arena e nunca
 // desaparece.
-const ARENA_BG_COLOR = '#242437';
-const ARENA_BORDER_COLOR = '#8f8fb4';
+const ARENA_BG_COLOR = '#3a3a3a';
+const ARENA_BORDER_COLOR = '#8b0000';
 const ARENA_BORDER_WIDTH = 4;
 
 function drawArenaBackground() {
@@ -99,6 +110,22 @@ function drawShotPreview(cx, cy, classId) {
   ctx.restore();
 }
 
+// Indica o jogador controlado por este cliente sem cobrir o personagem: uma
+// meia-lua pulsante no chão, aos pés (só a metade de baixo da elipse, pra não
+// virar um anel fechado competindo com o desenho) — a borda amarela ao redor
+// do sprite/quadrado antes usada atrapalhava a visualização do personagem.
+function drawOwnPlayerMarker(cx, feetY, now) {
+  const pulse = 1 + Math.sin(now / 300) * 0.12;
+  ctx.save();
+  ctx.strokeStyle = OWN_PLAYER_BORDER_COLOR;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  ctx.ellipse(cx, feetY, 15 * pulse, 5 * pulse, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.restore();
+}
+
 // Seta amarela que aponta para o quadrado do jogador controlado por este
 // cliente, exibida só no começo da partida (antes do contador acabar) para
 // ajudar a identificar qual dos dois é o "você".
@@ -125,32 +152,42 @@ function drawPlayerIndicatorArrow(cx, topY, now) {
   ctx.restore();
 }
 
-// O canvas pode estar espelhado (state.viewFlipped) por causa da rotação da
-// cena — sem desfazer isso localmente, o emoji sairia invertido.
-function drawWinnerEmoji(cx, topY) {
-  ctx.save();
-  ctx.translate(cx, topY);
-  if (state.viewFlipped) ctx.scale(-1, 1);
-  ctx.font = '28px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.fillText(state.winnerEmoji, 0, 0);
-  ctx.restore();
-}
+// dt próprio da animação de sprite, independente do performance.now() usado
+// pela predição (que só corre com a predição inicializada) — assim os
+// personagens continuam animando (ex.: morte) mesmo fora do modo online.
+let lastSpriteFrameMs = null;
 
 function drawPlayers(renderState, now) {
+  const nowMs = performance.now();
+  const dtMs = lastSpriteFrameMs === null ? 0 : nowMs - lastSpriteFrameMs;
+  lastSpriteFrameMs = nowMs;
+
   for (let i = 0; i < renderState.players.length; i++) {
     let p = renderState.players[i];
-    if (!p || !p.alive) continue;
+    if (!p) continue;
     if (state.mode === 'online' && i === state.playerIndex && state.predicted.initialized) {
       p = { ...p, x: state.predicted.x, y: state.predicted.y };
     }
+    // Direção do próprio jogador é aplicada direto do mouse local, sem
+    // esperar o round-trip do servidor — senão o personagem giraria com
+    // o mesmo atraso da predição/interpolação de rede.
+    if (i === state.playerIndex) {
+      p = { ...p, facing: state.facing };
+    }
 
-    const classColor = getClass(p.classId).color;
+    const cls = getClass(p.classId);
+    const sprite = hasCharacterSprite(p.classId)
+      ? updateCharacterAnimator(i, p.classId, p, hitFlashUntil[i], nowMs, dtMs)
+      : null;
+
+    // Sem sprite, jogador morto some na hora (comportamento antigo, a
+    // explosão de partículas já cobre o efeito). Com sprite, deixa a
+    // animação de morte terminar antes de sumir de vez.
+    if (!p.alive && (!sprite || sprite.isDeathFinished)) continue;
 
     // A prévia de mira some no desempate: a partida está congelada e ninguém
     // atira mais.
-    if (i === state.playerIndex && state.matchStarted && !state.desempate && !state.input.shield) {
+    if (p.alive && i === state.playerIndex && state.matchStarted && !state.desempate && !state.input.shield) {
       drawShotPreview(p.x + state.playerSize / 2, p.y + state.playerSize / 2, p.classId);
     }
 
@@ -159,24 +196,37 @@ function drawPlayers(renderState, now) {
     let oy = 0;
     if (flashRemaining > 0) {
       const t = 1 - flashRemaining / HIT_FLASH_DURATION;
-      const flicker = Math.floor(t * 12) % 2 === 0;
-      ctx.fillStyle = flicker ? '#ffffff' : classColor;
       const shake = (1 - t) * 4;
       ox = (Math.random() - 0.5) * shake;
       oy = (Math.random() - 0.5) * shake;
+    }
+
+    const cx = p.x + ox + state.playerSize / 2;
+    const cy = p.y + oy + state.playerSize / 2;
+    if (sprite) {
+      if (!drawCharacterFrame(ctx, sprite, cx, cy + getSpriteOffsetY(p.classId))) {
+        ctx.fillStyle = cls.color;
+        ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
+      }
     } else {
-      ctx.fillStyle = classColor;
+      if (flashRemaining > 0) {
+        const t = 1 - flashRemaining / HIT_FLASH_DURATION;
+        const flicker = Math.floor(t * 12) % 2 === 0;
+        ctx.fillStyle = flicker ? '#ffffff' : cls.color;
+      } else {
+        ctx.fillStyle = cls.color;
+      }
+      ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
     }
-    ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
-    if (state.gameOver && state.winnerEmoji && i === state.winnerIndex) {
-      drawWinnerEmoji(p.x + ox + state.playerSize / 2, p.y + oy - 6);
-    }
+
+    if (HITBOX_DEBUG) drawHitbox(p.x, p.y);
+
+    if (!p.alive) continue;
+
     if (i === state.playerIndex) {
-      ctx.strokeStyle = OWN_PLAYER_BORDER_COLOR;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
+      drawOwnPlayerMarker(cx, p.y + oy + state.playerSize + 4, now);
       if (!state.matchStarted) {
-        drawPlayerIndicatorArrow(p.x + ox + state.playerSize / 2, p.y + oy, now);
+        drawPlayerIndicatorArrow(cx, p.y + oy, now);
       }
     }
 
@@ -185,20 +235,26 @@ function drawPlayers(renderState, now) {
       : !!p.shielding;
     if (shieldingNow) {
       const maxHits = p.shieldMaxHits ?? state.shieldMaxHits[i];
-      drawShield(p.x + ox + state.playerSize / 2, p.y + oy + state.playerSize / 2,
-        maxHits - (p.shieldHits || 0), maxHits, now);
+      drawShield(cx, cy, maxHits - (p.shieldHits || 0), maxHits, now);
     }
   }
+}
+
+function drawHitbox(x, y) {
+  ctx.save();
+  ctx.strokeStyle = HITBOX_DEBUG_COLOR;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, state.playerSize, state.playerSize);
+  ctx.restore();
 }
 
 function drawProjectiles(renderState) {
   for (const proj of renderState.projectiles) {
     const size = proj.size ?? state.projectileSize;
-    const owner = renderState.players[proj.ownerIndex];
     if (proj.ownerIndex === state.playerIndex) {
       ctx.fillStyle = OWN_SHOT_COLOR;
     } else {
-      ctx.fillStyle = owner ? getClass(owner.classId).color : '#ffffff';
+      ctx.fillStyle = ENEMY_SHOT_COLOR;
     }
     ctx.beginPath();
     ctx.arc(proj.x, proj.y, size / 2, 0, Math.PI * 2);
@@ -234,6 +290,7 @@ export function render() {
       drawPlayers(renderState, now);
       drawProjectiles(renderState);
       updateAndDrawExplosions(now);
+      updateAndDrawFloatingIcons(now);
       ctx.restore();
 
       updateCooldownBars(now);
