@@ -9,6 +9,7 @@ import {
 import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 import { DEFAULT_BOT_DIFFICULTY } from '../../shared/botDifficulty.js';
 import { MATCH_DURATION_MS } from '../../shared/matchTimer.js';
+import { resetCharacterAnimators } from './characterSprites.js';
 
 export const state = {
   mode: null, // 'online' | 'bot'
@@ -134,4 +135,5 @@ export function resetMatchState() {
   state.prevAlive = [true, true];
   state.explosionParticles = [];
   state.viewFlipped = false;
+  resetCharacterAnimators();
 }

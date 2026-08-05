@@ -6,6 +6,7 @@ import { updateAndDrawExplosions } from './explosions.js';
 import { checkNearMiss } from './nearMiss.js';
 import { showGameOverOverlay } from './gameOver.js';
 import { getClass } from '../../shared/classes.js';
+import { hasCharacterSprite, updateCharacterAnimator, drawCharacterFrame } from './characterSprites.js';
 
 const GAMEOVER_OVERLAY_DELAY = 2000;
 const HIT_FLASH_DURATION = 400;
@@ -99,6 +100,22 @@ function drawShotPreview(cx, cy, classId) {
   ctx.restore();
 }
 
+// Indica o jogador controlado por este cliente sem cobrir o personagem: uma
+// meia-lua pulsante no chão, aos pés (só a metade de baixo da elipse, pra não
+// virar um anel fechado competindo com o desenho) — a borda amarela ao redor
+// do sprite/quadrado antes usada atrapalhava a visualização do personagem.
+function drawOwnPlayerMarker(cx, feetY, now) {
+  const pulse = 1 + Math.sin(now / 300) * 0.12;
+  ctx.save();
+  ctx.strokeStyle = OWN_PLAYER_BORDER_COLOR;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  ctx.ellipse(cx, feetY, 15 * pulse, 5 * pulse, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.restore();
+}
+
 // Seta amarela que aponta para o quadrado do jogador controlado por este
 // cliente, exibida só no começo da partida (antes do contador acabar) para
 // ajudar a identificar qual dos dois é o "você".
@@ -138,19 +155,36 @@ function drawWinnerEmoji(cx, topY) {
   ctx.restore();
 }
 
+// dt próprio da animação de sprite, independente do performance.now() usado
+// pela predição (que só corre com a predição inicializada) — assim os
+// personagens continuam animando (ex.: morte) mesmo fora do modo online.
+let lastSpriteFrameMs = null;
+
 function drawPlayers(renderState, now) {
+  const nowMs = performance.now();
+  const dtMs = lastSpriteFrameMs === null ? 0 : nowMs - lastSpriteFrameMs;
+  lastSpriteFrameMs = nowMs;
+
   for (let i = 0; i < renderState.players.length; i++) {
     let p = renderState.players[i];
-    if (!p || !p.alive) continue;
+    if (!p) continue;
     if (state.mode === 'online' && i === state.playerIndex && state.predicted.initialized) {
       p = { ...p, x: state.predicted.x, y: state.predicted.y };
     }
 
-    const classColor = getClass(p.classId).color;
+    const cls = getClass(p.classId);
+    const sprite = hasCharacterSprite(p.classId)
+      ? updateCharacterAnimator(i, p.classId, p, hitFlashUntil[i], nowMs, dtMs)
+      : null;
+
+    // Sem sprite, jogador morto some na hora (comportamento antigo, a
+    // explosão de partículas já cobre o efeito). Com sprite, deixa a
+    // animação de morte terminar antes de sumir de vez.
+    if (!p.alive && (!sprite || sprite.isDeathFinished)) continue;
 
     // A prévia de mira some no desempate: a partida está congelada e ninguém
     // atira mais.
-    if (i === state.playerIndex && state.matchStarted && !state.desempate && !state.input.shield) {
+    if (p.alive && i === state.playerIndex && state.matchStarted && !state.desempate && !state.input.shield) {
       drawShotPreview(p.x + state.playerSize / 2, p.y + state.playerSize / 2, p.classId);
     }
 
@@ -159,24 +193,38 @@ function drawPlayers(renderState, now) {
     let oy = 0;
     if (flashRemaining > 0) {
       const t = 1 - flashRemaining / HIT_FLASH_DURATION;
-      const flicker = Math.floor(t * 12) % 2 === 0;
-      ctx.fillStyle = flicker ? '#ffffff' : classColor;
       const shake = (1 - t) * 4;
       ox = (Math.random() - 0.5) * shake;
       oy = (Math.random() - 0.5) * shake;
-    } else {
-      ctx.fillStyle = classColor;
     }
-    ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
+
+    const cx = p.x + ox + state.playerSize / 2;
+    const cy = p.y + oy + state.playerSize / 2;
+    if (sprite) {
+      if (!drawCharacterFrame(ctx, sprite, cx, cy)) {
+        ctx.fillStyle = cls.color;
+        ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
+      }
+    } else {
+      if (flashRemaining > 0) {
+        const t = 1 - flashRemaining / HIT_FLASH_DURATION;
+        const flicker = Math.floor(t * 12) % 2 === 0;
+        ctx.fillStyle = flicker ? '#ffffff' : cls.color;
+      } else {
+        ctx.fillStyle = cls.color;
+      }
+      ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
+    }
+
+    if (!p.alive) continue;
+
     if (state.gameOver && state.winnerEmoji && i === state.winnerIndex) {
-      drawWinnerEmoji(p.x + ox + state.playerSize / 2, p.y + oy - 6);
+      drawWinnerEmoji(cx, p.y + oy - 6);
     }
     if (i === state.playerIndex) {
-      ctx.strokeStyle = OWN_PLAYER_BORDER_COLOR;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
+      drawOwnPlayerMarker(cx, p.y + oy + state.playerSize + 4, now);
       if (!state.matchStarted) {
-        drawPlayerIndicatorArrow(p.x + ox + state.playerSize / 2, p.y + oy, now);
+        drawPlayerIndicatorArrow(cx, p.y + oy, now);
       }
     }
 
@@ -185,8 +233,7 @@ function drawPlayers(renderState, now) {
       : !!p.shielding;
     if (shieldingNow) {
       const maxHits = p.shieldMaxHits ?? state.shieldMaxHits[i];
-      drawShield(p.x + ox + state.playerSize / 2, p.y + oy + state.playerSize / 2,
-        maxHits - (p.shieldHits || 0), maxHits, now);
+      drawShield(cx, cy, maxHits - (p.shieldHits || 0), maxHits, now);
     }
   }
 }
