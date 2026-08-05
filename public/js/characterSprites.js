@@ -131,6 +131,18 @@ export function hasCharacterSprite(classId) {
   return !!SPRITE_SHEETS[classId];
 }
 
+// Metadados de uma animação para quem desenha o sprite fora do canvas — hoje
+// as miniaturas e o preview da modal de seleção de classe, animados por CSS
+// (ver classSprite.js). Animações com variantes (ataque) devolvem a primeira.
+export function getSpriteAnimation(classId, anim = 'idle') {
+  const sheets = SPRITE_SHEETS[classId];
+  if (!sheets) return null;
+  const sheet = sheets[anim];
+  if (!sheet) return null;
+  const { src, frames, frameMs, loop } = Array.isArray(sheet) ? sheet[0] : sheet;
+  return { src, frames, frameMs, loop: !!loop };
+}
+
 // Abaixo disso por quadro conta como "parado" — evita que jitter de rede
 // (posição interpolada oscilando por frações de pixel) vire animação de
 // andar piscando.

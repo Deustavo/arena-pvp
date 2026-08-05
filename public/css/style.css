@@ -928,6 +928,8 @@
     font-size: 14px;
     color: var(--cor-sucesso);
   }
+  /* Modal de escolha de classe (online): lista vertical das 6 classes à
+     esquerda, preview animado + painel de detalhes empilhados à direita. */
   #classArea {
     display: flex;
     align-items: stretch;
@@ -968,6 +970,9 @@
     border-color: var(--cor-vermelho-destaque);
     box-shadow: 0 0 0 1px var(--cor-vermelho-destaque);
   }
+  .class-card .class-sprite {
+    --sprite-box: 36px;
+  }
   .class-card .class-name {
     font-size: 14px;
     overflow: hidden;
@@ -989,6 +994,49 @@
   }
   .class-dropdown-item.selected {
     box-shadow: inset 0 0 0 1px var(--cor-vermelho-destaque);
+  }
+  /* Sprite de personagem fora do canvas (ver public/js/classSprite.js): a tira
+     de quadros 100x100 é o `background-image` e a animação anda os quadros em
+     `steps()`. O JS só escreve `--sprite-frames`/`--sprite-duration` e a
+     imagem; o enquadramento é aqui.
+     `--sprite-zoom` aproxima a arte (o personagem ocupa menos da metade do
+     quadro) e `--sprite-anchor` é a altura do centro do corpo dentro do
+     quadro (0 = topo, 1 = base) — sem isso o personagem fica pequeno e caído
+     para baixo na miniatura. Nas miniaturas (0.4) é só estética; no preview
+     da modal (`--sprite-anchor: 0.5` mais abaixo) precisa bater exatamente
+     com a altura em que o tiro sai, então usa o centro geométrico do quadro —
+     é o mesmo ponto usado por render.js (`cy`) para centralizar o sprite no
+     canvas, e `--sprite-shot-offset` (escrito por classPreview.js a partir de
+     `getSpriteOffsetY`) corrige a mesma folga vertical que assassino/sniper
+     já recebem no canvas por terem uma pose mais agachada/alongada. */
+  .class-sprite {
+    --sprite-box: 48px;
+    --sprite-zoom: 1.9;
+    --sprite-anchor: 0.4;
+    --sprite-shot-offset: 0px;
+    --sprite-frames: 6;
+    --sprite-duration: 900ms;
+    --sprite-frame: calc(var(--sprite-box) * var(--sprite-zoom));
+    --sprite-x0: calc((var(--sprite-box) - var(--sprite-frame)) / 2);
+    flex: none;
+    width: var(--sprite-box);
+    height: var(--sprite-box);
+    background-repeat: no-repeat;
+    background-size: calc(var(--sprite-frames) * var(--sprite-frame)) var(--sprite-frame);
+    background-position: var(--sprite-x0)
+      calc(var(--sprite-box) / 2 - var(--sprite-frame) * var(--sprite-anchor) + var(--sprite-shot-offset));
+    image-rendering: pixelated;
+    animation: spriteStrip var(--sprite-duration) steps(var(--sprite-frames)) infinite;
+  }
+  /* Ataque/dano/morte: travam no último quadro em vez de repetir, igual ao
+     canvas (`loop: false` em characterSprites.js). */
+  .class-sprite.class-sprite-once {
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+  }
+  @keyframes spriteStrip {
+    from { background-position-x: var(--sprite-x0); }
+    to { background-position-x: calc(var(--sprite-x0) - var(--sprite-frames) * var(--sprite-frame)); }
   }
   .class-icon {
     flex: none;
@@ -1082,19 +1130,10 @@
     color: var(--cor-texto);
     white-space: nowrap;
   }
-  #classDetails .class-traits {
-    margin: 8px 0 0 0;
-    padding-left: 18px;
-    font-size: 11px;
-    color: var(--cor-texto-fraco);
-  }
-  #classDetails .class-traits li {
-    margin-bottom: 2px;
-  }
   #classPreview {
     position: relative;
     flex: 1;
-    min-height: 92px;
+    min-height: 132px;
     box-sizing: border-box;
     overflow: hidden;
     background: var(--cor-superficie-icone);
@@ -1119,6 +1158,11 @@
     align-items: center;
     justify-content: center;
   }
+  .class-preview-fighter.class-sprite {
+    --sprite-box: 92px;
+    --sprite-anchor: 0.5;
+  }
+  /* Fallback de classe sem sprite próprio: o quadrado colorido antigo. */
   .class-preview-square {
     flex: none;
     width: 22px;
@@ -1914,5 +1958,8 @@
     }
     #classList .class-card {
       flex: 1 1 45%;
+    }
+    .class-preview-fighter.class-sprite {
+      --sprite-box: 64px;
     }
   }

@@ -1,11 +1,13 @@
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { PLAYER_SPEED } from '../../shared/constants.js';
 import { positionDropdownMenu, resetDropdownMenu } from './dropdownPosition.js';
+import { applyClassSprite } from './classSprite.js';
 
 // Ícones em linha (mesmo estilo dos ícones de classe) para cada estatística,
 // usados para tornar o painel de detalhes mais fácil de escanear visualmente.
 const STAT_ICONS = {
   cooldown: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+  range: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/></svg>',
   damage: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>',
   shield: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>',
   life: '<svg viewBox="0 0 24 24"><path d="M12 21s-8-4.8-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.2-8 11-8 11z"/></svg>',
@@ -16,8 +18,10 @@ export function statLines(cls) {
   const seconds = cls.shotCooldownMs / 1000;
   const secondsLabel = Number.isInteger(seconds) ? `${seconds}` : seconds.toFixed(1);
   const speedPct = Math.round((cls.speed / PLAYER_SPEED) * 100);
+  const rangeLabel = Number.isFinite(cls.range) ? `${cls.range}` : 'Infinito';
   return [
-    { icon: STAT_ICONS.cooldown, label: 'Tiros a cada', value: `${secondsLabel}s` },
+    { icon: STAT_ICONS.cooldown, label: 'Velocidade de ataque', value: `${secondsLabel}s` },
+    { icon: STAT_ICONS.range, label: 'Alcance', value: rangeLabel },
     { icon: STAT_ICONS.damage, label: 'Dano', value: `${cls.damage} ${cls.damage === 1 ? 'coração' : 'corações'}` },
     { icon: STAT_ICONS.shield, label: 'Escudo', value: `${cls.shieldMaxHits} ${cls.shieldMaxHits === 1 ? 'hit' : 'hits'}` },
     { icon: STAT_ICONS.life, label: 'Vidas', value: `${cls.maxLives}` },
@@ -25,6 +29,8 @@ export function statLines(cls) {
   ];
 }
 
+// Cartão da lista vertical: sprite do personagem (ou ícone SVG, sem arte
+// própria) à esquerda e nome à direita.
 function createClassCard(cls) {
   const card = document.createElement('button');
   card.type = 'button';
@@ -32,10 +38,14 @@ function createClassCard(cls) {
   card.dataset.classId = cls.id;
   card.style.setProperty('--class-color', cls.color);
 
-  const icon = document.createElement('div');
-  icon.className = 'class-icon';
-  icon.innerHTML = cls.icon || '';
-  card.appendChild(icon);
+  const art = document.createElement('div');
+  art.className = 'class-card-art';
+  if (!applyClassSprite(art, cls.id)) {
+    // Classe sem arte própria: cai no ícone SVG.
+    art.classList.add('class-icon');
+    art.innerHTML = cls.icon || '';
+  }
+  card.appendChild(art);
 
   const title = document.createElement('span');
   title.className = 'class-name';
@@ -107,17 +117,6 @@ export function renderClassDetails(target, cls) {
   }
   info.appendChild(stats);
 
-  if (cls.traits.length) {
-    const traits = document.createElement('ul');
-    traits.className = 'class-traits';
-    for (const trait of cls.traits) {
-      const li = document.createElement('li');
-      li.textContent = trait;
-      traits.appendChild(li);
-    }
-    info.appendChild(traits);
-  }
-
   target.appendChild(info);
 }
 
@@ -165,14 +164,13 @@ export function createClassPicker({
       renderDetails(cls);
     }
 
+    // Só o clique troca a classe mostrada: passar o mouse por cima não mexe no
+    // preview nem nos detalhes, senão a modal fica trocando de personagem
+    // enquanto o jogador só passa o mouse a caminho de outro cartão.
     listEl.innerHTML = '';
     for (const cls of Object.values(CLASSES)) {
       const card = createClassCard(cls);
       card.addEventListener('click', () => selectClass(cls.id));
-      card.addEventListener('mouseenter', () => renderDetails(cls));
-      card.addEventListener('focus', () => renderDetails(cls));
-      card.addEventListener('mouseleave', () => renderDetails(currentClass()));
-      card.addEventListener('blur', () => renderDetails(currentClass()));
       listEl.appendChild(card);
     }
 
