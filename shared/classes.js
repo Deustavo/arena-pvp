@@ -8,7 +8,7 @@ export const CLASSES = {
   atirador: {
     id: 'atirador',
     name: 'Atirador',
-    demonName: 'Elia',
+    demonName: 'ELai',
     shotCooldownMs: 1000,
     damage: 3,
     shieldMaxHits: 1,

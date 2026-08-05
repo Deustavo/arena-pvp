@@ -29,6 +29,25 @@ export function statLines(cls) {
   ];
 }
 
+// Preenche um elemento `.class-name` com o nome do demônio em destaque (linha
+// de cima) e o nome da classe em cor secundária (linha de baixo) — mesmo
+// padrão nos cartões da lista, no dropdown do modo treino e no seu toggle.
+function fillClassNameEl(el, cls) {
+  el.innerHTML = '';
+
+  const demonName = document.createElement('span');
+  demonName.className = 'class-demon-name';
+  demonName.textContent = cls.demonName || cls.name;
+  el.appendChild(demonName);
+
+  if (cls.demonName) {
+    const className = document.createElement('span');
+    className.className = 'class-name-secondary';
+    className.textContent = cls.name;
+    el.appendChild(className);
+  }
+}
+
 // Cartão da lista vertical: sprite do personagem (ou ícone SVG, sem arte
 // própria) à esquerda e nome à direita.
 function createClassCard(cls) {
@@ -49,19 +68,7 @@ function createClassCard(cls) {
 
   const title = document.createElement('span');
   title.className = 'class-name';
-
-  const demonName = document.createElement('span');
-  demonName.className = 'class-demon-name';
-  demonName.textContent = cls.demonName || cls.name;
-  title.appendChild(demonName);
-
-  if (cls.demonName) {
-    const className = document.createElement('span');
-    className.className = 'class-name-secondary';
-    className.textContent = cls.name;
-    title.appendChild(className);
-  }
-
+  fillClassNameEl(title, cls);
   card.appendChild(title);
 
   return card;
@@ -81,7 +88,7 @@ function createClassDropdownItem(cls) {
 
   const title = document.createElement('span');
   title.className = 'class-name';
-  title.textContent = cls.name;
+  fillClassNameEl(title, cls);
   item.appendChild(title);
 
   return item;
@@ -146,8 +153,16 @@ export function createClassPicker({
     return getClass(getSelectedId() || defaultId);
   }
 
+  // Crossfade curto ao trocar de classe: como é o mesmo elemento (só o
+  // innerHTML muda), a troca de classe CSS precisa ser forçada com um reflow
+  // no meio, senão o navegador não reconhece que a animação deve reiniciar.
   function renderDetails(cls) {
     renderClassDetails(detailsEl, cls);
+    if (detailsEl) {
+      detailsEl.classList.remove('class-details-fade');
+      void detailsEl.offsetWidth;
+      detailsEl.classList.add('class-details-fade');
+    }
     if (onPreview) onPreview(cls);
   }
 
@@ -261,7 +276,7 @@ export function createClassPicker({
     setSelectedId(cls.id);
     toggleIcon.innerHTML = cls.icon || '';
     toggle.style.setProperty('--class-color', cls.color);
-    toggleName.textContent = cls.name;
+    fillClassNameEl(toggleName, cls);
     for (const item of menu.children) {
       const selected = item.dataset.classId === cls.id;
       item.classList.toggle('selected', selected);
