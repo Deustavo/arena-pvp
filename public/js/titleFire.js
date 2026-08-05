@@ -5,6 +5,7 @@
 // decidimos onde e quando soltar cada rajada.
 
 import { spawnFireBurst } from './fireCursor.js';
+import { playTitleFireSound } from './audio.js';
 
 const HOVER_CLASS = 'title-letter-hover';
 const BURST_PER_FRAME = 3;
@@ -41,6 +42,7 @@ export function initTitleFire() {
       // eslint-disable-next-line no-void
       void el.offsetWidth; // reinicia a animação de giro se o mouse voltar antes dela terminar
       el.classList.add(HOVER_CLASS);
+      playTitleFireSound();
       burning.set(el, Infinity);
       if (!rafId) rafId = requestAnimationFrame(spawnForBurning);
     });

@@ -319,6 +319,13 @@ export const playFormErrorSound = efeito('formError', 500, () => {
   sequencia([{ freq: 300 }, { freq: 200 }], { type: 'square', dur: 0.06, gain: 0.14 });
 });
 
+// Baforada leve quando o mouse acende uma letra do título — ruído filtrado
+// em queda, mais discreto que o resto da UI porque acontece toda vez que o
+// mouse passa por cima de uma letra (efeito frequente e só decorativo).
+export const playTitleFireSound = efeito('titleFire', 150, () => {
+  ruido({ dur: 0.15, filter: 'bandpass', from: 2200, to: 500, Q: 1, gain: 0.1 });
+});
+
 export const playFormSuccessSound = efeito('formSuccess', 500, () => {
   sequencia(
     [{ freq: 523.25 }, { freq: 659.25 }, { freq: 880, dur: 0.18 }],
