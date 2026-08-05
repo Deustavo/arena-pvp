@@ -43,8 +43,12 @@ export function openOnlineClassSelect(confirmCallback) {
 }
 
 export function closeOnlineClassSelect() {
-  onlineClassOverlayEl.style.display = 'none';
   preview.stop();
+  onlineClassOverlayEl.classList.add('closing');
+  onlineClassOverlayEl.addEventListener('animationend', () => {
+    onlineClassOverlayEl.style.display = 'none';
+    onlineClassOverlayEl.classList.remove('closing');
+  }, { once: true });
 }
 
 export function isOnlineClassSelectOpen() {

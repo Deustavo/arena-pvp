@@ -118,7 +118,11 @@ export function openBotClassSelect(confirmCallback) {
 }
 
 export function closeBotClassSelect() {
-  botClassOverlayEl.style.display = 'none';
+  botClassOverlayEl.classList.add('closing');
+  botClassOverlayEl.addEventListener('animationend', () => {
+    botClassOverlayEl.style.display = 'none';
+    botClassOverlayEl.classList.remove('closing');
+  }, { once: true });
 }
 
 export function isBotClassSelectOpen() {

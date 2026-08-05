@@ -300,7 +300,10 @@ export function abrirPerfilDeJogador(nome) {
 }
 
 function fechar() {
-  profileOverlayEl.classList.remove('visible');
+  profileOverlayEl.classList.add('closing');
+  profileOverlayEl.addEventListener('animationend', () => {
+    profileOverlayEl.classList.remove('visible', 'closing');
+  }, { once: true });
   // Invalida requisições em voo: uma página que chegasse depois de fechar
   // acabaria acrescentada ao histórico do próximo perfil aberto.
   aberturaAtual++;

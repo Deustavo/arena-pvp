@@ -281,6 +281,28 @@
     from { opacity: 0; }
     to { opacity: 1; }
   }
+  /* Reverso de entrada-pop/overlay-fade, para o fechar da modal não ser um
+     corte seco (display: none na hora do clique). Quem fecha (JS) adiciona
+     `.closing`, espera o `animationend` do overlay e só então esconde o
+     elemento — ver closeBotClassSelect/closeOnlineClassSelect/fechar() em
+     authScreens.js e profile.js. */
+  @keyframes saida-pop {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.92); }
+  }
+  @keyframes overlay-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  .modal.closing {
+    animation: saida-pop 0.15s ease forwards;
+  }
+  #botClassOverlay.closing,
+  #onlineClassOverlay.closing,
+  #authOverlay.visible.closing,
+  #profileOverlay.visible.closing {
+    animation: overlay-fade-out 0.15s ease forwards;
+  }
   /* ----- Controle de volume -----
      Fixo no canto da tela porque vale tanto para o menu quanto para uma
      partida em andamento — o jogador não deveria ter que voltar ao menu para

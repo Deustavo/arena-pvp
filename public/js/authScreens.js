@@ -115,7 +115,10 @@ function abrir(novaView) {
 }
 
 function fechar() {
-  authOverlayEl.classList.remove('visible');
+  authOverlayEl.classList.add('closing');
+  authOverlayEl.addEventListener('animationend', () => {
+    authOverlayEl.classList.remove('visible', 'closing');
+  }, { once: true });
   authFormEl.reset();
   mostrarFeedback('', '');
 }
