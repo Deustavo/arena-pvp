@@ -135,8 +135,12 @@ export function createClassPreview(containerEl) {
     const stagger = spread * 48;
     label.style.left = `${dummy.offsetLeft + dummy.offsetWidth / 2 + stagger}px`;
     // Acima do topo do alvo, não na altura do centro — senão o número nasce
-    // por cima do ícone em vez de flutuar sobre ele.
-    label.style.top = `${dummy.offsetTop - 6}px`;
+    // por cima do ícone em vez de flutuar sobre ele. O tiro do meio do leque
+    // (spread 0, ex.: mago) nasce sem deslocamento horizontal, então ficaria
+    // sobreposto aos dois vizinhos que nascem na mesma altura — sobe mais um
+    // pouco para abrir espaço entre os três.
+    const midExtraLift = spread === 0 ? 14 : 0;
+    label.style.top = `${dummy.offsetTop - 18 - midExtraLift}px`;
     character.appendChild(label);
     setTimeout(() => label.remove(), 950);
   }
