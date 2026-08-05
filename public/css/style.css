@@ -79,6 +79,10 @@
     --cor-superficie-hover-alta: #4a4a4a;
     --cor-modal-fundo: #262322;
     --cor-painel-fundo: rgba(38, 35, 34, 0.78);
+    /* Painéis "de pedra" (menu principal e ranking): cinza bem escuro e opaco,
+       sem textura, pra lerem como um bloco de pedra sólido. */
+    --cor-painel-pedra-veu: #100f0e;
+    --cor-pedra-borda: #100f0e;
 
     /* Neutros: bordas e cinzas médios */
     --cor-borda: #444;
@@ -124,6 +128,12 @@
     --sombra-modal: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     --sombra-flutuante: 0 8px 20px rgba(0, 0, 0, 0.35);
     --sombra-foco-vermelho: 0 0 6px 1px rgba(255, 0, 0, 0.4);
+    /* Bloco de pedra saltando da tela: sombra externa funda pra separar do
+       fundo + bisel interno (claro em cima, escuro embaixo) simulando a borda
+       desgastada de uma laje de pedra. */
+    --sombra-pedra: 0 20px 44px rgba(55, 55, 55, 0.35), 0 4px 12px rgba(55, 55, 55, 0.25),
+      inset 0 2px 0 rgba(255, 255, 255, 0.06), inset 0 -5px 10px rgba(0, 0, 0, 0.7),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.5);
   }
   /* O flex centralizado é só do body. O html fica um bloco comum de altura
      100% — é o overflow dele que a viewport usa para rolar, então ele não pode
@@ -391,16 +401,15 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    width: 280px;
+    width: 300px;
     max-width: 100%;
     max-height: 500px;
     box-sizing: border-box;
-    padding: 24px 16px;
-    background: var(--cor-painel-fundo);
+    padding: 16px 24px 24px 16px;
+    background: var(--cor-painel-pedra-veu);
     border-radius: 16px;
-    backdrop-filter: blur(6px);
-    border: 2px solid var(--cor-vermelho);
-    box-shadow: var(--sombra-modal);
+    border: 1px solid var(--cor-pedra-borda);
+    box-shadow: var(--sombra-pedra);
   }
   #rankingPanel h2 {
     margin: 0;
@@ -486,12 +495,11 @@
     width: 340px;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 24px 16px;
-    background: var(--cor-painel-fundo);
+    padding: 24px;
+    background: var(--cor-painel-pedra-veu);
     border-radius: 16px;
-    backdrop-filter: blur(6px);
-    border: 2px solid var(--cor-vermelho);
-    box-shadow: var(--sombra-modal);
+    border: 1px solid var(--cor-pedra-borda);
+    box-shadow: var(--sombra-pedra);
   }
   #menu button:not(.class-card) {
     font-size: 20px;
@@ -513,6 +521,7 @@
     align-items: stretch;
     gap: 6px;
     width: 100%;
+    margin-bottom: -16px;
   }
   #nicknameLabel {
     font-size: 13px;
@@ -542,6 +551,7 @@
     color: var(--cor-erro);
     font-size: 13px;
     line-height: 16px;
+    text-align: center;
   }
   #nicknameError.visible {
     visibility: visible;
