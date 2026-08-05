@@ -180,7 +180,7 @@
     max-height: 500px;
     box-sizing: border-box;
     padding: 24px 16px;
-    background: rgba(29, 29, 43, 0.72);
+    background: rgba(38, 35, 34, 0.78);
     border-radius: 16px;
     backdrop-filter: blur(6px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -273,7 +273,7 @@
     max-width: 100%;
     box-sizing: border-box;
     padding: 24px 16px;
-    background: rgba(29, 29, 43, 0.72);
+    background: rgba(38, 35, 34, 0.78);
     border-radius: 16px;
     backdrop-filter: blur(6px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
