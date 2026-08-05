@@ -658,7 +658,7 @@
      jogadores nascem na metade vertical da arena e ficariam cobertos. */
   #matchTutorialBanner {
     position: absolute;
-    top: 12%;
+    top: 4%;
     left: 50%;
     transform: translateX(-50%);
     max-width: 82%;
@@ -680,6 +680,82 @@
   #matchTutorialBanner.success {
     background: rgba(45, 138, 86, 0.9);
     border-color: var(--cor-sucesso);
+  }
+  /* Teclas desenhadas no balão do tutorial: cada passo mostra exatamente as
+     teclas que o jogador precisa apertar. Cinza = ainda não apertada,
+     vermelho (`.done`) = já apertada. */
+  .tutorial-teclas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .tutorial-teclas-linha {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tutorial-tecla {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 10px;
+    border: 2px solid var(--cor-borda-media);
+    border-radius: 8px;
+    background: var(--cor-superficie);
+    color: var(--cor-texto-fraco);
+    font-size: 18px;
+    font-weight: 700;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+  .tutorial-tecla.larga {
+    min-width: 180px;
+    font-size: 16px;
+  }
+  .tutorial-tecla.done {
+    border-color: var(--cor-vermelho-destaque);
+    color: var(--cor-vermelho-destaque);
+    background: var(--cor-superficie-alta);
+    transform: translateY(2px);
+  }
+  /* Dá evidência ao nome da tecla dentro do texto do passo. */
+  .tutorial-tecla-nome {
+    color: var(--cor-vermelho-destaque);
+    font-weight: 700;
+  }
+  /* Anel pulsando em volta do cursor no passo de atirar: induz o clique sem
+     esconder a arena (pointer-events: none e centralizado no ponteiro). */
+  #tutorialClickHint {
+    position: absolute;
+    left: 50%;
+    top: 55%;
+    width: 44px;
+    height: 44px;
+    margin: -22px 0 0 -22px;
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+  }
+  #tutorialClickHint.visible {
+    display: block;
+  }
+  #tutorialClickHint::before, #tutorialClickHint::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--cor-vermelho-destaque);
+    border-radius: 50%;
+    animation: tutorial-click-pulse 1.4s ease-out infinite;
+  }
+  #tutorialClickHint::after {
+    animation-delay: 0.7s;
+  }
+  @keyframes tutorial-click-pulse {
+    0% { transform: scale(0.35); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 0; }
   }
   #escHint.armed {
     color: var(--cor-ouro-suave);

@@ -98,7 +98,9 @@ export function initInput() {
     if (dir && !state.input[dir] && !state.desempate) {
       state.input[dir] = true;
       sendInput();
-      notifyMatchTutorial('move');
+      // O tutorial precisa saber *qual* direção foi apertada: o passo de
+      // movimento só termina depois das quatro teclas.
+      notifyMatchTutorial('move', dir);
     }
   });
 
