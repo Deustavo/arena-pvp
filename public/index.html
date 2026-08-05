@@ -25,7 +25,56 @@
     <div id="soundSettingsPanel">
       <div class="sound-settings-row">
         <label for="volumeEfeitosInput">Efeitos sonoros</label>
-        <input type="range" id="volumeEfeitosInput" min="0" max="100" step="1">
+        <div class="volume-control">
+          <button type="button" id="btnEffectsMute" aria-label="Mudo" title="Mudo">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor" stroke="none"/>
+              <path id="effectsMuteIcon" d="M17 7l6 10M23 7l-6 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <input type="range" id="volumeEfeitosInput" min="0" max="100" step="1">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="musicPlayer">
+    <button type="button" id="btnMusicToggle" aria-haspopup="true" aria-expanded="false" aria-label="Player de música" title="Player de música">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="17" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </button>
+    <div id="musicPanel">
+      <div id="musicTrackName"></div>
+      <div id="musicControls">
+        <button type="button" id="btnMusicPrev" aria-label="Faixa anterior" title="Faixa anterior">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 5v14M20 6l-11 6 11 6V6z" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+        <button type="button" id="btnMusicPlayPause" aria-label="Pausar" title="Tocar/Pausar">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path id="musicPauseIcon" d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor" stroke="none"/>
+            <path id="musicPlayIcon" d="M7 4l14 8-14 8V4z" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+        <button type="button" id="btnMusicNext" aria-label="Próxima faixa" title="Próxima faixa">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 5v14M4 6l11 6-11 6V6z" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+      </div>
+      <div class="sound-settings-row">
+        <div class="volume-control">
+          <button type="button" id="btnMusicMute" aria-label="Mudo" title="Mudo">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor" stroke="none"/>
+              <path id="musicMuteIcon" d="M17 7l6 10M23 7l-6 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <input type="range" id="musicVolumeInput" min="0" max="100" step="1" aria-label="Volume">
+        </div>
       </div>
     </div>
   </div>

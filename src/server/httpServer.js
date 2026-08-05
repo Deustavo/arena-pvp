@@ -19,6 +19,7 @@ const MIME = {
   '.html': 'text/html',
   '.js': 'text/javascript',
   '.css': 'text/css',
+  '.mp3': 'audio/mpeg',
 };
 
 // Origem do front na Vercel, liberada para o fetch cross-origin de /api/online-count.

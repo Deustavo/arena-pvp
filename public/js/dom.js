@@ -21,7 +21,19 @@ export const cooldownP1El = document.getElementById('cooldownP1');
 
 export const soundSettingsEl = document.getElementById('soundSettings');
 export const btnSoundSettings = document.getElementById('btnSoundSettings');
+export const soundSettingsPanelEl = document.getElementById('soundSettingsPanel');
 export const volumeEfeitosInput = document.getElementById('volumeEfeitosInput');
+export const btnEffectsMute = document.getElementById('btnEffectsMute');
+
+export const musicPlayerEl = document.getElementById('musicPlayer');
+export const btnMusicToggle = document.getElementById('btnMusicToggle');
+export const musicPanelEl = document.getElementById('musicPanel');
+export const musicTrackNameEl = document.getElementById('musicTrackName');
+export const btnMusicPrev = document.getElementById('btnMusicPrev');
+export const btnMusicPlayPause = document.getElementById('btnMusicPlayPause');
+export const btnMusicNext = document.getElementById('btnMusicNext');
+export const btnMusicMute = document.getElementById('btnMusicMute');
+export const musicVolumeInput = document.getElementById('musicVolumeInput');
 
 export const menuEl = document.getElementById('menu');
 export const gameWrapEl = document.getElementById('game-wrap');

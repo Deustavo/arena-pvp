@@ -127,6 +127,12 @@
     --cor-azul-link: #7fb2d0;
     --cor-azul-ranking: #9ecbff;
 
+    /* Fundo dos botões flutuantes de canto (volume, música): mais claro que
+       as superfícies normais, de propósito, pra ter contraste sobre
+       qualquer fundo (arena escura ou parede clara do menu). */
+    --cor-botao-flutuante-fundo: rgba(58, 58, 58, 0.85);
+    --cor-botao-flutuante-fundo-hover: rgba(78, 78, 78, 0.92);
+
     /* Sombras repetidas */
     --sombra-modal: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     --sombra-flutuante: 0 8px 20px rgba(0, 0, 0, 0.35);
@@ -327,15 +333,18 @@
   #soundSettings {
     position: fixed;
     top: 16px;
-    right: 16px;
+    right: 64px;
     z-index: 5;
   }
-  #soundSettings button {
+  /* Botões quadrados de canto arredondados (não circulares) e com fundo mais
+     claro que as superfícies normais, pra destacar sobre qualquer fundo. */
+  #soundSettings button,
+  #musicPlayer button {
     width: 40px;
     height: 40px;
-    border-radius: 50%;
+    border-radius: 10px;
     border: 1px solid var(--cor-borda);
-    background: rgba(29, 29, 29, 0.72);
+    background: var(--cor-botao-flutuante-fundo);
     color: var(--cor-texto);
     display: flex;
     align-items: center;
@@ -343,8 +352,9 @@
     cursor: pointer;
     backdrop-filter: blur(6px);
   }
-  #soundSettings button:hover {
-    background: rgba(63, 63, 63, 0.85);
+  #soundSettings button:hover,
+  #musicPlayer button:hover {
+    background: var(--cor-botao-flutuante-fundo-hover);
   }
   #soundSettingsMute {
     display: none;
@@ -372,6 +382,13 @@
   }
   #soundSettings.open #soundSettingsPanel {
     display: block;
+    animation: entrada-pop 0.15s ease;
+    transform-origin: top right;
+  }
+  /* Precisa ser tão específico quanto ".open ... " acima (2 ids), senão a
+     animação de entrada continua ganhando da de saída na cascata. */
+  #soundSettings.open #soundSettingsPanel.closing {
+    animation: saida-pop 0.15s ease forwards;
   }
   .sound-settings-row {
     display: flex;
@@ -385,6 +402,98 @@
   .sound-settings-row input[type="range"] {
     width: 100%;
     accent-color: var(--cor-vermelho);
+  }
+  /* Botão de mudo sempre à esquerda do slider de volume — vale tanto para
+     efeitos sonoros quanto para música. */
+  .volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  /* Precisa ser tão específico quanto "#soundSettings button"/"#musicPlayer
+     button" acima (1 id), senão o tamanho de 40px continua ganhando na
+     cascata mesmo com este seletor vindo depois. */
+  #soundSettingsPanel .volume-control button,
+  #musicPanel .volume-control button {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+  #effectsMuteIcon,
+  #musicMuteIcon {
+    display: none;
+  }
+  #btnEffectsMute.muted #effectsMuteIcon,
+  #btnMusicMute.muted #musicMuteIcon {
+    display: block;
+  }
+  /* ----- Player de música -----
+     Mesma linha do #soundSettings, no topo da tela: efeitos à esquerda,
+     música à direita — os dois controlam áudio e fazem sentido agrupados. */
+  #musicPlayer {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 5;
+  }
+  #btnMusicToggle.playing {
+    color: var(--cor-vermelho-destaque);
+    border-color: var(--cor-vermelho-destaque);
+  }
+  #musicPanel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 240px;
+    padding: 14px 16px;
+    box-sizing: border-box;
+    background: rgba(29, 29, 29, 0.92);
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    box-shadow: var(--sombra-flutuante);
+    backdrop-filter: blur(6px);
+  }
+  #musicPlayer.open #musicPanel {
+    display: block;
+    animation: entrada-pop 0.15s ease;
+    transform-origin: top right;
+  }
+  #musicPlayer.open #musicPanel.closing {
+    animation: saida-pop 0.15s ease forwards;
+  }
+  #musicTrackName {
+    font-size: 13px;
+    color: var(--cor-texto-suave);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 10px;
+  }
+  #musicControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  #musicControls button {
+    width: 34px;
+    height: 34px;
+  }
+  #btnMusicPlayPause {
+    width: 40px;
+    height: 40px;
+  }
+  #musicPlayIcon {
+    display: none;
+  }
+  #btnMusicPlayPause.is-paused #musicPauseIcon {
+    display: none;
+  }
+  #btnMusicPlayPause.is-paused #musicPlayIcon {
+    display: block;
   }
   #menu {
     position: relative;

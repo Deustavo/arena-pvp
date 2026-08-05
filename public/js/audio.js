@@ -22,6 +22,11 @@ function lerVolumeEfeitosSalvo() {
 // deve passar por este `master`.
 let volumeEfeitos = lerVolumeEfeitosSalvo();
 
+// Mudo é um estado à parte do volume: silencia o bus sem mexer no valor do
+// slider, pra restaurar o volume de antes ao desmutar (mesmo padrão do mudo
+// de música em music.js).
+let mutadoEfeitos = false;
+
 let audioCtx = null;
 let master = null;
 let ruidoBuffer = null;
@@ -40,7 +45,7 @@ function ctx() {
     if (!AudioCtx) return null;
     audioCtx = new AudioCtx();
     master = audioCtx.createGain();
-    master.gain.value = VOLUME_MASTER * (volumeEfeitos / 100);
+    master.gain.value = mutadoEfeitos ? 0 : VOLUME_MASTER * (volumeEfeitos / 100);
     master.connect(audioCtx.destination);
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -63,7 +68,16 @@ export function setEffectsVolume(pct) {
   } catch {
     // localStorage indisponível: a preferência só vale para esta sessão.
   }
-  if (master) master.gain.value = VOLUME_MASTER * (volumeEfeitos / 100);
+  if (master) master.gain.value = mutadoEfeitos ? 0 : VOLUME_MASTER * (volumeEfeitos / 100);
+}
+
+export function getEffectsMuted() {
+  return mutadoEfeitos;
+}
+
+export function setEffectsMuted(mudo) {
+  mutadoEfeitos = mudo;
+  if (master) master.gain.value = mutadoEfeitos ? 0 : VOLUME_MASTER * (volumeEfeitos / 100);
 }
 
 // Envelope attack/decay exponencial. Nunca chega a zero porque
