@@ -37,7 +37,11 @@ export function createWsServer(httpServer) {
     if (ws.readyState !== ws.OPEN) return;
 
     ws.userId = userId;
-    handleConnection(ws, nickname, classIdFromRequest(req));
+    // Convidado (sem conta) só pode jogar com o atirador — o cadeado do menu
+    // (public/js/onlineClassSelect.js) é só visual, então o servidor também
+    // precisa recusar qualquer outra classe vinda direto na query string.
+    const classId = userId ? classIdFromRequest(req) : DEFAULT_CLASS_ID;
+    handleConnection(ws, nickname, classId);
   });
 
   return wss;

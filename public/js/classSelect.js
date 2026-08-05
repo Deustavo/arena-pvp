@@ -48,9 +48,15 @@ function fillClassNameEl(el, cls) {
   }
 }
 
+// Ícone de cadeado usado nos cartões e no botão bloqueados (classe exige conta).
+export const LOCK_ICON = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
 // Cartão da lista vertical: sprite do personagem (ou ícone SVG, sem arte
-// própria) à esquerda e nome à direita.
-function createClassCard(cls) {
+// própria) à esquerda e nome à direita. `locked` só marca visualmente com um
+// cadeado — o cartão continua clicável, porque o jogador precisa poder ver as
+// características de uma classe bloqueada. Quem realmente barra o jogo é o
+// botão "Jogar" (ver onlineClassSelect.js).
+function createClassCard(cls, locked = false) {
   const card = document.createElement('button');
   card.type = 'button';
   card.className = 'class-card';
@@ -70,6 +76,15 @@ function createClassCard(cls) {
   title.className = 'class-name';
   fillClassNameEl(title, cls);
   card.appendChild(title);
+
+  if (locked) {
+    card.classList.add('locked');
+
+    const lock = document.createElement('div');
+    lock.className = 'class-card-lock';
+    lock.innerHTML = LOCK_ICON;
+    card.appendChild(lock);
+  }
 
   return card;
 }
@@ -145,7 +160,7 @@ export function renderClassDetails(target, cls) {
 // dropdown compacto para caber duas colunas (jogador/bot) lado a lado.
 export function createClassPicker({
   listEl, detailsEl, getSelectedId, setSelectedId, defaultId = DEFAULT_CLASS_ID, dropdown = false,
-  onPreview,
+  onPreview, isLocked = () => false,
 }) {
   if (!listEl) return { refresh() {} };
 
@@ -193,15 +208,25 @@ export function createClassPicker({
 
     // Só o clique troca a classe mostrada: passar o mouse por cima não mexe no
     // preview nem nos detalhes, senão a modal fica trocando de personagem
-    // enquanto o jogador só passa o mouse a caminho de outro cartão.
-    listEl.innerHTML = '';
-    for (const cls of Object.values(CLASSES)) {
-      const card = createClassCard(cls);
-      card.addEventListener('click', () => selectClass(cls.id));
-      listEl.appendChild(card);
+    // enquanto o jogador só passa o mouse a caminho de outro cartão. Cartão
+    // bloqueado continua clicável — o jogador pode ver as características de
+    // qualquer classe, só não pode confirmar "Jogar" com ela (ver
+    // onlineClassSelect.js).
+    //
+    // Os cartões são reconstruídos a cada `refresh()` (não só na criação do
+    // picker), porque `isLocked` depende do estado de login, que pode mudar
+    // entre uma abertura da modal e outra.
+    function buildCards() {
+      listEl.innerHTML = '';
+      for (const cls of Object.values(CLASSES)) {
+        const card = createClassCard(cls, isLocked(cls));
+        card.addEventListener('click', () => selectClass(cls.id));
+        listEl.appendChild(card);
+      }
     }
 
     function refresh() {
+      buildCards();
       lockDetailsHeight();
       selectClass(getSelectedId() || defaultId);
     }

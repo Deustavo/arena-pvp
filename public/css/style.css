@@ -1254,6 +1254,58 @@
     border-color: var(--cor-vermelho-destaque);
     box-shadow: 0 0 0 1px var(--cor-vermelho-destaque);
   }
+  /* Cartão bloqueado (classe exige conta): só um cadeado no canto, continua
+     clicável — o jogador pode ver as características de qualquer classe. Quem
+     realmente impede de jogar é o botão "Jogar" (#btnOnlineClassConfirm). */
+  .class-card.locked {
+    position: relative;
+  }
+  .class-card-lock {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 18px;
+    height: 18px;
+    color: var(--cor-texto-fraco);
+  }
+  .class-card-lock svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  /* Botão "Jogar" bloqueado: o próprio texto vira a mensagem de bloqueio, sem
+     tooltip. Usa cor sólida (não `opacity`) para não desbotar o cadeado. */
+  #btnOnlineClassConfirm.locked {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: not-allowed;
+    background: var(--cor-superficie-alta);
+    color: var(--cor-texto-fraco);
+    font-size: 14px;
+  }
+  #btnOnlineClassConfirm.locked:hover {
+    background: var(--cor-superficie-alta);
+  }
+  .btn-lock-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .btn-lock-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
   .class-card .class-sprite {
     --sprite-box: 36px;
     --sprite-zoom: 3;
