@@ -14,7 +14,7 @@ const MATCH_TUTORIAL_SEEN_KEY = 'jogoDoAno.tutorialPartidaVisto';
 const STEPS = [
   { text: 'Use <strong>WASD</strong> para se mover.', action: 'move' },
   { text: 'Clique em qualquer ponto da arena para <strong>atirar</strong>.', action: 'shoot' },
-  { text: 'Segure <strong>Espaço</strong> para erguer o <strong>escudo</strong> e bloquear tiros.', action: 'shield' },
+  { text: 'Segure <strong>Espaço</strong> para erguer o escudo e bloquear tiros.', action: 'shield' },
   { text: 'Atire no inimigo até derrota-lo.', action: null },
 ];
 
