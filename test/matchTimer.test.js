@@ -126,7 +126,7 @@ describe('tickCronometro', () => {
 
 describe('formatarTempo', () => {
   test('formata como m:ss, arredondando para cima', () => {
-    assert.equal(formatarTempo(MATCH_DURATION_MS), '2:00');
+    assert.equal(formatarTempo(MATCH_DURATION_MS), '1:30');
     assert.equal(formatarTempo(59_400), '1:00');
     assert.equal(formatarTempo(9500), '0:10');
     assert.equal(formatarTempo(1), '0:01');

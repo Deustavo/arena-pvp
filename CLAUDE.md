@@ -347,7 +347,7 @@ do input/mouse do jogador local.
 
 ### Tempo de partida e desempate
 
-Toda partida dura no máximo `MATCH_DURATION_MS` (2 minutos). A contagem e o
+Toda partida dura no máximo `MATCH_DURATION_MS` (1 minuto e 30 segundos). A contagem e o
 desempate são regra de jogo e vivem em `shared/matchTimer.js`, chamados a cada
 tick pelos dois donos de loop: `Match.js` (online) e `bot.js` (modo treino).
 
