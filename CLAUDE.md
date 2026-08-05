@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Sobre o projeto
 
-"Arena PVP" é um jogo 1x1 online 2D (top-down shooter) em vanilla JS, sem framework
+"Demon Arena" é um jogo 1x1 online 2D (top-down shooter) em vanilla JS, sem framework
 e sem bundler. O servidor roda em Node puro (`http` + `ws`), o cliente é HTML/CSS/JS
 servido como arquivos estáticos, e há um modo offline contra bot que reusa a mesma
 lógica de simulação do servidor.

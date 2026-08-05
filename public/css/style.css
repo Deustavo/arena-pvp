@@ -333,6 +333,10 @@
     text-align: center;
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   }
+  .flip-letter {
+    display: inline-block;
+    transform: scaleX(-1);
+  }
   #menuContent {
     display: flex;
     flex-direction: row;
