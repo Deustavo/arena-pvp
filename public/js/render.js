@@ -6,13 +6,21 @@ import { updateAndDrawExplosions } from './explosions.js';
 import { checkNearMiss } from './nearMiss.js';
 import { showGameOverOverlay } from './gameOver.js';
 import { getClass } from '../../shared/classes.js';
-import { hasCharacterSprite, updateCharacterAnimator, drawCharacterFrame } from './characterSprites.js';
+import {
+  hasCharacterSprite, updateCharacterAnimator, drawCharacterFrame, getSpriteOffsetY,
+} from './characterSprites.js';
 
 const GAMEOVER_OVERLAY_DELAY = 2000;
 const HIT_FLASH_DURATION = 400;
 const OWN_PLAYER_BORDER_COLOR = '#facc15';
 const OWN_SHOT_COLOR = '#facc15';
 const AIM_PREVIEW_COLOR = '#9ca3af';
+const HITBOX_DEBUG_COLOR = '#22ff22';
+
+// Debug visual da caixa de colisão real de cada jogador (o mesmo retângulo
+// usado por rectsIntersect em shared/physics.js), ativado por `?debug=1` na
+// URL — não deve rodar em produção sem o parâmetro explícito.
+const HITBOX_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
 
 // Fundo e borda da arena são desenhados dentro do canvas, e não via CSS: o
 // #game-wrap inteiro recebe um transform: scale() menor que 1 (gameScale.js)
@@ -188,7 +196,7 @@ function drawPlayers(renderState, now) {
     const cx = p.x + ox + state.playerSize / 2;
     const cy = p.y + oy + state.playerSize / 2;
     if (sprite) {
-      if (!drawCharacterFrame(ctx, sprite, cx, cy)) {
+      if (!drawCharacterFrame(ctx, sprite, cx, cy + getSpriteOffsetY(p.classId))) {
         ctx.fillStyle = cls.color;
         ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
       }
@@ -202,6 +210,8 @@ function drawPlayers(renderState, now) {
       }
       ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
     }
+
+    if (HITBOX_DEBUG) drawHitbox(p.x, p.y);
 
     if (!p.alive) continue;
 
@@ -220,6 +230,14 @@ function drawPlayers(renderState, now) {
       drawShield(cx, cy, maxHits - (p.shieldHits || 0), maxHits, now);
     }
   }
+}
+
+function drawHitbox(x, y) {
+  ctx.save();
+  ctx.strokeStyle = HITBOX_DEBUG_COLOR;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, state.playerSize, state.playerSize);
+  ctx.restore();
 }
 
 function drawProjectiles(renderState) {

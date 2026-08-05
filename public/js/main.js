@@ -17,11 +17,13 @@ import { initRanking, refreshRankingHighlight } from './ranking.js';
 import { initUiSounds } from './uiSounds.js';
 import { initSoundSettings } from './soundSettings.js';
 import { initParallax } from './parallax.js';
+import { initFireCursor } from './fireCursor.js';
 
 initInput();
 initUiSounds();
 initSoundSettings();
 initParallax();
+initFireCursor();
 initNicknameInput();
 initOnlineClassSelect();
 initBotClassSelect();

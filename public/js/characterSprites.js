@@ -87,6 +87,19 @@ const SPRITE_SHEETS = {
   },
 };
 
+// Ajuste fino vertical por classe: os pés de todo personagem ficam na mesma
+// linha dentro do quadro 100x100 (y=60), mas a pose de assassino e sniper
+// (mais agachada/alongada que as demais) faz o sprite parecer flutuar acima
+// do hitbox real. Desloca só o desenho, nunca a física.
+const SPRITE_OFFSET_Y = {
+  assassino: 18,
+  sniper: 14,
+};
+
+export function getSpriteOffsetY(classId) {
+  return SPRITE_OFFSET_Y[classId] || 0;
+}
+
 // state.js importa este módulo (pra resetar o animador em resetMatchState) e
 // é testado direto em Node, sem DOM — `typeof Image` protege esse import de
 // quebrar fora do browser.
