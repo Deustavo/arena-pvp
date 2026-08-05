@@ -9,7 +9,7 @@ import { sanitizeNickname, isValidAccountName, ACCOUNT_NAME_ERROR } from '../../
 // URL pública do backend (Cloud Run) — base dos links gerados nos e-mails.
 const BASE_URL = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
 // Origem do front (Vercel em produção, mesma origem em desenvolvimento).
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://playarenapvp.vercel.app';
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://demonarena.vercel.app';
 
 export const TRUSTED_ORIGINS = [
   FRONTEND_ORIGIN,

@@ -22,7 +22,7 @@ const MIME = {
 };
 
 // Origem do front na Vercel, liberada para o fetch cross-origin de /api/online-count.
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://playarenapvp.vercel.app';
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://demonarena.vercel.app';
 
 const authHandler = toNodeHandler(auth);
 
