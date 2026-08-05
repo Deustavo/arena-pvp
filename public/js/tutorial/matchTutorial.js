@@ -37,10 +37,16 @@ function htmlPassoMovimento(feitas) {
 }
 
 function htmlPassoEscudo(feitas) {
-  return 'Segure <span class="tutorial-tecla-nome">Espaço</span> para erguer o escudo e bloquear tiros.'
-    + `<div class="tutorial-teclas"><div class="tutorial-teclas-linha">${
-      tecla('Espaço', feitas.has('shield'), true)
-    }</div></div>`;
+  const done = feitas.has('shield');
+  const classes = ['tutorial-tecla', 'larga', 'tutorial-tecla-hold'];
+  if (done) classes.push('done');
+  return 'Segure <span class="tutorial-tecla-nome">Espaço</span> por 1 segundo '
+    + 'para erguer o escudo e bloquear tiros.'
+    + `<div class="tutorial-teclas"><div class="tutorial-teclas-linha">`
+    + `<span class="${classes.join(' ')}">`
+    + `<span class="tutorial-tecla-hold-fill"></span>`
+    + `<span class="tutorial-tecla-hold-label">Espaço</span>`
+    + `</span></div></div>`;
 }
 
 // `keys`: tokens que o passo exige (todos, não apenas um). Passos sem `keys`
@@ -64,6 +70,11 @@ const STEPS = [
   { action: null, html: () => 'Atire no inimigo até derrota-lo.' },
 ];
 
+// Tempo que o jogador precisa segurar Espaço no passo de escudo. É maior que
+// um simples "apertou a tecla" de propósito: escudo é a única ação do jogo
+// que depende de segurar (as outras são apertar/clicar), então o passo exige
+// o gesto de segurar de verdade em vez de só detectar o keydown.
+const SHIELD_HOLD_MS = 1000;
 const FINAL_STEP_HIDE_MS = 4000;
 // Duração do flash verde do balão ao completar um passo — tempo suficiente
 // para o jogador perceber antes do texto do próximo passo assentar.
@@ -82,6 +93,10 @@ let forcedNext = false;
 // Tokens de tecla já apertados no passo atual (ver `keys` em STEPS).
 const teclasFeitas = new Set();
 let cursorListenerAtivo = false;
+// Progresso de segurar Espaço no passo de escudo: `null` quando não está
+// sendo segurado, timestamp de início enquanto segura.
+let shieldHoldStartedAt = null;
+let shieldHoldFrame = null;
 // true se o tutorial foi iniciado na partida atual — diferente de `active`,
 // que já vira false antes do fim real da partida (passo final se esconde
 // sozinho após FINAL_STEP_HIDE_MS). Usado pelo overlay de fim de jogo para
@@ -151,6 +166,43 @@ function mostrarDicaCursor(mostrar) {
   cursorListenerAtivo = true;
 }
 
+function setShieldHoldFill(frac) {
+  const fillEl = matchTutorialBannerEl.querySelector('.tutorial-tecla-hold-fill');
+  if (fillEl) fillEl.style.width = `${frac * 100}%`;
+}
+
+function tickShieldHold() {
+  if (shieldHoldStartedAt === null) return;
+  const frac = Math.min(1, (Date.now() - shieldHoldStartedAt) / SHIELD_HOLD_MS);
+  setShieldHoldFill(frac);
+  if (frac < 1) {
+    shieldHoldFrame = requestAnimationFrame(tickShieldHold);
+    return;
+  }
+  shieldHoldStartedAt = null;
+  shieldHoldFrame = null;
+  notifyMatchTutorial('shield');
+}
+
+// Chamado pelo keydown de Espaço: começa a preencher a barra da tecla no
+// balão do tutorial. Só faz algo se o passo atual realmente for o de escudo
+// — nos outros passos (ou fora do tutorial) é barato e não tem efeito.
+export function startTutorialShieldHold() {
+  if (!active || advancing || STEPS[stepIndex].action !== 'shield') return;
+  if (shieldHoldStartedAt !== null) return;
+  shieldHoldStartedAt = Date.now();
+  shieldHoldFrame = requestAnimationFrame(tickShieldHold);
+}
+
+// Chamado pelo keyup de Espaço: solta antes de completar 1s zera a barra —
+// não fica progresso "guardado" entre uma tentativa e outra.
+export function cancelTutorialShieldHold() {
+  if (shieldHoldFrame !== null) cancelAnimationFrame(shieldHoldFrame);
+  shieldHoldFrame = null;
+  shieldHoldStartedAt = null;
+  setShieldHoldFill(0);
+}
+
 function renderStep() {
   const step = STEPS[stepIndex];
   matchTutorialBannerEl.innerHTML = step.html(teclasFeitas);
@@ -170,6 +222,9 @@ export function startMatchTutorial() {
   clearTimeout(successTimer);
   hideTimer = null;
   successTimer = null;
+  if (shieldHoldFrame !== null) cancelAnimationFrame(shieldHoldFrame);
+  shieldHoldFrame = null;
+  shieldHoldStartedAt = null;
   matchTutorialBannerEl.classList.remove('success');
   renderStep();
 }
@@ -183,6 +238,9 @@ export function stopMatchTutorial() {
   successTimer = null;
   matchTutorialBannerEl.classList.remove('visible', 'success');
   mostrarDicaCursor(false);
+  if (shieldHoldFrame !== null) cancelAnimationFrame(shieldHoldFrame);
+  shieldHoldFrame = null;
+  shieldHoldStartedAt = null;
 }
 
 function advanceStep() {

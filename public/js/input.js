@@ -4,7 +4,9 @@ import { isShieldAvailable } from './hud.js';
 import { sendInput, sendShoot } from './network.js';
 import { botShoot } from './bot.js';
 import { backToMenu } from './menu.js';
-import { notifyMatchTutorial } from './tutorial/matchTutorial.js';
+import {
+  notifyMatchTutorial, startTutorialShieldHold, cancelTutorialShieldHold,
+} from './tutorial/matchTutorial.js';
 import { playShieldUpSound, playUnavailableSound } from './audio.js';
 import { getClass } from '../../shared/classes.js';
 
@@ -85,7 +87,10 @@ export function initInput() {
         state.input.shield = true;
         sendInput();
         playShieldUpSound();
-        notifyMatchTutorial('shield');
+        // O passo do tutorial exige segurar Espaço por 1s (ver
+        // startTutorialShieldHold); escudar no jogo em si continua
+        // instantâneo, o "segurar" é só o gesto que o tutorial valida.
+        startTutorialShieldHold();
       } else if (emPartida && !isShieldAvailable()) {
         // Escudo esgotado. O keydown repete enquanto a tecla fica pressionada,
         // mas o efeito tem janela anti-repetição própria (audio.js).
@@ -108,6 +113,7 @@ export function initInput() {
     if (!state.mode) return;
     if (e.code === 'Space') {
       e.preventDefault();
+      cancelTutorialShieldHold();
       if (state.input.shield) {
         state.input.shield = false;
         sendInput();

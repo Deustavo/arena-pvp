@@ -929,6 +929,23 @@
     background: var(--cor-superficie-alta);
     transform: translateY(2px);
   }
+  /* Tecla de segurar (Espaço, no passo de escudo): a barra preenche por
+     dentro conforme o jogador segura, em vez de só acender ao apertar. */
+  .tutorial-tecla-hold {
+    position: relative;
+    overflow: hidden;
+  }
+  .tutorial-tecla-hold-fill {
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    background: var(--cor-vermelho-destaque);
+    opacity: 0.45;
+    transition: width 0.05s linear;
+  }
+  .tutorial-tecla-hold-label {
+    position: relative;
+  }
   /* Dá evidência ao nome da tecla dentro do texto do passo. */
   .tutorial-tecla-nome {
     color: var(--cor-vermelho-destaque);
