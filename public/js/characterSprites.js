@@ -1,4 +1,4 @@
-// Sprites animados por classe. Hoje só o atirador tem arte própria — as
+// Sprites animados por classe. Hoje atirador e tank têm arte própria — as
 // demais classes continuam desenhadas como quadrado colorido em render.js
 // (hasCharacterSprite retorna false pra elas e o fallback antigo se aplica).
 //
@@ -17,6 +17,13 @@ const SPRITE_SHEETS = {
     attack: { src: '/assets/sprites/atirador/attack.png', frames: 9, frameMs: 55, loop: false },
     hurt: { src: '/assets/sprites/atirador/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/atirador/death.png', frames: 4, frameMs: 120, loop: false },
+  },
+  tank: {
+    idle: { src: '/assets/sprites/tank/idle.png', frames: 6, frameMs: 150, loop: true },
+    walk: { src: '/assets/sprites/tank/walk.png', frames: 8, frameMs: 90, loop: true },
+    attack: { src: '/assets/sprites/tank/attack.png', frames: 11, frameMs: 55, loop: false },
+    hurt: { src: '/assets/sprites/tank/hurt.png', frames: 4, frameMs: 80, loop: false },
+    death: { src: '/assets/sprites/tank/death.png', frames: 4, frameMs: 120, loop: false },
   },
 };
 
