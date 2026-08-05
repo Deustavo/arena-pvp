@@ -4,7 +4,6 @@ import { isShieldAvailable } from './hud.js';
 import { sendInput, sendShoot } from './network.js';
 import { botShoot } from './bot.js';
 import { backToMenu } from './menu.js';
-import { rerollWinnerEmoji } from './gameOver.js';
 import { notifyMatchTutorial } from './tutorial/matchTutorial.js';
 import { playShieldUpSound, playUnavailableSound } from './audio.js';
 import { getClass } from '../../shared/classes.js';
@@ -114,7 +113,6 @@ export function initInput() {
     if (e.target.closest('button, a, input, select, textarea')) return;
     if (!state.mode) return;
     if (state.gameOver) {
-      rerollWinnerEmoji();
       return;
     }
     if (!state.matchStarted || state.desempate) return;

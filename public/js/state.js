@@ -60,8 +60,7 @@ export const state = {
   gameOverAt: 0,
   overlayShown: false,
   lastResult: null, // 'win' | 'lose' | 'draw'
-  winnerIndex: null, // índice do jogador vencedor (null em empate), para exibir o emoji
-  winnerEmoji: null,
+  winnerIndex: null, // índice do jogador vencedor (null em empate)
   prevAlive: [true, true],
   explosionParticles: [],
 
@@ -131,7 +130,6 @@ export function resetMatchState() {
   state.overlayShown = false;
   state.lastResult = null;
   state.winnerIndex = null;
-  state.winnerEmoji = null;
   state.prevAlive = [true, true];
   state.explosionParticles = [];
   state.viewFlipped = false;

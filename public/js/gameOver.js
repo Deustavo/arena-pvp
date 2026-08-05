@@ -3,23 +3,10 @@ import { state } from './state.js';
 import { wasMatchTutorial, stopMatchTutorial } from './tutorial/matchTutorial.js';
 import { playVictorySound, playDefeatSound } from './audio.js';
 
-const WINNER_EMOJIS = ['😆', '🤣', '😂', '😅', '😘', '😜', '🤪', '😢', '🤫', '😹', '👻', '🤡', '👀'];
-
 // Guarda se a partida que terminou era o tutorial, para esconder "Jogar
 // novamente"/"Trocar classes" no overlay de fim de jogo — depois do tutorial
 // só faz sentido voltar ao menu.
 let lastMatchWasTutorial = false;
-
-function randomWinnerEmoji() {
-  return WINNER_EMOJIS[Math.floor(Math.random() * WINNER_EMOJIS.length)];
-}
-
-// Troca o emoji exibido sobre o vencedor por outro aleatório — chamado a
-// cada clique na tela enquanto o overlay de fim de jogo estiver ativo.
-export function rerollWinnerEmoji() {
-  if (state.winnerIndex === null) return;
-  state.winnerEmoji = randomWinnerEmoji();
-}
 
 export function recordGameOver(result) {
   lastMatchWasTutorial = wasMatchTutorial();
@@ -35,7 +22,6 @@ export function recordGameOver(result) {
   } else {
     state.winnerIndex = null;
   }
-  state.winnerEmoji = state.winnerIndex !== null ? randomWinnerEmoji() : null;
 }
 
 // O jingle toca aqui e não em recordGameOver de propósito: a partida acaba com

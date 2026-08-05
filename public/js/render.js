@@ -142,19 +142,6 @@ function drawPlayerIndicatorArrow(cx, topY, now) {
   ctx.restore();
 }
 
-// O canvas pode estar espelhado (state.viewFlipped) por causa da rotação da
-// cena — sem desfazer isso localmente, o emoji sairia invertido.
-function drawWinnerEmoji(cx, topY) {
-  ctx.save();
-  ctx.translate(cx, topY);
-  if (state.viewFlipped) ctx.scale(-1, 1);
-  ctx.font = '28px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.fillText(state.winnerEmoji, 0, 0);
-  ctx.restore();
-}
-
 // dt próprio da animação de sprite, independente do performance.now() usado
 // pela predição (que só corre com a predição inicializada) — assim os
 // personagens continuam animando (ex.: morte) mesmo fora do modo online.
@@ -218,9 +205,6 @@ function drawPlayers(renderState, now) {
 
     if (!p.alive) continue;
 
-    if (state.gameOver && state.winnerEmoji && i === state.winnerIndex) {
-      drawWinnerEmoji(cx, p.y + oy - 6);
-    }
     if (i === state.playerIndex) {
       drawOwnPlayerMarker(cx, p.y + oy + state.playerSize + 4, now);
       if (!state.matchStarted) {
