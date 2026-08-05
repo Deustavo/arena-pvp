@@ -1,15 +1,87 @@
+  /* ===== Paleta =====
+     Fonte única das cores da interface: nenhuma regra abaixo deve escrever um
+     hex literal — use uma variável daqui (ou crie uma, se a cor for realmente
+     nova). Cores iguais ou quase iguais foram unificadas na mesma variável de
+     propósito: antes existiam vários cinzas levemente diferentes (#2b2b3d,
+     #2e2e2e, #2f2f40…) que apareciam misturados na mesma tela.
+
+     Toda a interface é escala de cinza + o vermelho da identidade. Os cinzas
+     eram azulados/arroxeados (#2b2b3d, #9a9ab0, #52527a…) e foram
+     neutralizados; azul só sobrou onde a cor é *informação* e não decoração
+     (`--cor-azul-*`, `--class-color` de cada classe em shared/classes.js). */
+  :root {
+    /* Neutros: superfícies, da mais funda para a mais alta */
+    --cor-fundo: #1d1d1d;
+    --cor-fundo-arena: #202020;
+    --cor-superficie-baixa: #1c1c1c;
+    --cor-superficie-icone: #242424;
+    --cor-superficie: #2a2a2a;
+    --cor-superficie-alta: #2e2e2e;
+    --cor-superficie-forte: #333;
+    --cor-superficie-forte-hover: #222;
+    --cor-superficie-elevada: #3a3a3a;
+    --cor-superficie-hover: #3f3f3f;
+    --cor-superficie-hover-alta: #4a4a4a;
+    --cor-modal-fundo: #262322;
+    --cor-painel-fundo: rgba(38, 35, 34, 0.78);
+
+    /* Neutros: bordas e cinzas médios */
+    --cor-borda: #444;
+    --cor-borda-media: #555;
+    --cor-borda-clara: #666;
+    --cor-borda-hover: #777;
+    --cor-cinza-medio: #6b6b6b;
+    --cor-cinza-claro: #8a8a8a;
+
+    /* Texto */
+    --cor-branco: #fff;
+    --cor-texto: #eee;
+    --cor-texto-suave: #ccc;
+    --cor-texto-medio: #bbb;
+    --cor-texto-fraco: #9a9a9a;
+
+    /* Identidade vermelha (botões, bordas de modal, seleção, foco) */
+    --cor-vermelho: #8b0000;
+    --cor-vermelho-hover: #6e0000;
+    --cor-vermelho-selecao: #6e2020;
+    --cor-vermelho-destaque: #ff4d4d;
+
+    /* Feedback: erro, sucesso, tempo/ouro, empate */
+    --cor-erro: #e63946;
+    --cor-erro-forte: #c0392b;
+    --cor-erro-forte-hover: #a5322a;
+    --cor-erro-fundo: #a12a35;
+    --cor-erro-claro: #ff8b93;
+    --cor-erro-texto: #ff6b6b;
+    --cor-sucesso: #4ade80;
+    --cor-sucesso-claro: #7fd8a4;
+    --cor-ouro: #facc15;
+    --cor-ouro-suave: #f4c542;
+    --cor-empate: #d0c07f;
+
+    /* Azuis: só onde a cor carrega informação (classe no HUD, escudo, links) */
+    --cor-azul-classe: #7dd3fc;
+    --cor-azul-escudo: #4aa8ff;
+    --cor-azul-link: #7fb2d0;
+    --cor-azul-ranking: #9ecbff;
+
+    /* Sombras repetidas */
+    --sombra-modal: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    --sombra-flutuante: 0 8px 20px rgba(0, 0, 0, 0.35);
+    --sombra-foco-vermelho: 0 0 6px 1px rgba(255, 0, 0, 0.4);
+  }
   /* O flex centralizado é só do body. O html fica um bloco comum de altura
      100% — é o overflow dele que a viewport usa para rolar, então ele não pode
      centralizar nem prender o conteúdo (era o que impedia o menu mais alto que
      a tela de ser rolado). */
   html {
     height: 100%;
-    background: #1d1d2b;
+    background: var(--cor-fundo);
   }
   body {
     margin: 0;
     height: 100%;
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), #1d1d2b url('../assets/backgrounds/dungeon_brick_wall_grey.png') repeat;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), var(--cor-fundo) url('../assets/backgrounds/dungeon_brick_wall_grey.png') repeat;
     /* Paralaxe da tela inicial (public/js/parallax.js): desloca só a camada
        da textura (segunda posição) pelo mouse via variáveis CSS; a camada do
        gradiente escuro (primeira posição) fica parada em 0 0. Sem transição
@@ -22,7 +94,7 @@
     justify-content: center;
     flex-direction: column;
     font-family: sans-serif;
-    color: #eee;
+    color: var(--cor-texto);
     overflow-x: hidden;
     user-select: none;
     -webkit-user-select: none;
@@ -40,13 +112,13 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    background: transparent; /* sobrescreve a regra genérica `canvas { background: #3a3a3a }` mais abaixo */
+    background: transparent; /* sobrescreve a regra genérica `canvas { background: var(--cor-superficie-elevada) }` mais abaixo */
     pointer-events: none;
     z-index: 999;
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: #52527a #1d1d2b00;
+    scrollbar-color: var(--cor-cinza-medio) transparent;
   }
   *::-webkit-scrollbar {
     width: 10px;
@@ -56,13 +128,13 @@
     background: transparent;
   }
   *::-webkit-scrollbar-thumb {
-    background-color: #52527a;
+    background-color: var(--cor-cinza-medio);
     border-radius: 8px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background-color: #6b6b9c;
+    background-color: var(--cor-cinza-claro);
   }
   *::-webkit-scrollbar-corner {
     background: transparent;
@@ -104,14 +176,14 @@
     position: absolute;
     inset: 0;
     border-radius: 6px;
-    background: linear-gradient(90deg, #2b2b3d 25%, #3a3a52 37%, #2b2b3d 63%);
+    background: linear-gradient(90deg, var(--cor-superficie-alta) 25%, var(--cor-superficie-hover) 37%, var(--cor-superficie-alta) 63%);
     background-size: 400% 100%;
     animation: skeleton-shimmer 1.4s ease infinite;
   }
   .skeleton-row {
     height: 14px;
     border-radius: 6px;
-    background: linear-gradient(90deg, #2b2b3d 25%, #3a3a52 37%, #2b2b3d 63%);
+    background: linear-gradient(90deg, var(--cor-superficie-alta) 25%, var(--cor-superficie-hover) 37%, var(--cor-superficie-alta) 63%);
     background-size: 400% 100%;
     animation: skeleton-shimmer 1.4s ease infinite;
   }
@@ -129,9 +201,9 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 1px solid #444;
-    background: rgba(29, 29, 43, 0.72);
-    color: #eee;
+    border: 1px solid var(--cor-borda);
+    background: rgba(29, 29, 29, 0.72);
+    color: var(--cor-texto);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -139,7 +211,7 @@
     backdrop-filter: blur(6px);
   }
   #soundSettings button:hover {
-    background: rgba(58, 58, 82, 0.85);
+    background: rgba(63, 63, 63, 0.85);
   }
   #soundSettingsMute {
     display: none;
@@ -159,10 +231,10 @@
     min-width: 200px;
     padding: 14px 16px;
     box-sizing: border-box;
-    background: rgba(29, 29, 43, 0.92);
-    border: 1px solid #444;
+    background: rgba(29, 29, 29, 0.92);
+    border: 1px solid var(--cor-borda);
     border-radius: 10px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--sombra-flutuante);
     backdrop-filter: blur(6px);
   }
   #soundSettings.open #soundSettingsPanel {
@@ -175,11 +247,11 @@
     font-size: 13px;
   }
   .sound-settings-row label {
-    color: #ccc;
+    color: var(--cor-texto-suave);
   }
   .sound-settings-row input[type="range"] {
     width: 100%;
-    accent-color: #8b0000;
+    accent-color: var(--cor-vermelho);
   }
   #menu {
     position: relative;
@@ -200,11 +272,11 @@
     max-height: 500px;
     box-sizing: border-box;
     padding: 24px 16px;
-    background: rgba(38, 35, 34, 0.78);
+    background: var(--cor-painel-fundo);
     border-radius: 16px;
     backdrop-filter: blur(6px);
-    border: 2px solid #8b0000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    border: 2px solid var(--cor-vermelho);
+    box-shadow: var(--sombra-modal);
   }
   #rankingPanel h2 {
     margin: 0;
@@ -220,7 +292,7 @@
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
   }
   #rankingList {
     margin: 0;
@@ -239,7 +311,7 @@
     font-size: 14px;
   }
   #rankingList .ranking-posicao {
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 12px;
     text-align: right;
   }
@@ -268,10 +340,10 @@
     text-decoration: underline;
   }
   #menu #rankingList .ranking-nome-proprio {
-    color: #ffd54f;
+    color: var(--cor-ouro);
   }
   #rankingList .ranking-vitorias {
-    color: #9ecbff;
+    color: var(--cor-azul-ranking);
     font-weight: bold;
     flex-shrink: 0;
   }
@@ -279,7 +351,7 @@
     margin: 0;
     font-size: 14px;
     text-align: center;
-    color: #aaa;
+    color: var(--cor-texto-medio);
   }
   #menu h1 {
     margin: 0 0 8px 0;
@@ -294,11 +366,11 @@
     max-width: 100%;
     box-sizing: border-box;
     padding: 24px 16px;
-    background: rgba(38, 35, 34, 0.78);
+    background: var(--cor-painel-fundo);
     border-radius: 16px;
     backdrop-filter: blur(6px);
-    border: 2px solid #8b0000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    border: 2px solid var(--cor-vermelho);
+    box-shadow: var(--sombra-modal);
   }
   #menu button:not(.class-card) {
     font-size: 20px;
@@ -306,13 +378,13 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #8b0000;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
     width: 100%;
     box-sizing: border-box;
   }
   #menu button:not(.class-card):hover {
-    background: #6e0000;
+    background: var(--cor-vermelho-hover);
   }
   #nicknameField {
     display: flex;
@@ -323,7 +395,7 @@
   }
   #nicknameLabel {
     font-size: 13px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -331,21 +403,21 @@
     font-size: 18px;
     padding: 10px 14px;
     border-radius: 8px;
-    border: 2px solid #fff;
-    background: #3a3a3a;
-    color: #eee;
+    border: 2px solid var(--cor-branco);
+    background: var(--cor-superficie-elevada);
+    color: var(--cor-texto);
     width: 100%;
     box-sizing: border-box;
     text-align: center;
   }
   #nicknameInput:focus {
     outline: none;
-    border-color: #ff4d4d;
-    box-shadow: 0 0 6px 1px rgba(255, 0, 0, 0.4);
+    border-color: var(--cor-vermelho-destaque);
+    box-shadow: var(--sombra-foco-vermelho);
   }
   #nicknameError {
     visibility: hidden;
-    color: #e63946;
+    color: var(--cor-erro);
     font-size: 13px;
     line-height: 16px;
   }
@@ -353,10 +425,10 @@
     visibility: visible;
   }
   #menu button#btnOnline {
-    background: #c0392b;
+    background: var(--cor-erro-forte);
   }
   #menu button#btnOnline:hover {
-    background: #a5322a;
+    background: var(--cor-erro-forte-hover);
   }
   /* A largura é definida por gameScale.js (é a largura da arena depois de
      caber na tela); 800px é só o valor natural antes dele rodar. */
@@ -378,8 +450,8 @@
     font-size: 18px;
     padding: 6px 10px;
     border-radius: 6px;
-    background: #2a2a2a;
-    border: 1px solid #444;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
   }
   /* Em tela estreita as duas colunas do HUD não cabem lado a lado sem reduzir o
      texto a ponto de não dar para ler. Empilhadas, cada linha tem a largura
@@ -414,21 +486,21 @@
     transform: translateX(-50%);
     padding: 2px 12px;
     border-radius: 6px;
-    background: #22222f;
-    border: 1px solid #444;
-    color: #e8e8f0;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-texto);
     font-size: 22px;
     font-variant-numeric: tabular-nums;
     letter-spacing: 1px;
   }
   #matchTimer.warning {
-    color: #f4c542;
-    border-color: #f4c542;
+    color: var(--cor-ouro-suave);
+    border-color: var(--cor-ouro-suave);
   }
   #matchTimer.desempate {
-    color: #fff;
-    background: #a12a35;
-    border-color: #e63946;
+    color: var(--cor-branco);
+    background: var(--cor-erro-fundo);
+    border-color: var(--cor-erro);
     font-size: 16px;
     letter-spacing: 0;
     animation: desempatePulse 0.8s ease-in-out infinite;
@@ -461,14 +533,14 @@
   }
   .hud-name {
     font-size: 14px;
-    color: #ccc;
+    color: var(--cor-texto-suave);
   }
   #nameP0 {
-    color: #facc15;
+    color: var(--cor-ouro);
   }
   .hud-class-name {
     font-size: 11px;
-    color: #7dd3fc;
+    color: var(--cor-azul-classe);
     opacity: 0.8;
   }
   .hud-class-icon {
@@ -479,9 +551,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #22222f;
-    border: 1px solid #444;
-    color: #7dd3fc;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-azul-classe);
   }
   .hud-class-icon svg {
     width: 20px;
@@ -506,27 +578,27 @@
     width: 100%;
     height: 6px;
     border-radius: 3px;
-    background: #22222f;
-    border: 1px solid #444;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--cor-borda);
     overflow: hidden;
   }
   .cooldown-fill {
     height: 100%;
     width: 0%;
-    background: #7dd3fc;
+    background: var(--cor-azul-classe);
     transition: background-color 0.15s;
   }
   .cooldown-fill.ready {
-    background: #4ade80;
+    background: var(--cor-sucesso);
   }
   .heart {
     position: relative;
     width: 21px;
     height: 18px;
-    color: #e63946;
+    color: var(--cor-erro);
   }
   .heart.lost {
-    color: #555;
+    color: var(--cor-borda-media);
   }
   .heart-pixel {
     position: absolute;
@@ -535,7 +607,7 @@
     background: currentColor;
   }
   .heart.half .heart-pixel-right {
-    color: #555;
+    color: var(--cor-borda-media);
   }
   .heart.blink {
     animation: heartBlink 0.4s steps(1, start) 3;
@@ -548,10 +620,10 @@
     position: relative;
     width: 21px;
     height: 24px;
-    color: #4aa8ff;
+    color: var(--cor-azul-escudo);
   }
   .shield.lost {
-    color: #555;
+    color: var(--cor-borda-media);
   }
   .shield-pixel {
     position: absolute;
@@ -560,7 +632,7 @@
     background: currentColor;
   }
   canvas {
-    background: #3a3a3a;
+    background: var(--cor-superficie-elevada);
     border: none;
     display: block;
   }
@@ -569,7 +641,7 @@
      CSS para caber na tela (gameScale.js) e uma borda CSS fina desapareceria
      nessa redução. */
   #game {
-    background: #3a3a3a;
+    background: var(--cor-superficie-elevada);
   }
   #canvas-wrap {
     position: relative;
@@ -578,7 +650,7 @@
   #escHint {
     margin-top: 8px;
     font-size: 13px;
-    color: #777;
+    color: var(--cor-borda-hover);
   }
   /* Fica na faixa de cima da arena, mas bem afastado da borda e perto do
      centro: é o texto mais importante da primeira partida e precisa ser lido
@@ -591,10 +663,10 @@
     transform: translateX(-50%);
     max-width: 82%;
     padding: 16px 28px;
-    background: rgba(20, 20, 30, 0.9);
-    border: 1px solid #555;
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid var(--cor-borda-media);
     border-radius: 10px;
-    color: #f1f1f6;
+    color: var(--cor-texto);
     font-size: clamp(18px, 4.6vw, 24px);
     line-height: 1.35;
     text-align: center;
@@ -607,10 +679,10 @@
   }
   #matchTutorialBanner.success {
     background: rgba(45, 138, 86, 0.9);
-    border-color: #4ade80;
+    border-color: var(--cor-sucesso);
   }
   #escHint.armed {
-    color: #f4c542;
+    color: var(--cor-ouro-suave);
   }
   #gameOverOverlay, #waitingOverlay, #countdownOverlay {
     display: none;
@@ -620,7 +692,7 @@
     align-items: center;
     justify-content: center;
     gap: 20px;
-    background: #202020;
+    background: var(--cor-fundo-arena);
   }
   #countdownOverlay {
     background: rgba(32, 32, 32, 0.85);
@@ -628,7 +700,7 @@
   #countdownOverlay h2 {
     margin: 0;
     font-size: 18px;
-    color: #bbb;
+    color: var(--cor-texto-medio);
   }
   /* Os textos dos overlays da partida têm tamanho próprio, limitado pela
      largura da tela: a arena é redimensionada por CSS (ver gameScale.js) e não
@@ -643,20 +715,20 @@
     max-width: 92%;
     font-size: clamp(28px, 8vw, 72px);
     font-weight: bold;
-    color: #fff;
+    color: var(--cor-branco);
     text-align: center;
     overflow-wrap: anywhere;
   }
   #countdownVs {
     font-size: clamp(18px, 4vw, 32px);
     font-weight: normal;
-    color: #999;
+    color: var(--cor-texto-fraco);
   }
   #countdownNumber {
     font-family: 'Courier New', 'Consolas', monospace;
     font-size: clamp(56px, 15vw, 120px);
     font-weight: bold;
-    color: #4ade80;
+    color: var(--cor-sucesso);
     text-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
   }
   #gameOverOverlay h2, #waitingOverlay h2 {
@@ -674,12 +746,12 @@
     margin: 0;
     max-width: 320px;
     text-align: center;
-    color: #ccc;
+    color: var(--cor-texto-suave);
     font-size: 15px;
   }
   #waitingOverlay .loader {
-    --color-1: #fff;
-    --color-2: #4ade80;
+    --color-1: var(--cor-branco);
+    --color-2: var(--cor-sucesso);
     --size: 1px;
 
     width: calc(48 * var(--size));
@@ -726,10 +798,10 @@
     50% { opacity: 0.25; }
   }
   #gameOverOverlay.win h2 {
-    color: #4ade80;
+    color: var(--cor-sucesso);
   }
   #gameOverOverlay.lose h2 {
-    color: #e63946;
+    color: var(--cor-erro);
   }
   #gameOverOverlay .overlay-buttons, #waitingOverlay .overlay-buttons {
     display: flex;
@@ -743,42 +815,42 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #8b0000;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
   }
   #gameOverOverlay button:hover, #waitingOverlay button:hover {
-    background: #6e0000;
+    background: var(--cor-vermelho-hover);
   }
   #waitingOverlay button#btnLeaveQueue {
-    background: #555;
+    background: var(--cor-borda-media);
   }
   #waitingOverlay button#btnLeaveQueue:hover {
-    background: #444;
+    background: var(--cor-borda);
   }
   #gameOverOverlay button#btnBackToMenu {
     background: transparent;
-    border: 2px solid #555;
+    border: 2px solid var(--cor-borda-media);
     font-size: 14px;
     padding: 8px 18px;
   }
   #gameOverOverlay button#btnBackToMenu:hover {
-    background: #3d3d52;
-    border-color: #777;
+    background: var(--cor-superficie-hover);
+    border-color: var(--cor-borda-hover);
   }
   #waitingOverlay button#btnTryTrainingMode {
     display: none;
   }
   #gameOverOverlay button#btnSwapClasses {
     display: none;
-    background: #555;
+    background: var(--cor-borda-media);
   }
   #gameOverOverlay button#btnSwapClasses:hover {
-    background: #444;
+    background: var(--cor-borda);
   }
   #onlineCount {
     margin-top: 4px;
     font-size: 14px;
-    color: #4ade80;
+    color: var(--cor-sucesso);
   }
   #classArea {
     display: flex;
@@ -805,20 +877,20 @@
     width: 100%;
     box-sizing: border-box;
     text-align: left;
-    background: #2b2b3d;
-    border: 2px solid #444;
+    background: var(--cor-superficie-alta);
+    border: 2px solid var(--cor-borda);
     border-radius: 8px;
     padding: 8px 10px;
     cursor: pointer;
-    color: #eee;
+    color: var(--cor-texto);
     font: inherit;
   }
   .class-card:hover {
-    border-color: #666;
+    border-color: var(--cor-borda-clara);
   }
   .class-card.selected {
-    border-color: #4ade80;
-    box-shadow: 0 0 0 1px #4ade80;
+    border-color: var(--cor-vermelho-destaque);
+    box-shadow: 0 0 0 1px var(--cor-vermelho-destaque);
   }
   .class-card .class-name {
     font-size: 14px;
@@ -840,7 +912,7 @@
     gap: 10px;
   }
   .class-dropdown-item.selected {
-    box-shadow: inset 0 0 0 1px #4ade80;
+    box-shadow: inset 0 0 0 1px var(--cor-vermelho-destaque);
   }
   .class-icon {
     flex: none;
@@ -850,9 +922,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #22222f;
-    border: 1px solid var(--class-color, #444);
-    color: var(--class-color, #7dd3fc);
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--class-color, var(--cor-borda));
+    color: var(--class-color, var(--cor-azul-classe));
   }
   .class-icon svg {
     width: 18px;
@@ -869,8 +941,8 @@
     gap: 12px;
     width: 100%;
     box-sizing: border-box;
-    background: #1c1c28;
-    border: 2px solid #444;
+    background: var(--cor-superficie-baixa);
+    border: 2px solid var(--cor-borda);
     border-radius: 8px;
     padding: 12px 14px;
     min-height: 118px;
@@ -887,17 +959,19 @@
     flex: 1;
     min-width: 0;
   }
+  /* Nome e ícones de stat ficam neutros: a cor da classe aparece no
+     `.class-icon` ao lado (`--class-color`), que já é o identificador visual. */
   #classDetails h3 {
     margin: 0 0 6px 0;
     font-size: 16px;
-    color: #7dd3fc;
+    color: var(--cor-texto);
   }
   #classDetails .class-stats {
     display: flex;
     flex-direction: column;
     gap: 4px;
     font-size: 12px;
-    color: #ccc;
+    color: var(--cor-texto-suave);
   }
   #classDetails .stat-row {
     display: flex;
@@ -911,7 +985,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #7dd3fc;
+    color: var(--cor-texto-fraco);
   }
   #classDetails .stat-icon svg {
     width: 100%;
@@ -923,20 +997,20 @@
     stroke-linejoin: round;
   }
   #classDetails .stat-label {
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     white-space: nowrap;
   }
   #classDetails .stat-value {
     margin-left: auto;
     font-weight: 600;
-    color: #eee;
+    color: var(--cor-texto);
     white-space: nowrap;
   }
   #classDetails .class-traits {
     margin: 8px 0 0 0;
     padding-left: 18px;
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
   }
   #classDetails .class-traits li {
     margin-bottom: 2px;
@@ -947,8 +1021,8 @@
     min-height: 92px;
     box-sizing: border-box;
     overflow: hidden;
-    background: #22222f;
-    border: 2px solid #444;
+    background: var(--cor-superficie-icone);
+    border: 2px solid var(--cor-borda);
     border-radius: 8px;
     padding: 8px 0 0;
     display: flex;
@@ -974,7 +1048,7 @@
     width: 22px;
     height: 22px;
     border-radius: 3px;
-    border: 2px solid #facc15;
+    border: 2px solid var(--cor-ouro);
     box-sizing: border-box;
   }
   .class-preview-spacer {
@@ -1009,10 +1083,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #4a4a5e;
-    border: 2px solid #8a8aa0;
+    background: var(--cor-superficie-hover-alta);
+    border: 2px solid var(--cor-cinza-claro);
     border-radius: 4px;
-    color: #cfcfe0;
+    color: var(--cor-texto-suave);
   }
   .class-preview-dummy svg {
     width: 14px;
@@ -1025,15 +1099,15 @@
     animation: classPreviewDummyHit 0.3s ease-out;
   }
   @keyframes classPreviewDummyHit {
-    0% { background: #fff; border-color: #fff; transform: scale(1.18); }
-    100% { background: #4a4a5e; border-color: #8a8aa0; transform: scale(1); }
+    0% { background: var(--cor-branco); border-color: var(--cor-branco); transform: scale(1.18); }
+    100% { background: var(--cor-superficie-hover-alta); border-color: var(--cor-cinza-claro); transform: scale(1); }
   }
   .class-preview-damage {
     position: absolute;
     top: 50%;
     font-size: 11px;
     font-weight: 700;
-    color: #ff6b6b;
+    color: var(--cor-erro-texto);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     pointer-events: none;
     white-space: nowrap;
@@ -1047,14 +1121,14 @@
   #menuDivider {
     width: 100%;
     border: none;
-    border-top: 1px solid #444;
+    border-top: 1px solid var(--cor-borda);
     margin: 4px 0;
   }
   #menu button#btnHowToPlay {
-    background: #333;
+    background: var(--cor-superficie-forte);
   }
   #menu button#btnHowToPlay:hover {
-    background: #222;
+    background: var(--cor-superficie-forte-hover);
   }
   /* ----- Regra comum a todas as modais -----
      Cada modal define a própria largura, mas a altura é sempre limitada à
@@ -1075,11 +1149,16 @@
     justify-content: center;
     z-index: 10;
   }
+  /* Modal do modo treino: fundo opaco (o menu atrás competia com o conteúdo) e
+     sem scroll próprio — o conteúdo é curto e os dropdowns são `position: fixed`
+     (ver dropdownPosition.js), então nada aqui precisa rolar. */
   #botClassOverlay .modal {
-    background: rgba(38, 35, 34, 0.78);
-    border: 2px solid #8b0000;
+    background: var(--cor-modal-fundo);
+    max-height: none;
+    overflow: visible;
+    border: 2px solid var(--cor-vermelho);
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 420px;
     display: flex;
@@ -1102,15 +1181,15 @@
     padding: 0;
     border-radius: 6px;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 15px;
     line-height: 1;
     border: none;
     cursor: pointer;
   }
   #btnBotClassClose:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   #botClassColumns {
     display: flex;
@@ -1126,7 +1205,7 @@
   .class-select-col h3 {
     margin: 0;
     font-size: 13px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -1143,7 +1222,7 @@
   #botDifficultyCol h3 {
     margin: 0;
     font-size: 13px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -1157,32 +1236,32 @@
     width: 100%;
     padding: 10px 14px;
     border-radius: 8px;
-    border: 2px solid #fff;
-    background: #3a3a3a;
-    color: #eee;
+    border: 2px solid var(--cor-branco);
+    background: var(--cor-superficie-elevada);
+    color: var(--cor-texto);
     font-size: 14px;
     font-family: inherit;
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s;
   }
   .dropdown-toggle:hover {
-    background: #4a4a4a;
+    background: var(--cor-superficie-hover-alta);
   }
   .dropdown-toggle:focus-visible {
     outline: none;
-    border-color: #ff4d4d;
-    box-shadow: 0 0 6px 1px rgba(255, 0, 0, 0.4);
+    border-color: var(--cor-vermelho-destaque);
+    box-shadow: var(--sombra-foco-vermelho);
   }
   .dropdown-arrow {
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     flex: none;
     margin-left: 10px;
     transition: transform 0.15s;
   }
   .dropdown.open .dropdown-toggle {
-    border-color: #ff4d4d;
-    background: #4a4a4a;
-    box-shadow: 0 0 6px 1px rgba(255, 0, 0, 0.4);
+    border-color: var(--cor-vermelho-destaque);
+    background: var(--cor-superficie-hover-alta);
+    box-shadow: var(--sombra-foco-vermelho);
   }
   .dropdown.open .dropdown-arrow {
     transform: rotate(180deg);
@@ -1195,10 +1274,10 @@
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    background: #2b2b3d;
-    border: 2px solid #444;
+    background: var(--cor-superficie-alta);
+    border: 2px solid var(--cor-borda);
     border-radius: 8px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--sombra-flutuante);
     z-index: 20;
     display: flex;
     flex-direction: column;
@@ -1218,17 +1297,17 @@
   .dropdown-item {
     padding: 9px 10px;
     border-radius: 6px;
-    color: #cfcfe0;
+    color: var(--cor-texto-suave);
     font-size: 14px;
     cursor: pointer;
   }
   .dropdown-item:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   .dropdown-item.selected {
-    background: #6e2020;
-    color: #fff;
+    background: var(--cor-vermelho-selecao);
+    color: var(--cor-branco);
   }
   #btnBotClassConfirm {
     font-size: 16px;
@@ -1236,11 +1315,11 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #8b0000;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
   }
   #btnBotClassConfirm:hover {
-    background: #6e0000;
+    background: var(--cor-vermelho-hover);
   }
   #onlineClassOverlay {
     display: none;
@@ -1252,10 +1331,10 @@
     z-index: 10;
   }
   #onlineClassOverlay .modal {
-    background: rgba(38, 35, 34, 0.78);
-    border: 2px solid #8b0000;
+    background: var(--cor-modal-fundo);
+    border: 2px solid var(--cor-vermelho);
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 540px;
     max-width: calc(100vw - 32px);
@@ -1280,15 +1359,15 @@
     padding: 0;
     border-radius: 6px;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 15px;
     line-height: 1;
     border: none;
     cursor: pointer;
   }
   #btnOnlineClassClose:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   #btnOnlineClassConfirm {
     font-size: 16px;
@@ -1296,11 +1375,11 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #8b0000;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
   }
   #btnOnlineClassConfirm:hover {
-    background: #6e0000;
+    background: var(--cor-vermelho-hover);
   }
   #botClassOverlay .modal {
     max-width: calc(100vw - 32px);
@@ -1319,7 +1398,7 @@
     align-items: baseline;
     gap: 8px;
     font-size: 14px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -1334,10 +1413,10 @@
     gap: 12px;
   }
   #accountName {
-    color: #eee;
+    color: var(--cor-texto);
   }
   .account-sep {
-    color: #6b6b80;
+    color: var(--cor-cinza-medio);
   }
   #menu button.link-button, .link-button {
     background: none;
@@ -1345,13 +1424,13 @@
     padding: 0;
     width: auto;
     font-size: 14px;
-    color: #bbb;
+    color: var(--cor-texto-medio);
     cursor: pointer;
     text-decoration: underline;
   }
   #menu button.link-button:hover, .link-button:hover {
     background: none;
-    color: #eee;
+    color: var(--cor-texto);
   }
   #authOverlay {
     display: none;
@@ -1366,10 +1445,10 @@
     display: flex;
   }
   #authOverlay .modal {
-    background: rgba(38, 35, 34, 0.78);
-    border: 2px solid #8b0000;
+    background: var(--cor-modal-fundo);
+    border: 2px solid var(--cor-vermelho);
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 360px;
     max-width: calc(100vw - 32px);
@@ -1394,15 +1473,15 @@
     padding: 0;
     border-radius: 6px;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 15px;
     line-height: 1;
     border: none;
     cursor: pointer;
   }
   #btnAuthClose:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   #authForm {
     display: flex;
@@ -1416,7 +1495,7 @@
   }
   .auth-field label {
     font-size: 13px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -1424,16 +1503,16 @@
     font-size: 16px;
     padding: 10px 14px;
     border-radius: 8px;
-    border: 2px solid #fff;
-    background: #3a3a3a;
-    color: #eee;
+    border: 2px solid var(--cor-branco);
+    background: var(--cor-superficie-elevada);
+    color: var(--cor-texto);
     width: 100%;
     box-sizing: border-box;
   }
   .auth-field input:focus {
     outline: none;
-    border-color: #ff4d4d;
-    box-shadow: 0 0 6px 1px rgba(255, 0, 0, 0.4);
+    border-color: var(--cor-vermelho-destaque);
+    box-shadow: var(--sombra-foco-vermelho);
   }
   .auth-field input:disabled {
     opacity: 0.5;
@@ -1454,15 +1533,15 @@
     height: 32px;
     border: none;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 16px;
     line-height: 1;
     cursor: pointer;
     border-radius: 6px;
   }
   .password-toggle-btn:hover {
-    color: #eee;
-    background: #2f2f40;
+    color: var(--cor-texto);
+    background: var(--cor-superficie-alta);
   }
   .password-toggle-btn:disabled {
     opacity: 0.5;
@@ -1484,11 +1563,11 @@
   }
   #authFeedback.erro, #resetFeedback.erro {
     background: rgba(230, 57, 70, 0.15);
-    color: #ff8b93;
+    color: var(--cor-erro-claro);
   }
   #authFeedback.sucesso, #resetFeedback.sucesso {
     background: rgba(42, 157, 92, 0.15);
-    color: #7fd8a4;
+    color: var(--cor-sucesso-claro);
   }
   #btnAuthSubmit, #btnResetSubmit {
     font-size: 18px;
@@ -1496,17 +1575,17 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background: #8b0000;
-    color: #fff;
+    background: var(--cor-vermelho);
+    color: var(--cor-branco);
     width: 100%;
     box-sizing: border-box;
   }
   #btnAuthSubmit:hover, #btnResetSubmit:hover {
-    background: #6e0000;
+    background: var(--cor-vermelho-hover);
   }
   #btnAuthSubmit:disabled, #btnResetSubmit:disabled {
-    background: #555;
-    color: #9a9ab0;
+    background: var(--cor-borda-media);
+    color: var(--cor-texto-fraco);
     cursor: default;
   }
   #authLinks {
@@ -1530,10 +1609,10 @@
     display: flex;
   }
   #profileOverlay .modal {
-    background: rgba(38, 35, 34, 0.78);
-    border: 2px solid #8b0000;
+    background: var(--cor-modal-fundo);
+    border: 2px solid var(--cor-vermelho);
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 460px;
     max-width: calc(100vw - 32px);
@@ -1558,15 +1637,15 @@
     padding: 0;
     border-radius: 6px;
     background: transparent;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     font-size: 15px;
     line-height: 1;
     border: none;
     cursor: pointer;
   }
   #btnProfileClose:hover {
-    background: #3d3d52;
-    color: #fff;
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
   }
   #profileSummary {
     display: flex;
@@ -1590,20 +1669,20 @@
   }
   .resumo-item span {
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  .resultado-vitoria { color: #7fd8a4; }
-  .resultado-derrota { color: #ff8b93; }
-  .resultado-empate  { color: #d0c07f; }
+  .resultado-vitoria { color: var(--cor-sucesso-claro); }
+  .resultado-derrota { color: var(--cor-erro-claro); }
+  .resultado-empate  { color: var(--cor-empate); }
   #profileClasses:empty {
     display: none;
   }
   .profile-subtitulo {
     margin: 0 0 8px;
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -1621,12 +1700,12 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    background: #22222f;
+    background: var(--cor-superficie-forte);
     border-radius: 8px;
     padding: 8px 6px;
   }
   .classe-usada .class-icon {
-    background: #1c1c28;
+    background: var(--cor-superficie-baixa);
   }
   .classe-usada-nome {
     font-size: 13px;
@@ -1634,7 +1713,7 @@
   }
   .classe-usada-total {
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
   }
   /* A lista tem scroll próprio (é o que dispara o infinite scroll), mas o teto
      precisa acompanhar a tela: fixo em 320px, ele sozinho já fazia a modal
@@ -1660,7 +1739,9 @@
       "resultado classes  data";
     column-gap: 10px;
     align-items: center;
-    background: #22222f;
+    /* Mais claro que o fundo da modal (`--cor-modal-fundo`), não mais escuro:
+       com um tom parecido os cartões desapareciam dentro da modal. */
+    background: var(--cor-superficie-forte);
     border-radius: 8px;
     padding: 8px 12px;
   }
@@ -1677,19 +1758,19 @@
   .partida-classes {
     grid-area: classes;
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
   }
   .partida-data {
     grid-area: data;
     font-size: 11px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     white-space: nowrap;
   }
   .profile-vazio {
     margin: 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-align: center;
   }
 
@@ -1705,8 +1786,8 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    background: #2b2b3d;
-    border: 2px solid #555;
+    background: var(--cor-superficie-alta);
+    border: 2px solid var(--cor-borda-media);
     border-radius: 12px;
     padding: 24px;
     box-sizing: border-box;
@@ -1719,7 +1800,7 @@
   .standalone-card h2 {
     margin: 0;
     font-size: 18px;
-    color: #9a9ab0;
+    color: var(--cor-texto-fraco);
     text-align: center;
     font-weight: normal;
   }
@@ -1731,7 +1812,7 @@
   #resetBackLink {
     text-align: center;
     font-size: 14px;
-    color: #7fb2d0;
+    color: var(--cor-azul-link);
   }
 
   @media (max-width: 700px) {

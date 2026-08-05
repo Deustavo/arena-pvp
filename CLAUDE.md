@@ -300,6 +300,40 @@ Ainda não têm som os efeitos de ambiente. Falta também expor **volume/mudo**
 na interface — o `GainNode` master já está no lugar, só não há controle nem
 preferência salva.
 
+#### Paleta de cores (`public/css/style.css`)
+
+Todas as cores da interface ficam em **variáveis CSS no `:root`**, no topo do
+`style.css`. Nenhuma regra abaixo desse bloco deve escrever um hex literal — use
+uma variável existente ou crie uma nova ali, com nome de propósito
+(`--cor-superficie-hover`, `--cor-texto-fraco`, `--cor-vermelho-destaque`…).
+Isso vale também para as sombras repetidas (`--sombra-modal`,
+`--sombra-flutuante`, `--sombra-foco-vermelho`). Antes existiam vários cinzas
+quase iguais (`#2b2b3d`, `#2e2e2e`, `#2f2f40`) e várias cópias da mesma
+`box-shadow` aparecendo lado a lado na mesma tela; cores iguais ou
+imperceptivelmente diferentes foram unificadas na mesma variável.
+
+Regras de cor do jogo:
+
+- A interface é **escala de cinza + o vermelho da identidade**. Os cinzas não
+  têm tom azulado/arroxeado — se um valor novo não for `#rgb` com os três
+  canais iguais (ou muito próximos), provavelmente está errado.
+- Azul só onde a cor **é informação**, nunca decoração: `--cor-azul-classe`
+  (classe no HUD), `--cor-azul-escudo`, `--cor-azul-ranking`, `--cor-azul-link`.
+- A cor de cada classe vem de `shared/classes.js` e chega ao CSS pela custom
+  property `--class-color`, aplicada no elemento pelo JS (`classSelect.js`,
+  `profile.js`). É o único identificador colorido de classe: textos e ícones ao
+  redor (título e stats de `#classDetails`, por exemplo) ficam neutros.
+- Seleção/foco usam vermelho (`--cor-vermelho-destaque`), não verde — verde é só
+  `--cor-sucesso` (vitória, contagem de vitórias).
+- Modais são **opacas** (`--cor-modal-fundo`); o véu translúcido que separa a
+  modal do menu é o overlay atrás dela, não a modal. Painéis da tela inicial
+  (`#rankingPanel`, `#menu`) continuam translúcidos (`--cor-painel-fundo`),
+  porque o fundo com paralaxe faz parte do visual da tela inicial.
+
+As cores desenhadas no canvas (`render.js`, `explosions.js`, `fireCursor.js`,
+`shared/classes.js`) não passam por essas variáveis — CSS não alcança o canvas.
+Lá elas ficam em constantes nomeadas no topo de cada módulo.
+
 #### Loading skeleton na tela inicial
 
 Qualquer elemento da tela de menu que depende de uma resposta assíncrona antes de
