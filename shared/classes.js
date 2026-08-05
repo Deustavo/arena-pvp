@@ -8,6 +8,7 @@ export const CLASSES = {
   atirador: {
     id: 'atirador',
     name: 'Atirador',
+    demonName: 'Elia',
     shotCooldownMs: 1000,
     damage: 3,
     shieldMaxHits: 1,
@@ -25,6 +26,7 @@ export const CLASSES = {
   mago: {
     id: 'mago',
     name: 'Mago',
+    demonName: 'MohTas',
     shotCooldownMs: 2000,
     damage: 2.5,
     shieldMaxHits: 3,
@@ -42,6 +44,7 @@ export const CLASSES = {
   tank: {
     id: 'tank',
     name: 'Tank',
+    demonName: 'MaleS',
     shotCooldownMs: 2400,
     damage: 2.5,
     shieldMaxHits: 5,
@@ -59,6 +62,7 @@ export const CLASSES = {
   assassino: {
     id: 'assassino',
     name: 'Assassino',
+    demonName: 'Nale-Chi',
     shotCooldownMs: 1600,
     damage: 9,
     shieldMaxHits: 1,
@@ -76,6 +80,7 @@ export const CLASSES = {
   duelista: {
     id: 'duelista',
     name: 'Duelista',
+    demonName: 'Lanu',
     shotCooldownMs: 430,
     damage: 1,
     shieldMaxHits: 2,
@@ -93,6 +98,7 @@ export const CLASSES = {
   sniper: {
     id: 'sniper',
     name: 'Sniper',
+    demonName: 'RePa',
     shotCooldownMs: 1600,
     damage: 7,
     longRangeDistance: 450,

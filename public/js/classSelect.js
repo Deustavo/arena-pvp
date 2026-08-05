@@ -49,7 +49,19 @@ function createClassCard(cls) {
 
   const title = document.createElement('span');
   title.className = 'class-name';
-  title.textContent = cls.name;
+
+  const demonName = document.createElement('span');
+  demonName.className = 'class-demon-name';
+  demonName.textContent = cls.demonName || cls.name;
+  title.appendChild(demonName);
+
+  if (cls.demonName) {
+    const className = document.createElement('span');
+    className.className = 'class-name-secondary';
+    className.textContent = cls.name;
+    title.appendChild(className);
+  }
+
   card.appendChild(title);
 
   return card;
