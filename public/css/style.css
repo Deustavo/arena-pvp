@@ -1,3 +1,58 @@
+  /* ===== Fontes =====
+     Self-hosted (sem dependência de CDN externo): Chakra Petch é a fonte-base
+     da interface (legível em tamanho pequeno pro HUD) e Metal Mania é só pros
+     títulos (h1/h2 de menu, painéis, modais e fim de jogo), pela temática de
+     demônios/arena. Arquivos em public/assets/fonts/, dois subsets cada
+     (latin + latin-ext, pro acento do português) via unicode-range. */
+  @font-face {
+    font-family: 'Metal Mania';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/metal-mania-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  }
+  @font-face {
+    font-family: 'Metal Mania';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/metal-mania-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-024F, U+1E00-1EFF, U+2020, U+2113;
+  }
+  @font-face {
+    font-family: 'Chakra Petch';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/chakra-petch-400-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  }
+  @font-face {
+    font-family: 'Chakra Petch';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/chakra-petch-400-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-024F, U+1E00-1EFF, U+2020, U+2113;
+  }
+  @font-face {
+    font-family: 'Chakra Petch';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../assets/fonts/chakra-petch-600-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  }
+  @font-face {
+    font-family: 'Chakra Petch';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../assets/fonts/chakra-petch-600-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-024F, U+1E00-1EFF, U+2020, U+2113;
+  }
+
   /* ===== Paleta =====
      Fonte única das cores da interface: nenhuma regra abaixo deve escrever um
      hex literal — use uma variável daqui (ou crie uma, se a cor for realmente
@@ -93,7 +148,7 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    font-family: sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     color: var(--cor-texto);
     overflow-x: hidden;
     user-select: none;
@@ -102,6 +157,17 @@
   input, textarea {
     user-select: text;
     -webkit-user-select: text;
+  }
+  /* Botões não herdam a fonte do body por padrão (fonte de UI do navegador) —
+     precisa declarar explicitamente. */
+  button {
+    font-family: 'Chakra Petch', sans-serif;
+  }
+  /* Metal Mania é só pros títulos (menu, painéis, modais, fim de jogo) — em
+     texto corrido ou números pequenos (HUD, cronômetro) ela vira ilegível. */
+  h1, h2 {
+    font-family: 'Metal Mania', cursive;
+    letter-spacing: 0.5px;
   }
   /* Canvas do rastro de fogo do cursor (public/js/fireCursor.js): fixo por
      cima de tudo e sem capturar clique/hover, porque é puramente decorativo
@@ -424,10 +490,10 @@
   #nicknameError.visible {
     visibility: visible;
   }
-  #menu button#btnOnline {
+  #menu button#btnBot {
     background: var(--cor-erro-forte);
   }
-  #menu button#btnOnline:hover {
+  #menu button#btnBot:hover {
     background: var(--cor-erro-forte-hover);
   }
   /* A largura é definida por gameScale.js (é a largura da arena depois de
