@@ -63,6 +63,9 @@ export const state = {
   winnerIndex: null, // índice do jogador vencedor (null em empate)
   prevAlive: [true, true],
   explosionParticles: [],
+  // Coração/escudo quebrado que sobe sobre a cabeça do jogador ao perder uma
+  // vida ou o escudo (ver public/js/floatingIcons.js).
+  floatingIcons: [],
 
   bot: null,
   botInterval: null,
@@ -145,6 +148,7 @@ export function resetMatchState() {
   state.winnerIndex = null;
   state.prevAlive = [true, true];
   state.explosionParticles = [];
+  state.floatingIcons = [];
   state.viewFlipped = false;
   resetCharacterAnimators();
 }

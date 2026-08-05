@@ -3,6 +3,7 @@ import { state, screenXToWorld } from './state.js';
 import { isShieldAvailable, hitFlashUntil, updateCooldownBars } from './hud.js';
 import { advancePrediction, getRenderState } from './prediction.js';
 import { updateAndDrawExplosions } from './explosions.js';
+import { updateAndDrawFloatingIcons } from './floatingIcons.js';
 import { checkNearMiss } from './nearMiss.js';
 import { showGameOverOverlay } from './gameOver.js';
 import { getClass } from '../../shared/classes.js';
@@ -289,6 +290,7 @@ export function render() {
       drawPlayers(renderState, now);
       drawProjectiles(renderState);
       updateAndDrawExplosions(now);
+      updateAndDrawFloatingIcons(now);
       ctx.restore();
 
       updateCooldownBars(now);

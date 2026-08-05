@@ -4,6 +4,7 @@ import {
 } from './dom.js';
 import { state } from './state.js';
 import { checkDeathExplosion } from './explosions.js';
+import { spawnFloatingHeartLoss, spawnFloatingShieldBreak } from './floatingIcons.js';
 import { playHitSound, playShieldBlockSound, playShieldBreakSound, playShotSound } from './audio.js';
 import { getClass } from '../../shared/classes.js';
 
@@ -171,7 +172,14 @@ function triggerHeartBlink(heartEl) {
   heartEl.classList.add('blink');
 }
 
-function updateHeartsRow(row, lives, rawIndex) {
+// Centro horizontal e topo da cabeça de um jogador, em coordenadas de mundo —
+// é onde os ícones flutuantes de vida/escudo perdidos nascem (floatingIcons.js).
+function headPosition(player) {
+  if (!player) return null;
+  return { x: player.x + state.playerSize / 2, topY: player.y };
+}
+
+function updateHeartsRow(row, lives, rawIndex, player) {
   const hearts = heartsEls[row];
   if (!hearts.length) return;
   const prev = prevLives[row];
@@ -195,22 +203,31 @@ function updateHeartsRow(row, lives, rawIndex) {
     // sons juntos só embolam. Vale para os dois jogadores e também para o
     // último coração drenado no desempate.
     if (lives > 0) playHitSound();
+    const head = headPosition(player);
+    // Quantos corações inteiros saíram nesse hit (dano fracionário conta como 1,
+    // já que não faz sentido mostrar "meio coração" voando).
+    const heartsLost = Math.max(1, Math.round(prev - lives));
+    if (head) spawnFloatingHeartLoss(head.x, head.topY, heartsLost);
   }
   prevLives[row] = lives;
 }
 
-function updateShieldsRow(row, charges) {
+function updateShieldsRow(row, charges, player) {
   const shields = shieldsEls[row];
   if (!shields.length) return;
   for (let i = 0; i < shields.length; i++) {
     shields[i].classList.toggle('lost', i >= charges);
   }
   // Perdeu carga = bloqueou um tiro. Quando foi a última, o som é o de escudo
-  // quebrando em vez do de bloqueio: avisa que não há mais proteção.
+  // quebrando em vez do de bloqueio: avisa que não há mais proteção. O ícone
+  // flutuante de escudo rachado aparece nos dois casos — perder uma carga já é
+  // "perder um escudo", não só zerar todas.
   const prev = prevShieldCharges[row];
   if (prev !== null && charges < prev) {
     if (charges <= 0) playShieldBreakSound();
     else playShieldBlockSound();
+    const head = headPosition(player);
+    if (head) spawnFloatingShieldBreak(head.x, head.topY);
   }
   prevShieldCharges[row] = charges;
 }
@@ -258,17 +275,17 @@ export function updateHud() {
   if (me) {
     nameP0El.textContent = me.name || 'Você';
     updateClassIcon(classIconP0El, classNameP0El, 0, me.classId);
-    updateHeartsRow(0, me.lives, state.playerIndex);
-    updateShieldsRow(0, shieldCharges(state.playerIndex));
+    updateHeartsRow(0, me.lives, state.playerIndex, me);
+    updateShieldsRow(0, shieldCharges(state.playerIndex), me);
     checkShot(0, me.lastShot);
     checkDeathExplosion(state.playerIndex, me);
   }
   if (opp) {
     nameP1El.textContent = opp.name || 'Oponente';
     updateClassIcon(classIconP1El, classNameP1El, 1, opp.classId);
-    updateHeartsRow(1, opp.lives, oppIndex);
+    updateHeartsRow(1, opp.lives, oppIndex, opp);
     checkShot(1, opp.lastShot);
-    updateShieldsRow(1, shieldCharges(oppIndex));
+    updateShieldsRow(1, shieldCharges(oppIndex), opp);
     checkDeathExplosion(oppIndex, opp);
   }
 }
