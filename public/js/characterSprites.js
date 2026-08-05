@@ -21,7 +21,7 @@ const SPRITE_SHEETS = {
   tank: {
     idle: { src: '/assets/sprites/tank/idle.png', frames: 6, frameMs: 150, loop: true },
     walk: { src: '/assets/sprites/tank/walk.png', frames: 8, frameMs: 90, loop: true },
-    attack: { src: '/assets/sprites/tank/attack.png', frames: 11, frameMs: 55, loop: false },
+    attack: { src: '/assets/sprites/tank/attack.png', frames: 11, frameMs: 35, loop: false },
     hurt: { src: '/assets/sprites/tank/hurt.png', frames: 4, frameMs: 80, loop: false },
     death: { src: '/assets/sprites/tank/death.png', frames: 4, frameMs: 120, loop: false },
   },
