@@ -9,7 +9,7 @@
   body {
     margin: 0;
     height: 100%;
-    background: #1d1d2b;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), #1d1d2b url('../assets/backgrounds/dungeon_brick_wall_grey.png') repeat;
     display: flex;
     align-items: center;
     justify-content: center;
