@@ -153,7 +153,6 @@
        de background-position durante a partida, porque `body.game-active`
        nunca tem essas variáveis atualizadas — o fundo já fica parado. */
     background-position: 0 0, var(--parallax-x, 0px) var(--parallax-y, 0px);
-    transition: background-position 0.2s ease-out;
     display: flex;
     align-items: center;
     justify-content: center;
