@@ -1054,7 +1054,6 @@
     background: rgba(38, 35, 34, 0.78);
     border: 2px solid #8b0000;
     border-radius: 10px;
-    backdrop-filter: blur(6px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     padding: 20px 24px;
     width: 420px;
@@ -1231,7 +1230,6 @@
     background: rgba(38, 35, 34, 0.78);
     border: 2px solid #8b0000;
     border-radius: 10px;
-    backdrop-filter: blur(6px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     padding: 20px 24px;
     width: 540px;
@@ -1346,7 +1344,6 @@
     background: rgba(38, 35, 34, 0.78);
     border: 2px solid #8b0000;
     border-radius: 10px;
-    backdrop-filter: blur(6px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     padding: 20px 24px;
     width: 360px;
@@ -1511,7 +1508,6 @@
     background: rgba(38, 35, 34, 0.78);
     border: 2px solid #8b0000;
     border-radius: 10px;
-    backdrop-filter: blur(6px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
     padding: 20px 24px;
     width: 460px;
