@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Demon Arena</title>
+<title>DemoN ArenA</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
@@ -25,46 +25,48 @@
     </div>
   </div>
   <div id="menu">
-    <div id="menuBody">
-      <h1>Demon Arena</h1>
-      <div id="accountBar" class="skeleton-loading">
-        <div id="accountLoggedIn">
-          <span id="accountGreeting">Jogando como <strong id="accountName"></strong></span>
-          <div id="accountActions">
-            <button type="button" id="btnProfile" class="link-button">Perfil</button>
-            <button type="button" id="btnLogout" class="link-button">Sair</button>
+    <h1 id="menuTitle">DemoN ArenA</h1>
+    <div id="menuContent">
+      <div id="menuBody">
+        <div id="accountBar" class="skeleton-loading">
+          <div id="accountLoggedIn">
+            <span id="accountGreeting">Jogando como <strong id="accountName"></strong></span>
+            <div id="accountActions">
+              <button type="button" id="btnProfile" class="link-button">Perfil</button>
+              <button type="button" id="btnLogout" class="link-button">Sair</button>
+            </div>
+          </div>
+          <div id="accountLoggedOut">
+            <button type="button" id="btnLogin" class="link-button">Entrar</button>
+            <span class="account-sep">ou</span>
+            <button type="button" id="btnSignup" class="link-button">criar conta</button>
           </div>
         </div>
-        <div id="accountLoggedOut">
-          <button type="button" id="btnLogin" class="link-button">Entrar</button>
-          <span class="account-sep">ou</span>
-          <button type="button" id="btnSignup" class="link-button">criar conta</button>
+        <div id="nicknameField">
+          <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
+          <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
+          <div id="nicknameError">Digite um nickname para jogar</div>
         </div>
+        <button id="btnOnline">Jogar Online</button>
+        <button id="btnBot">Modo treino</button>
+        <hr id="menuDivider">
+        <button id="btnHowToPlay">Como jogar</button>
+        <div id="onlineCount" class="skeleton-loading">● <span id="onlineCountValue">--</span> jogador(es) online</div>
       </div>
-      <div id="nicknameField">
-        <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
-        <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
-        <div id="nicknameError">Digite um nickname para jogar</div>
+      <div id="rankingPanel">
+        <h2>Ranking</h2>
+        <div id="rankingHeader">
+          <span>Jogador</span>
+          <span>Vitórias</span>
+        </div>
+        <ol id="rankingList">
+          <li class="skeleton-row"></li>
+          <li class="skeleton-row"></li>
+          <li class="skeleton-row"></li>
+          <li class="skeleton-row"></li>
+          <li class="skeleton-row"></li>
+        </ol>
       </div>
-      <button id="btnOnline">Jogar Online</button>
-      <button id="btnBot">Modo treino</button>
-      <hr id="menuDivider">
-      <button id="btnHowToPlay">Como jogar</button>
-      <div id="onlineCount" class="skeleton-loading">● <span id="onlineCountValue">--</span> jogador(es) online</div>
-    </div>
-    <div id="rankingPanel">
-      <h2>Ranking</h2>
-      <div id="rankingHeader">
-        <span>Jogador</span>
-        <span>Vitórias</span>
-      </div>
-      <ol id="rankingList">
-        <li class="skeleton-row"></li>
-        <li class="skeleton-row"></li>
-        <li class="skeleton-row"></li>
-        <li class="skeleton-row"></li>
-        <li class="skeleton-row"></li>
-      </ol>
     </div>
   </div>
 

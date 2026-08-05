@@ -262,12 +262,10 @@ export const playTimerTickSound = efeito('timerTick', 200, (segundosRestantes) =
   ruido({ dur: 0.02, filter: 'highpass', from: 2000 + passos * 400, gain: 0.1 + passos * 0.015 });
 });
 
-// Aviso de tempo restante (1 minuto e 30 segundos). Um beep para o aviso de
-// 1 minuto, dois para o de 30 segundos — mais urgente porque é o último aviso
-// antes dos tiques finais de `playTimerTickSound`.
-export const playTimeWarningSound = efeito('timeWarning', 500, (marcaMs) => {
-  const notas = marcaMs <= 30000 ? [{ freq: 880 }, { freq: 880 }] : [{ freq: 880 }];
-  sequencia(notas, { type: 'sine', dur: 0.12, gain: 0.18 });
+// Aviso de tempo restante (30 segundos) — mais urgente porque é o último
+// aviso antes dos tiques finais de `playTimerTickSound`.
+export const playTimeWarningSound = efeito('timeWarning', 500, () => {
+  sequencia([{ freq: 880 }, { freq: 880 }], { type: 'sine', dur: 0.12, gain: 0.18 });
 });
 
 // Tempo esgotado com os dois vivos: a partida congela e começa o desempate.

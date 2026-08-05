@@ -323,6 +323,18 @@
     position: relative;
     z-index: 1;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  #menuTitle {
+    margin: 0;
+    font-size: 64px;
+    text-align: center;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  #menuContent {
+    display: flex;
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
@@ -418,9 +430,6 @@
     font-size: 14px;
     text-align: center;
     color: var(--cor-texto-medio);
-  }
-  #menu h1 {
-    margin: 0 0 8px 0;
   }
   #menuBody {
     display: flex;
@@ -2004,6 +2013,9 @@
   }
 
   @media (max-width: 700px) {
+    #menuTitle {
+      font-size: 40px;
+    }
     #menu button:not(.class-card):not(.ranking-nome) {
       min-width: 0;
       width: 100%;
