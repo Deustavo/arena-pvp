@@ -2768,6 +2768,36 @@
   .changelog-resumo {
     color: var(--cor-texto-medio);
   }
+  /* Galeria dos personagens no tópico "Sprites dos personagens": os 6
+     andando (animação `walk`), com nome do demônio e classe embaixo. O
+     enquadramento reusa `.class-sprite` (ver classSprite.js), só com o quadro
+     maior que o das miniaturas da lista de classes. */
+  .changelog-sprites {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .changelog-sprite-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-align: center;
+    padding: 10px 6px 8px;
+    border-radius: 8px;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--class-color, var(--cor-borda));
+  }
+  .changelog-sprite-item .class-demon-name {
+    color: var(--class-color, var(--cor-texto));
+  }
+  .changelog-sprite.class-sprite {
+    --sprite-box: 72px;
+    --sprite-zoom: 2.4;
+    --sprite-anchor: 0.45;
+    margin-bottom: 4px;
+  }
 
   @media (max-width: 700px) {
     #menuTitle {

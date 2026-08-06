@@ -83,11 +83,15 @@ por vez até sobrar um. Zerando no mesmo passo, é empate.
 O jogador sempre se vê do lado esquerdo da tela, independente de onde nasceu na
 arena.
 
-### Modo treino
+### Modo treino e tutorial
 
 Partida offline contra bot, com escolha da sua classe, da classe do bot e da
 dificuldade, do noob ao demoníaco. O bot mira, reage, desvia e ergue escudo de
 acordo com a dificuldade, e joga de forma diferente conforme a classe dele.
+
+O tutorial deixou de ser uma tela explicativa e virou uma partida de verdade
+contra um boneco de treino, com uma faixa no topo pedindo a próxima ação. O
+relógio não corre enquanto ele está rolando.
 
 ### Contas, ranking e perfil
 
@@ -98,25 +102,15 @@ O ranking top 10 por vitórias fica na tela inicial. Clicando num nome abre o
 perfil daquele jogador, com histórico de partidas e as classes que ele mais usa.
 Só partida online entre contas entra no histórico.
 
-### Tutorial jogado
-
-O tutorial deixou de ser uma tela explicativa e virou uma partida de verdade
-contra um boneco de treino, com uma faixa no topo pedindo a próxima ação. O
-relógio não corre enquanto ele está rolando.
-
-### Som
+### Som, música e tela inicial
 
 Todos os efeitos são sintetizados na hora, sem nenhum arquivo de áudio: tiro,
 dano, escudo bloqueando e quebrando, explosão, tiro passando raspando, tique dos
 últimos 10 segundos e a buzina do desempate.
 
-### Música e créditos
-
 A tela inicial toca música de fundo, com botão de pular faixa e mudo que fica
 salvo no navegador. As músicas são do Jeremy Black, e a tela de créditos mostra
 a trilha e os assets usados no jogo.
 
-### Tela inicial
-
-Fundo com paralaxe, rastro de fogo no cursor, fogo no título e contagem de
-jogadores online.
+A tela inicial também ganhou fundo com paralaxe, rastro de fogo no cursor, fogo
+no título e contagem de jogadores online.
