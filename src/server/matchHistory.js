@@ -12,6 +12,11 @@ const LIMITE_PADRAO = 20;
 // Teto por requisição: o perfil só pede LIMITE_PADRAO, mas a rota é pública e
 // o limite vem da query string, então ninguém puxa o histórico inteiro de uma vez.
 const LIMITE_MAXIMO = 50;
+// Teto de offset: a rota é pública e sem autenticação (/api/player/matches),
+// então um offset ilimitado deixaria qualquer um forçar o banco a varrer o
+// histórico inteiro de qualquer conta de graça. Nenhum uso legítimo (scroll
+// do perfil) chega perto disso.
+const OFFSET_MAXIMO = 5000;
 
 // Paginação do histórico: o perfil abre com as últimas LIMITE_PADRAO partidas e
 // pede as próximas conforme o jogador rola a lista. Pura para ser testável, e
@@ -20,7 +25,7 @@ const LIMITE_MAXIMO = 50;
 export function parsePaginacao({ limit, offset } = {}) {
   return {
     limite: inteiroNaFaixa(limit, LIMITE_PADRAO, 1, LIMITE_MAXIMO),
-    offset: inteiroNaFaixa(offset, 0, 0, Number.MAX_SAFE_INTEGER),
+    offset: inteiroNaFaixa(offset, 0, 0, OFFSET_MAXIMO),
   };
 }
 

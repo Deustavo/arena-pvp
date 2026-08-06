@@ -21,8 +21,17 @@ function getSessionByToken(token) {
   });
 }
 
+// Mensagens legítimas (input/shoot) são pequenas objetos JSON; isso é generoso
+// o bastante para elas e barra o default de 100MB do `ws`, que deixaria um
+// cliente malicioso mandar uma mensagem gigante antes mesmo de autenticar.
+const MAX_WS_PAYLOAD_BYTES = 4 * 1024;
+
 export function createWsServer(httpServer) {
-  wss = new WebSocketServer({ server: httpServer, perMessageDeflate: false });
+  wss = new WebSocketServer({
+    server: httpServer,
+    perMessageDeflate: false,
+    maxPayload: MAX_WS_PAYLOAD_BYTES,
+  });
 
   wss.on('connection', async (ws, req) => {
     // Espectador: não entra no matchmaking nem manda input/shoot, só recebe o
@@ -106,6 +115,10 @@ function handleShoot(ws, msg) {
   if (!player.alive || !match.interval) return;
   // Em modo de defesa o jogador não atira (mas continua podendo se mover).
   if (escudoAtivo(player)) return;
+  // Payload malformado (NaN, string, ausente) criaria projéteis que nunca
+  // colidem nem expiram corretamente e ficariam sendo rebroadcast a 60Hz
+  // pelo resto da partida — descarta o tiro em vez de aceitar qualquer valor.
+  if (!Number.isFinite(msg.targetX) || !Number.isFinite(msg.targetY)) return;
 
   const cls = getClass(player.classId);
   const now = Date.now();
@@ -116,7 +129,7 @@ function handleShoot(ws, msg) {
   const cy = player.y + PLAYER_SIZE / 2;
 
   const { projectiles, nextId } = createShotProjectiles(
-    match.nextProjectileId, cx, cy, msg.targetX ?? 0, msg.targetY ?? 0, player.index, player.classId
+    match.nextProjectileId, cx, cy, msg.targetX, msg.targetY, player.index, player.classId
   );
   match.nextProjectileId = nextId;
   match.projectiles.push(...projectiles);
