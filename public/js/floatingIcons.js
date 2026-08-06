@@ -68,6 +68,17 @@ function drawIcon(icon, now) {
 
   ctx.save();
   ctx.globalAlpha = Math.max(0, alpha);
+  // drawIcon roda dentro do ctx.scale(-1, 1) de espelhamento de visão
+  // (render.js) quando state.viewFlipped — sem isso o texto "-N" e o coração
+  // saem espelhados/ilegíveis pro jogador que nasceu do lado direito. Cancela
+  // o flip só da forma desenhada, girando em torno de icon.x, que já está no
+  // sistema de coordenadas espelhado e por isso continua caindo no lugar
+  // certo na tela.
+  if (state.viewFlipped) {
+    ctx.translate(icon.x, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-icon.x, 0);
+  }
 
   if (isHeart) {
     const label = `-${icon.count}`;
