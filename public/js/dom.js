@@ -16,6 +16,7 @@ export const classIconP0El = document.getElementById('classIconP0');
 export const classIconP1El = document.getElementById('classIconP1');
 export const hudEl = document.getElementById('hud');
 export const matchTimerEl = document.getElementById('matchTimer');
+export const spectatorBannerEl = document.getElementById('spectatorBanner');
 export const cooldownP0El = document.getElementById('cooldownP0');
 export const cooldownP1El = document.getElementById('cooldownP1');
 

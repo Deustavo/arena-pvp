@@ -4,7 +4,7 @@ import { canvas } from './dom.js';
 import {
   showWaitingOverlay, hideWaitingOverlay, showCountdown, hideCountdown, showNoOpponentsMessage,
 } from './overlays.js';
-import { updateHud, isShieldAvailable, initHearts } from './hud.js';
+import { updateHud, isShieldAvailable, initHearts, showSpectatorBanner } from './hud.js';
 import { recordGameOver, recordSpectatorGameOver } from './gameOver.js';
 import { playStartSound, playMatchFoundSound } from './audio.js';
 import { reconcilePrediction } from './prediction.js';
@@ -161,6 +161,7 @@ function handleSpectatorMessage(msg, onBackToMenu) {
       state.latestState = { players: msg.players, projectiles: [] };
       initHearts(msg.players.map((p) => p.lives));
       updateHud();
+      showSpectatorBanner();
       atualizarCronometro(msg.matchDurationMs ?? MATCH_DURATION_MS, false);
       updateGameScale();
       break;

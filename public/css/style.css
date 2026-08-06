@@ -963,6 +963,29 @@
     letter-spacing: 0;
     animation: desempatePulse 0.8s ease-in-out infinite;
   }
+  /* Só aparece no modo espectador (ver showSpectatorBanner em hud.js): deixa
+     claro que ninguém dos dois lados é "você", já que o resto do HUD é
+     idêntico ao de quem está jogando. Posicionado abaixo do cronômetro pelo
+     mesmo motivo dele ser `absolute` — #hud é `flex` com só dois filhos no
+     fluxo (as colunas dos jogadores), e um terceiro item no fluxo quebraria
+     o `space-between`. */
+  #spectatorBanner {
+    display: none;
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 2px 12px;
+    border-radius: 6px;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--cor-ouro-suave);
+    color: var(--cor-ouro-suave);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  #spectatorBanner.visible {
+    display: block;
+  }
   @keyframes desempatePulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.55; }
@@ -995,6 +1018,12 @@
   }
   #nameP0 {
     color: var(--cor-ouro);
+  }
+  /* Modo espectador: o slot 0 não é "você", então não leva o dourado que
+     marca o próprio nome nos outros modos (ver showSpectatorBanner em
+     hud.js). */
+  body.spectating #nameP0 {
+    color: var(--cor-texto-suave);
   }
   .hud-class-name {
     font-size: 11px;

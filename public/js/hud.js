@@ -1,6 +1,6 @@
 import {
   livesP0El, livesP1El, shieldsP0El, shieldsP1El, nameP0El, nameP1El, cooldownP0El, cooldownP1El,
-  classIconP0El, classIconP1El, classNameP0El, classNameP1El,
+  classIconP0El, classIconP1El, classNameP0El, classNameP1El, spectatorBannerEl,
 } from './dom.js';
 import { state } from './state.js';
 import { checkDeathExplosion } from './explosions.js';
@@ -168,6 +168,24 @@ export function resetHud() {
     el.style.width = '0%';
     el.classList.remove('ready');
   }
+  hideSpectatorBanner();
+}
+
+// Indício de que o HUD é de uma partida assistida, não jogada: o resto
+// (corações, escudos, nomes, cronômetro) é idêntico ao de quem está jogando.
+// `body.spectating` também tira o destaque dourado de `#nameP0` (style.css) —
+// esse dourado marca "seu nome" nos outros modos, mas o slot 0 aqui não é
+// "você", é só o primeiro jogador da partida.
+export function showSpectatorBanner() {
+  spectatorBannerEl.textContent = 'Assistindo';
+  spectatorBannerEl.classList.add('visible');
+  document.body.classList.add('spectating');
+}
+
+export function hideSpectatorBanner() {
+  spectatorBannerEl.textContent = '';
+  spectatorBannerEl.classList.remove('visible');
+  document.body.classList.remove('spectating');
 }
 
 // Preenche o lado do HUD do jogador local (nome, ícone de classe, corações e

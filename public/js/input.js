@@ -20,6 +20,10 @@ const keyMap = {
 const ESC_CONFIRM_WINDOW_MS = 2000;
 const ESC_DEFAULT_TEXT = 'Aperte ESC 2 vezes para sair';
 const ESC_CONFIRM_TEXT = 'Aperte ESC novamente para sair';
+// Espectador não "sai" de uma partida (não é dele) — o texto fala em parar de
+// assistir, senão soa como se estivesse desistindo de um jogo próprio.
+const ESC_DEFAULT_TEXT_SPECTATOR = 'Aperte ESC 2 vezes para parar de assistir';
+const ESC_CONFIRM_TEXT_SPECTATOR = 'Aperte ESC novamente para parar de assistir';
 
 let escArmed = false;
 let escResetTimer = null;
@@ -55,7 +59,7 @@ export function resetEscHint() {
   escArmed = false;
   clearTimeout(escResetTimer);
   escResetTimer = null;
-  escHintEl.textContent = ESC_DEFAULT_TEXT;
+  escHintEl.textContent = state.mode === 'spectator' ? ESC_DEFAULT_TEXT_SPECTATOR : ESC_DEFAULT_TEXT;
   escHintEl.classList.remove('armed');
   escLeaveBannerEl.classList.remove('visible');
 }
@@ -68,7 +72,9 @@ function handleEscPress() {
     return;
   }
   escArmed = true;
-  escHintEl.textContent = ESC_CONFIRM_TEXT;
+  const confirmText = state.mode === 'spectator' ? ESC_CONFIRM_TEXT_SPECTATOR : ESC_CONFIRM_TEXT;
+  escHintEl.textContent = confirmText;
+  escLeaveBannerEl.textContent = confirmText;
   escHintEl.classList.add('armed');
   // Mesmo aviso do texto pequeno embaixo da arena, mas também como faixa
   // flutuante no mesmo padrão visual do tutorial — é o alerta mais importante

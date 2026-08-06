@@ -479,6 +479,18 @@ containers de início) lista as partidas ativas com um botão "Assistir".
   ignora teclado e clique por completo nesse modo — só o ESC continua
   funcionando, para sair a qualquer momento (`backToMenu`, que fecha o
   WebSocket como em qualquer outro modo).
+- O resto do HUD/arena é **quase idêntico** ao de quem está jogando —
+  corações, escudos, nomes reais, cronômetro — então sem um sinal explícito
+  seria fácil achar que é a própria partida. Três pistas visuais cobrem isso,
+  todas ligadas por `body.spectating` (`showSpectatorBanner`/
+  `hideSpectatorBanner` em `hud.js`, chamado no `init` do espectador e limpo
+  em `resetHud`): `#spectatorBanner` mostra "Assistindo" abaixo do
+  cronômetro, o nome do jogador do slot 0 perde o dourado que marca "seu
+  nome" nos outros modos (`body.spectating #nameP0` em `style.css` — aqui o
+  slot 0 não é "você"), e a borda da arena (`drawArenaBorder` em `render.js`)
+  fica amarela (`ARENA_BORDER_COLOR_SPECTATOR`) em vez do vermelho padrão. O
+  aviso de ESC também muda de texto ("parar de assistir" em vez de "sair")
+  nesse modo.
 - Fim de partida assistida usa `recordSpectatorGameOver` (`gameOver.js`), não
   `recordGameOver`: sem "você" não existe vitória/derrota, só quem venceu (ou
   empate, no caso de desempate zerando os dois no mesmo passo) — sem jingle de

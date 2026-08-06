@@ -32,6 +32,9 @@ const HITBOX_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
 // desaparece.
 const ARENA_BG_COLOR = '#3a3a3a';
 const ARENA_BORDER_COLOR = '#8b0000';
+// Modo espectador: borda amarela em vez de vermelha, o mesmo aviso visual de
+// "isso não é a sua partida" que o banner "Assistindo" já dá em texto.
+const ARENA_BORDER_COLOR_SPECTATOR = '#facc15';
 const ARENA_BORDER_WIDTH = 4;
 
 function drawArenaBackground() {
@@ -45,7 +48,7 @@ function drawArenaBackground() {
 function drawArenaBorder() {
   const inset = ARENA_BORDER_WIDTH / 2;
   ctx.save();
-  ctx.strokeStyle = ARENA_BORDER_COLOR;
+  ctx.strokeStyle = state.mode === 'spectator' ? ARENA_BORDER_COLOR_SPECTATOR : ARENA_BORDER_COLOR;
   ctx.lineWidth = ARENA_BORDER_WIDTH;
   ctx.strokeRect(inset, inset, canvas.width - ARENA_BORDER_WIDTH, canvas.height - ARENA_BORDER_WIDTH);
   ctx.restore();
