@@ -22,66 +22,77 @@ import { initMusicPlayer } from './music.js';
 import { initParallax } from './parallax.js';
 import { initFireCursor } from './fireCursor.js';
 import { initTitleFire } from './titleFire.js';
+import { ehDispositivoMobile, mostrarBloqueioMobile } from './mobileBlock.js';
 
-initInput();
-initUiSounds();
-initSoundSettings();
-initMusicPlayer();
-initParallax();
-initFireCursor();
-initTitleFire();
-initNicknameInput();
-initOnlineClassSelect();
-initBotClassSelect();
-initAuthScreens();
-initProfile();
-initCredits();
-initRanking();
-initLiveMatches();
+// Celular/tablet: só o aviso de "jogue no computador". Nada mais é
+// inicializado — em especial a música, que não deve tocar nessa tela.
+if (ehDispositivoMobile()) {
+  mostrarBloqueioMobile();
+} else {
+  iniciarJogo();
+}
 
-// Restaura a sessão do token guardado. Não bloqueia a tela: o menu já aparece
-// como convidado e troca para o estado logado quando a resposta chega.
-loadSession().then(() => {
-  atualizarBarraDeConta();
-  refreshRankingHighlight();
-});
+function iniciarJogo() {
+  initInput();
+  initUiSounds();
+  initSoundSettings();
+  initMusicPlayer();
+  initParallax();
+  initFireCursor();
+  initTitleFire();
+  initNicknameInput();
+  initOnlineClassSelect();
+  initBotClassSelect();
+  initAuthScreens();
+  initProfile();
+  initCredits();
+  initRanking();
+  initLiveMatches();
 
-btnOnline.addEventListener('click', () => {
-  if (!commitNickname()) return;
-  // Primeiro acesso: pula a modal de seleção de classe e cai direto no
-  // tutorial interativo (startOnline já redireciona pra partida de bot
-  // nesse caso — ver shouldStartMatchTutorial em menu.js).
-  if (shouldStartMatchTutorial()) {
-    startOnline();
-    return;
-  }
-  openOnlineClassSelect(startOnline);
-});
-btnBot.addEventListener('click', () => {
-  if (shouldStartMatchTutorial()) {
+  // Restaura a sessão do token guardado. Não bloqueia a tela: o menu já aparece
+  // como convidado e troca para o estado logado quando a resposta chega.
+  loadSession().then(() => {
+    atualizarBarraDeConta();
+    refreshRankingHighlight();
+  });
+
+  btnOnline.addEventListener('click', () => {
+    if (!commitNickname()) return;
+    // Primeiro acesso: pula a modal de seleção de classe e cai direto no
+    // tutorial interativo (startOnline já redireciona pra partida de bot
+    // nesse caso — ver shouldStartMatchTutorial em menu.js).
+    if (shouldStartMatchTutorial()) {
+      startOnline();
+      return;
+    }
+    openOnlineClassSelect(startOnline);
+  });
+  btnBot.addEventListener('click', () => {
+    if (shouldStartMatchTutorial()) {
+      startBot();
+      return;
+    }
+    openBotClassSelect(startBot);
+  });
+  btnHowToPlay.addEventListener('click', () => {
+    forceNextMatchTutorial();
     startBot();
-    return;
-  }
-  openBotClassSelect(startBot);
-});
-btnHowToPlay.addEventListener('click', () => {
-  forceNextMatchTutorial();
-  startBot();
-});
-btnLeaveQueue.addEventListener('click', () => leaveNetworkQueue(backToMenu));
-btnTryTrainingMode.addEventListener('click', () => {
-  state.pendingTrainingRedirect = true;
-  leaveNetworkQueue(backToMenu);
-});
-btnPlayAgain.addEventListener('click', () => {
-  if (state.mode === 'online') startOnline();
-  else if (state.mode === 'bot') startBot();
-});
-btnBackToMenu.addEventListener('click', () => backToMenu());
-btnSwapClasses.addEventListener('click', () => {
-  if (state.mode === 'online') openOnlineClassSelect(startOnline);
-  else openBotClassSelect(startBot);
-});
+  });
+  btnLeaveQueue.addEventListener('click', () => leaveNetworkQueue(backToMenu));
+  btnTryTrainingMode.addEventListener('click', () => {
+    state.pendingTrainingRedirect = true;
+    leaveNetworkQueue(backToMenu);
+  });
+  btnPlayAgain.addEventListener('click', () => {
+    if (state.mode === 'online') startOnline();
+    else if (state.mode === 'bot') startBot();
+  });
+  btnBackToMenu.addEventListener('click', () => backToMenu());
+  btnSwapClasses.addEventListener('click', () => {
+    if (state.mode === 'online') openOnlineClassSelect(startOnline);
+    else openBotClassSelect(startBot);
+  });
 
-showMenu();
-requestAnimationFrame(render);
+  showMenu();
+  requestAnimationFrame(render);
+}

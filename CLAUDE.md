@@ -242,6 +242,14 @@ conecta event listeners de UI aos módulos.
   DOM nem rede.
 - `overlays.js`, `gameOver.js`, `hud.js` — overlays de espera/contagem regressiva/fim
   de jogo e HUD (vidas, cooldown, escudo).
+- `mobileBlock.js` — celular/tablet não tem como jogar (o jogo é WASD + mouse e
+  não existe controle de toque), então em aparelho touch-only `main.js` mostra
+  só o aviso `#mobileBlock` ("jogue no computador") e **não inicializa mais
+  nada** — nem a música, que ficaria tocando por cima da mensagem. A detecção
+  (`deveBloquearMobile`, pura e testada) combina client hints, user agent,
+  multitoque em `MacIntel` (iPadOS se anuncia como Mac) e, como último recurso,
+  `pointer: coarse` sem `hover`. Um notebook com tela sensível ao toque
+  continua liberado, porque tem mouse e teclado.
 - `tutorial/matchTutorial.js` — único tutorial do jogo (o antigo modal explicativo
   "Como jogar" em canvas foi removido): joga-se uma partida de verdade contra o
   bot enquanto uma faixa no topo da arena (`#matchTutorialBanner`) indica a

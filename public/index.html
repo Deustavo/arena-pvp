@@ -13,6 +13,14 @@
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body>
+  <!-- Aviso de "sem suporte a celular" (ver public/js/mobileBlock.js). Fica
+       escondido por padrão e só aparece quando o JS marca body.mobile-bloqueado
+       — nesse caso nada mais do jogo é inicializado, nem a música. -->
+  <div id="mobileBlock">
+    <h1>Demon Arena</h1>
+    <p class="mobile-block-lead">Ainda não temos suporte para celular.</p>
+    <p>Acesse <strong id="mobileBlockUrl"></strong> no computador para entrar na arena.</p>
+  </div>
   <div id="soundSettings">
     <button type="button" id="btnSoundSettings" aria-haspopup="true" aria-expanded="false" aria-label="Configurações de som" title="Configurações de som">
       <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">

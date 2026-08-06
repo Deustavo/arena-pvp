@@ -2679,3 +2679,47 @@
       --sprite-box: 90px;
     }
   }
+
+  /* ===== Sem suporte a celular =====
+     Marcado por public/js/mobileBlock.js quando o aparelho é touch-only. Não
+     é um overlay por cima do menu: o menu, o jogo e os painéis flutuantes
+     saem da tela por completo, porque nada deles é inicializado nesse caso. */
+  #mobileBlock {
+    display: none;
+  }
+  body.mobile-bloqueado > *:not(#mobileBlock) {
+    display: none !important;
+  }
+  body.mobile-bloqueado #mobileBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    box-sizing: border-box;
+    min-height: 100%;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  #mobileBlock h1 {
+    font-family: 'Metal Mania', cursive;
+    font-size: 48px;
+    line-height: 1.1;
+    margin: 0;
+    color: var(--cor-vermelho-destaque);
+    text-shadow: var(--sombra-foco-vermelho);
+  }
+  #mobileBlock p {
+    max-width: 32ch;
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--cor-texto-suave);
+  }
+  #mobileBlock .mobile-block-lead {
+    font-size: 20px;
+    color: var(--cor-texto);
+  }
+  #mobileBlock strong {
+    color: var(--cor-branco);
+  }
