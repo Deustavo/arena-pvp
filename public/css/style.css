@@ -732,6 +732,54 @@
     font-weight: bold;
     flex-shrink: 0;
   }
+  #spectatorPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 660px;
+    box-sizing: border-box;
+    padding: 16px 24px 24px;
+    background: var(--cor-painel-pedra-veu);
+    border-radius: 16px;
+    border: 1px solid var(--cor-pedra-borda);
+    box-shadow: var(--sombra-pedra);
+    animation: entrada-fade 0.5s ease 0.2s both;
+  }
+  #spectatorPanel h2 {
+    margin: 0;
+    font-size: 22px;
+    text-align: center;
+  }
+  #liveMatchesList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #liveMatchesList li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    padding: 6px 0;
+    animation: overlay-fade 0.35s ease both;
+  }
+  #liveMatchesList li + li {
+    border-top: 1px solid var(--cor-pedra-borda);
+  }
+  .live-match-classe {
+    color: var(--cor-texto-fraco);
+    font-size: 12px;
+  }
+  #menu .live-match-watch {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
   .ranking-vazio, .ranking-erro {
     margin: 0;
     font-size: 14px;

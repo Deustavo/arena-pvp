@@ -84,7 +84,7 @@ export function initInput() {
       handleEscPress();
       return;
     }
-    if (!state.mode) return;
+    if (!state.mode || state.mode === 'spectator') return;
     if (e.code === 'Space') {
       e.preventDefault();
       const emPartida = state.matchStarted && !state.gameOver && !state.desempate;
@@ -115,7 +115,7 @@ export function initInput() {
   });
 
   window.addEventListener('keyup', (e) => {
-    if (!state.mode) return;
+    if (!state.mode || state.mode === 'spectator') return;
     if (e.code === 'Space') {
       e.preventDefault();
       cancelTutorialShieldHold();
@@ -143,7 +143,7 @@ export function initInput() {
 
   window.addEventListener('click', (e) => {
     if (e.target.closest('button, a, input, select, textarea')) return;
-    if (!state.mode) return;
+    if (!state.mode || state.mode === 'spectator') return;
     if (state.gameOver) {
       return;
     }

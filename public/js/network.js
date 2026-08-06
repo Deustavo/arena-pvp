@@ -5,7 +5,7 @@ import {
   showWaitingOverlay, hideWaitingOverlay, showCountdown, hideCountdown, showNoOpponentsMessage,
 } from './overlays.js';
 import { updateHud, isShieldAvailable, initHearts } from './hud.js';
-import { recordGameOver } from './gameOver.js';
+import { recordGameOver, recordSpectatorGameOver } from './gameOver.js';
 import { playStartSound, playMatchFoundSound } from './audio.js';
 import { reconcilePrediction } from './prediction.js';
 import { WS_URL } from './config.js';
@@ -120,6 +120,57 @@ function handleOnlineMessage(msg, onBackToMenu) {
       } else {
         recordGameOver('lose');
       }
+      break;
+  }
+}
+
+// Modo espectador: mesmo protocolo WS, mas sem nickname/classe/token — o
+// servidor identifica pelo parâmetro `spectate` e nunca cria `ws.player`
+// pro socket (ver wsServer.js), então input/tiro nunca são enviados daqui.
+export function connectSpectator(matchId, onBackToMenu) {
+  const params = new URLSearchParams({ spectate: matchId });
+  state.ws = new WebSocket(`${WS_URL}?${params}`);
+
+  state.ws.onmessage = (event) => {
+    handleSpectatorMessage(JSON.parse(event.data), onBackToMenu);
+  };
+}
+
+function handleSpectatorMessage(msg, onBackToMenu) {
+  switch (msg.type) {
+    case 'error':
+      onBackToMenu();
+      break;
+    case 'init':
+      state.playerIndex = null;
+      state.matchId = msg.matchId;
+      state.arena = msg.arena;
+      state.playerSize = msg.playerSize;
+      state.projectileSize = msg.projectileSize;
+      state.colors = msg.colors;
+      state.shieldRadius = msg.shieldRadius ?? SHIELD_RADIUS;
+      state.shieldMaxHits = msg.players.map((p) => p.shieldMaxHits ?? 1);
+      canvas.width = state.arena.w;
+      canvas.height = state.arena.h;
+      state.gameOver = false;
+      // A partida já passou da contagem regressiva quando ela aparece no
+      // painel "ao vivo" (ver listActiveMatches em matchmaking.js) — o
+      // espectador entra direto no jogo, sem overlay de espera/contagem.
+      state.matchStarted = true;
+      state.viewFlipped = false;
+      state.latestState = { players: msg.players, projectiles: [] };
+      initHearts(msg.players.map((p) => p.lives));
+      updateHud();
+      atualizarCronometro(msg.matchDurationMs ?? MATCH_DURATION_MS, false);
+      updateGameScale();
+      break;
+    case 'state':
+      state.latestState = msg;
+      updateHud();
+      atualizarCronometro(msg.remainingMs ?? state.remainingMs, !!msg.desempate);
+      break;
+    case 'gameover':
+      recordSpectatorGameOver(msg.winnerIndex);
       break;
   }
 }

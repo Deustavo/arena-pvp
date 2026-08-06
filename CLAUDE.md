@@ -179,10 +179,15 @@ importado por `main.js`, que é o entrypoint (registrado em `index.html`) e apen
 conecta event listeners de UI aos módulos.
 
 - `state.js` — estado global mutável do cliente (single source of truth do lado
-  cliente): modo atual (`online`/`bot`), input, snapshot mais recente do servidor,
-  estado do bot local, etc.
+  cliente): modo atual (`online`/`bot`/`spectator`), input, snapshot mais
+  recente do servidor, estado do bot local, etc.
 - `network.js` — conexão WebSocket do modo online: envia `input`/`shoot`, e trata
-  mensagens do servidor (`waiting`, `init`, `start`, `state`, `gameover`).
+  mensagens do servidor (`waiting`, `init`, `start`, `state`, `gameover`). Também
+  expõe `connectSpectator`, a conexão somente-leitura do modo espectador (ver
+  "Modo espectador" abaixo).
+- `liveMatches.js` — painel "Partidas ao vivo" do menu (`#spectatorPanel`, abaixo
+  dos containers de início): poll de `GET /api/live-matches` a cada 5s, mesmo
+  padrão de `onlineCount.js`/`ranking.js`, com um botão "Assistir" por partida.
 - `bot.js` — modo offline contra bot: mantém seu próprio loop (`setInterval` a
   `TICK_MS`) chamando as mesmas `stepPlayers`/`stepProjectiles` de `shared/`, e roda
   a IA do bot no cliente (mira preditiva opcional, desvio, escudo — mesmas regras
@@ -434,6 +439,54 @@ tick pelos dois donos de loop: `Match.js` (online) e `bot.js` (modo treino).
 - Enquanto o tutorial interativo roda, o relógio **não corre** (`adiarFim` a
   cada tick em `bot.js`): quem está aprendendo os controles não está disputando
   a partida.
+
+### Modo espectador (assistir partidas em andamento)
+
+Qualquer partida online 1x1 em andamento pode ser assistida em modo leitura,
+sem entrar no matchmaking e sem afetar o jogo dos dois jogadores. O painel
+"Partidas ao vivo" (`#spectatorPanel`, na tela de menu, logo abaixo dos
+containers de início) lista as partidas ativas com um botão "Assistir".
+
+- `GET /api/live-matches` (`httpServer.js`, público, mesmo CORS de
+  `/api/online-count`) devolve `listActiveMatches()` (`matchmaking.js`): id,
+  nome e classe dos dois jogadores de cada partida que já passou da contagem
+  regressiva (`match.interval` existe — antes disso ainda não há nada pra
+  assistir). `public/js/liveMatches.js` faz poll dessa rota a cada 5s e para
+  de pollar assim que o cliente entra em qualquer partida/tela de jogo
+  (`showGame()`/`showMenu()` em `menu.js`, mesmo padrão de `onlineCount.js`).
+- Um espectador se conecta no **mesmo** WebSocket do jogo, mas com
+  `?spectate=<matchId>` na query string em vez de `nickname`/`classId`/`token`.
+  `wsServer.js` detecta esse parâmetro **antes** de resolver identidade/sessão
+  e desvia a conexão para `attachSpectator`/`detachSpectator` (`Match.js`) em
+  vez do fluxo normal de `handleConnection` — esse socket nunca vira
+  `ws.player`/`ws.match`, então mesmo que o cliente tente mandar `input`/`shoot`
+  (não manda, mas o servidor não confia nisso) não há jogador pra aplicar.
+  `matchId` inválido ou de partida já encerrada recebe `{ type: 'error' }` e a
+  conexão é fechada.
+- `match.spectators` (`Set` em `Match.js`) recebe o mesmo broadcast de
+  `state`/`gameover` que os dois jogadores (`broadcastState`/`endMatch`). Ao
+  entrar, `attachSpectator` manda um `init` com `playerIndex: null` e o
+  snapshot **atual** dos dois jogadores — a partida pode estar em andamento
+  há um tempo quando o espectador chega, então não existe contagem regressiva
+  para ele: o cliente cai direto no jogo (`state.matchStarted = true` já no
+  `init`, em `connectSpectator`/`network.js`).
+- `playerIndex: null` é o sinal de "sem jogador local" que os módulos de
+  partida do cliente precisam tratar (modo `state.mode === 'spectator'`):
+  `hud.js` usa `state.playerIndex ?? 0` como o slot 0 do HUD (em vez de não
+  preencher nenhum lado), `render.js` não desenha marcador/seta de "você" nem
+  prévia de mira em nenhum dos dois jogadores e colore os projéteis por dono
+  (slot 0 = amarelo, slot 1 = vermelho) em vez de "meu tiro", e `input.js`
+  ignora teclado e clique por completo nesse modo — só o ESC continua
+  funcionando, para sair a qualquer momento (`backToMenu`, que fecha o
+  WebSocket como em qualquer outro modo).
+- Fim de partida assistida usa `recordSpectatorGameOver` (`gameOver.js`), não
+  `recordGameOver`: sem "você" não existe vitória/derrota, só quem venceu (ou
+  empate, no caso de desempate zerando os dois no mesmo passo) — sem jingle de
+  vitória/derrota, e o overlay some com os botões "Jogar novamente"/"Trocar
+  classes", sobrando só "Menu inicial".
+- Não gera histórico nem conta como jogador: `saveMatchResult`
+  (`matchHistory.js`) e o `endMatch` de `Match.js` só olham `match.players`,
+  nunca `match.spectators`.
 
 ### Convenção de nomes e comentários
 

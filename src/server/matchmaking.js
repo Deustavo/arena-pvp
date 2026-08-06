@@ -15,6 +15,28 @@ export function activeMatchCount() {
   return activeMatches.size;
 }
 
+// Metadados públicos das partidas em andamento, para o painel de espectador
+// do menu. Só partidas que já passaram da contagem regressiva (`interval`
+// existe) — antes disso ainda não há nada de fato pra assistir.
+export function listActiveMatches() {
+  const matches = [];
+  for (const match of activeMatches) {
+    if (!match.running || !match.interval) continue;
+    matches.push({
+      id: match.id,
+      players: match.players.map((p) => ({ name: p.name, classId: p.classId })),
+    });
+  }
+  return matches;
+}
+
+export function getMatchById(matchId) {
+  for (const match of activeMatches) {
+    if (match.id === matchId && match.running) return match;
+  }
+  return null;
+}
+
 function onMatchEnd(match) {
   activeMatches.delete(match);
   console.log(`Partida ${match.id} encerrada. Partidas ativas: ${activeMatches.size}`);

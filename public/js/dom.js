@@ -105,6 +105,9 @@ export const onlineCountValueEl = document.getElementById('onlineCountValue');
 
 export const rankingListEl = document.getElementById('rankingList');
 
+export const spectatorPanelEl = document.getElementById('spectatorPanel');
+export const liveMatchesListEl = document.getElementById('liveMatchesList');
+
 export const btnCredits = document.getElementById('btnCredits');
 export const creditsOverlayEl = document.getElementById('creditsOverlay');
 export const btnCreditsClose = document.getElementById('btnCreditsClose');

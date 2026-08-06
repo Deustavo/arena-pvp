@@ -12,7 +12,7 @@ import { MATCH_DURATION_MS } from '../../shared/matchTimer.js';
 import { resetCharacterAnimators } from './characterSprites.js';
 
 export const state = {
-  mode: null, // 'online' | 'bot'
+  mode: null, // 'online' | 'bot' | 'spectator'
   ws: null,
   pendingTrainingRedirect: false, // true quando o jogador clicou em "Modo treino" a partir do aviso de poucos jogadores online
   playerIndex: null,

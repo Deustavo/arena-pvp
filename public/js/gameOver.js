@@ -24,6 +24,17 @@ export function recordGameOver(result) {
   }
 }
 
+// Fim de uma partida assistida (modo espectador): não há "você" vencendo ou
+// perdendo, só um resultado neutro — quem venceu, ou empate no desempate.
+export function recordSpectatorGameOver(winnerIndex) {
+  lastMatchWasTutorial = false;
+  state.gameOver = true;
+  state.gameOverAt = Date.now();
+  state.overlayShown = false;
+  state.lastResult = winnerIndex === null ? 'draw' : 'spectator';
+  state.winnerIndex = winnerIndex;
+}
+
 // O jingle toca aqui e não em recordGameOver de propósito: a partida acaba com
 // a explosão do jogador, e os dois sons no mesmo instante só embolam. O overlay
 // aparece GAMEOVER_OVERLAY_DELAY depois (render.js), quando a explosão já
@@ -45,13 +56,18 @@ export function showGameOverOverlay() {
     text = 'Empate';
     // Empate usa o som de derrota: em nenhum dos dois casos o jogador ganhou.
     playDefeatSound();
+  } else if (state.lastResult === 'spectator') {
+    // Fim de uma partida assistida: resultado neutro, sem jingle de
+    // vitória/derrota (nenhum dos dois é "o jogador").
+    const winner = state.latestState.players[state.winnerIndex];
+    text = winner ? `${winner.name} venceu` : 'Partida encerrada';
   } else {
     text = 'Partida encerrada';
   }
   gameOverMessageEl.textContent = text;
-  // Ao terminar o tutorial, só faz sentido oferecer "Menu inicial" — o
-  // jogador ainda não escolheu classe/modo de verdade para repetir.
-  btnPlayAgain.style.display = lastMatchWasTutorial ? 'none' : 'block';
+  // Ao terminar o tutorial ou uma partida assistida, só faz sentido oferecer
+  // "Menu inicial" — não há classe/modo próprio pra repetir.
+  btnPlayAgain.style.display = (lastMatchWasTutorial || state.mode === 'spectator') ? 'none' : 'block';
   btnSwapClasses.style.display = !lastMatchWasTutorial && (state.mode === 'bot' || state.mode === 'online') ? 'block' : 'none';
   gameOverOverlayEl.style.display = 'flex';
 }

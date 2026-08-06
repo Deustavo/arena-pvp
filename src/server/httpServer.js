@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { getOnlineCount } from './wsServer.js';
+import { listActiveMatches } from './matchmaking.js';
 import { auth } from './auth.js';
 import {
   getHistory, getSummary, findUserIdByName, parsePaginacao,
@@ -46,6 +47,13 @@ export function createHttpServer() {
         return;
       }
       authHandler(req, res);
+      return;
+    }
+
+    if (req.url === '/api/live-matches') {
+      res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ matches: listActiveMatches() }));
       return;
     }
 

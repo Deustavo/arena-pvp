@@ -60,6 +60,9 @@ export function createMatch(wsA, wsB, { onEnd, bot = false, botDifficulty = 'int
     onEnd,
     bot,
     botState: bot ? createBotState(botDifficulty) : null,
+    // Sockets assistindo a partida em modo leitura (ver attachSpectator).
+    // Nunca recebem `ws.player`/`ws.match` — só entram no broadcast de estado.
+    spectators: new Set(),
   };
 
   players.forEach((p, i) => {
@@ -136,6 +139,31 @@ function broadcastState(match) {
   for (const p of match.players) {
     if (p.ws.readyState === WebSocket.OPEN) p.ws.send(payload);
   }
+  for (const ws of match.spectators) send(ws, state);
+}
+
+// Espectador entra em modo leitura: recebe o mesmo `init` que os jogadores
+// (sem `playerIndex`, já que não há "seu" personagem) com o snapshot atual —
+// a partida pode já estar em andamento havia algum tempo quando ele chega —
+// e a partir daí só acompanha o broadcast de `state` de broadcastState acima.
+export function attachSpectator(match, ws) {
+  match.spectators.add(ws);
+  send(ws, {
+    type: 'init',
+    matchId: match.id,
+    playerIndex: null,
+    arena: ARENA,
+    playerSize: PLAYER_SIZE,
+    projectileSize: PROJECTILE_SIZE,
+    colors: COLORS,
+    shieldRadius: SHIELD_RADIUS,
+    matchDurationMs: MATCH_DURATION_MS,
+    players: match.players.map(playerSnapshot),
+  });
+}
+
+export function detachSpectator(match, ws) {
+  match.spectators.delete(ws);
 }
 
 export function endMatch(match, winnerIndex) {
@@ -143,6 +171,7 @@ export function endMatch(match, winnerIndex) {
   match.running = false;
   clearInterval(match.interval);
   for (const p of match.players) send(p.ws, { type: 'gameover', winnerIndex });
+  for (const ws of match.spectators) send(ws, { type: 'gameover', winnerIndex });
   // Gravação em segundo plano: o fim da partida não espera o banco.
   saveMatchResult(match, winnerIndex);
   if (match.onEnd) match.onEnd(match, winnerIndex);

@@ -249,9 +249,13 @@ function drawHitbox(x, y) {
 }
 
 function drawProjectiles(renderState) {
+  // Sem jogador local (espectador, `playerIndex` null) não existe "meu tiro":
+  // colore por dono de forma estável (slot 0 = amarelo, slot 1 = vermelho),
+  // só pra diferenciar visualmente os dois lados.
+  const ownColorIndex = state.playerIndex ?? 0;
   for (const proj of renderState.projectiles) {
     const size = proj.size ?? state.projectileSize;
-    if (proj.ownerIndex === state.playerIndex) {
+    if (proj.ownerIndex === ownColorIndex) {
       ctx.fillStyle = OWN_SHOT_COLOR;
     } else {
       ctx.fillStyle = ENEMY_SHOT_COLOR;

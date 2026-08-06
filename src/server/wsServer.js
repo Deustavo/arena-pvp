@@ -3,7 +3,8 @@ import { PLAYER_SIZE } from '../../shared/constants.js';
 import { createShotProjectiles, escudoAtivo } from '../../shared/entities.js';
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { emDesempate } from '../../shared/matchTimer.js';
-import { handleConnection, handleLeaveQueue, handleDisconnect } from './matchmaking.js';
+import { handleConnection, handleLeaveQueue, handleDisconnect, getMatchById } from './matchmaking.js';
+import { attachSpectator, detachSpectator } from './Match.js';
 import { parseConnectionParams, resolvePlayerIdentity } from './wsIdentity.js';
 import { auth } from './auth.js';
 
@@ -24,6 +25,23 @@ export function createWsServer(httpServer) {
   wss = new WebSocketServer({ server: httpServer, perMessageDeflate: false });
 
   wss.on('connection', async (ws, req) => {
+    // Espectador: não entra no matchmaking nem manda input/shoot, só recebe o
+    // broadcast de estado de uma partida existente. Detectado antes de tudo
+    // porque não precisa (nem deve) resolver identidade/sessão.
+    const { searchParams } = new URL(req.url, 'http://localhost');
+    const spectateId = searchParams.get('spectate');
+    if (spectateId) {
+      const match = getMatchById(spectateId);
+      if (!match) {
+        ws.send(JSON.stringify({ type: 'error', message: 'Partida não encontrada' }));
+        ws.close();
+        return;
+      }
+      ws.on('close', () => detachSpectator(match, ws));
+      attachSpectator(match, ws);
+      return;
+    }
+
     ws.on('message', (raw) => handleMessage(ws, raw));
     ws.on('close', () => handleDisconnect(ws));
 

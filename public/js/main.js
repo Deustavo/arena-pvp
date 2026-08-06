@@ -15,6 +15,7 @@ import { initProfile } from './profile.js';
 import { initCredits } from './credits.js';
 import { loadSession } from './auth.js';
 import { initRanking, refreshRankingHighlight } from './ranking.js';
+import { initLiveMatches } from './liveMatches.js';
 import { initUiSounds } from './uiSounds.js';
 import { initSoundSettings } from './soundSettings.js';
 import { initMusicPlayer } from './music.js';
@@ -36,6 +37,7 @@ initAuthScreens();
 initProfile();
 initCredits();
 initRanking();
+initLiveMatches();
 
 // Restaura a sessão do token guardado. Não bloqueia a tela: o menu já aparece
 // como convidado e troca para o estado logado quando a resposta chega.

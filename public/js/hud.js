@@ -129,8 +129,12 @@ export function initHearts(maxLives = [10, 10]) {
   // reordenado para [você, oponente] aqui, senão a fileira de escudos do
   // slot 0 é montada com a contagem do jogador errado quando você não é
   // `players[0]` no servidor.
-  const oppIndex = state.playerIndex === 0 ? 1 : 0;
-  const maxShields = [state.shieldMaxHits[state.playerIndex], state.shieldMaxHits[oppIndex]];
+  // `?? 0`: no modo espectador `state.playerIndex` é null (não há "você") —
+  // trata o slot 0 do servidor como o slot 0 do HUD, igual às duas outras
+  // funções abaixo que leem esse índice.
+  const meIndex = state.playerIndex ?? 0;
+  const oppIndex = meIndex === 0 ? 1 : 0;
+  const maxShields = [state.shieldMaxHits[meIndex], state.shieldMaxHits[oppIndex]];
   shieldsEls[0] = createShieldsRow(shieldsP0El, maxShields[0]);
   shieldsEls[1] = createShieldsRow(shieldsP1El, maxShields[1]);
   prevShieldCharges = [maxShields[0], maxShields[1]];
@@ -277,24 +281,26 @@ function updateCooldownBar(el, player, now) {
 }
 
 export function updateCooldownBars(now = Date.now()) {
-  const oppIndex = state.playerIndex === 0 ? 1 : 0;
-  const me = state.latestState.players[state.playerIndex];
+  const meIndex = state.playerIndex ?? 0;
+  const oppIndex = meIndex === 0 ? 1 : 0;
+  const me = state.latestState.players[meIndex];
   const opp = state.latestState.players[oppIndex];
   updateCooldownBar(cooldownP0El, me, now);
   updateCooldownBar(cooldownP1El, opp, now);
 }
 
 export function updateHud() {
-  const oppIndex = state.playerIndex === 0 ? 1 : 0;
-  const me = state.latestState.players[state.playerIndex];
+  const meIndex = state.playerIndex ?? 0;
+  const oppIndex = meIndex === 0 ? 1 : 0;
+  const me = state.latestState.players[meIndex];
   const opp = state.latestState.players[oppIndex];
   if (me) {
     nameP0El.textContent = me.name || 'Você';
     updateClassIcon(classIconP0El, classNameP0El, 0, me.classId);
-    updateHeartsRow(0, me.lives, state.playerIndex, me);
-    updateShieldsRow(0, shieldCharges(state.playerIndex), me);
+    updateHeartsRow(0, me.lives, meIndex, me);
+    updateShieldsRow(0, shieldCharges(meIndex), me);
     checkShot(0, me.lastShot);
-    checkDeathExplosion(state.playerIndex, me);
+    checkDeathExplosion(meIndex, me);
   }
   if (opp) {
     nameP1El.textContent = opp.name || 'Oponente';

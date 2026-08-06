@@ -4,7 +4,8 @@ import { hideWaitingOverlay, hideCountdown } from './overlays.js';
 import { hideGameOverOverlay } from './gameOver.js';
 import { startOnlineCountPolling, stopOnlineCountPolling } from './onlineCount.js';
 import { startRankingPolling, stopRankingPolling } from './ranking.js';
-import { startOnline as connectOnline, closeConnection } from './network.js';
+import { startLiveMatchesPolling, stopLiveMatchesPolling } from './liveMatches.js';
+import { startOnline as connectOnline, connectSpectator, closeConnection } from './network.js';
 import { startBot as startBotMatch, stopBot } from './bot.js';
 import { commitNickname } from './nickname.js';
 import { resetEscHint } from './input.js';
@@ -22,6 +23,7 @@ export function showMenu() {
   hideWaitingOverlay();
   startOnlineCountPolling();
   startRankingPolling();
+  startLiveMatchesPolling();
 }
 
 export function showGame() {
@@ -32,6 +34,7 @@ export function showGame() {
   document.body.style.removeProperty('--parallax-y');
   stopOnlineCountPolling();
   stopRankingPolling();
+  stopLiveMatchesPolling();
   updateGameScale();
 }
 
@@ -70,6 +73,15 @@ export function startOnline() {
   prepareNewMatch();
   showGame();
   connectOnline(backToMenu);
+}
+
+// Assistir uma partida em andamento (painel "Partidas ao vivo" do menu). Não
+// passa por `commitNickname`/seleção de classe — espectador não joga.
+export function watchMatch(matchId) {
+  state.mode = 'spectator';
+  prepareNewMatch();
+  showGame();
+  connectSpectator(matchId, backToMenu);
 }
 
 export function startBot() {
