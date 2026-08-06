@@ -346,7 +346,8 @@
   #onlineClassOverlay.closing,
   #authOverlay.visible.closing,
   #profileOverlay.visible.closing,
-  #creditsOverlay.visible.closing {
+  #creditsOverlay.visible.closing,
+  #changelogOverlay.visible.closing {
     animation: overlay-fade-out 0.15s ease forwards;
   }
   /* ----- Controle de volume -----
@@ -1863,12 +1864,17 @@
     margin: 4px 0;
   }
   #menu button#btnHowToPlay,
-  #menu button#btnCredits {
+  #menu button#btnCredits,
+  #menu button#btnChangelog {
     background: var(--cor-superficie-forte);
   }
   #menu button#btnHowToPlay:hover,
-  #menu button#btnCredits:hover {
+  #menu button#btnCredits:hover,
+  #menu button#btnChangelog:hover {
     background: var(--cor-superficie-forte-hover);
+  }
+  #menuVersion {
+    color: var(--cor-vermelho-destaque);
   }
   /* ----- Regra comum a todas as modais -----
      Cada modal define a própria largura, mas a altura é sempre limitada à
@@ -2646,6 +2652,121 @@
     text-align: center;
     font-size: 14px;
     color: var(--cor-azul-link);
+  }
+
+  /* ----- Modal de novidades (histórico de versões) -----
+     Mesma carcaça da modal de créditos, só mais larga e com o corpo rolável:
+     o conteúdo é texto corrido e cresce a cada versão publicada. */
+  #changelogOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #changelogOverlay.visible {
+    display: flex;
+    animation: overlay-fade 0.15s ease;
+  }
+  #changelogOverlay .modal {
+    background: var(--cor-modal-fundo);
+    border: 2px solid var(--cor-vermelho);
+    border-radius: 10px;
+    box-shadow: var(--sombra-modal);
+    padding: 20px 24px;
+    width: 740px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    /* Quem rola é o corpo, não a modal inteira: o cabeçalho com o botão de
+       fechar precisa ficar visível o tempo todo. */
+    overflow: hidden;
+  }
+  #changelogHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  #changelogHeader h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  #btnChangelogClose {
+    width: 26px;
+    height: 26px;
+    min-width: 0;
+    padding: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--cor-texto-fraco);
+    font-size: 15px;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+  }
+  #btnChangelogClose:hover {
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
+  }
+  #changelogBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .changelog-versao {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--cor-superficie-baixa);
+    border-radius: 8px;
+    padding: 14px 18px 18px;
+  }
+  .changelog-versao-cabecalho {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+  .changelog-versao-cabecalho h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    margin: 0;
+    color: var(--cor-texto);
+  }
+  .changelog-tag {
+    font-size: 12px;
+    color: var(--cor-sucesso);
+    border: 1px solid var(--cor-sucesso);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  .changelog-data {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--cor-texto-fraco);
+  }
+  .changelog-versao h4 {
+    margin: 12px 0 0;
+    font-size: 15px;
+    color: var(--cor-vermelho-destaque);
+  }
+  .changelog-versao p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--cor-texto-suave);
+  }
+  .changelog-resumo {
+    color: var(--cor-texto-medio);
   }
 
   @media (max-width: 700px) {

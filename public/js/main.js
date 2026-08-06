@@ -13,6 +13,7 @@ import { initBotClassSelect, openBotClassSelect } from './botClassSelect.js';
 import { initAuthScreens, atualizarBarraDeConta } from './authScreens.js';
 import { initProfile } from './profile.js';
 import { initCredits } from './credits.js';
+import { initChangelog } from './changelog.js';
 import { loadSession } from './auth.js';
 import { initRanking, refreshRankingHighlight } from './ranking.js';
 import { initLiveMatches } from './liveMatches.js';
@@ -46,6 +47,7 @@ function iniciarJogo() {
   initAuthScreens();
   initProfile();
   initCredits();
+  initChangelog();
   initRanking();
   initLiveMatches();
 

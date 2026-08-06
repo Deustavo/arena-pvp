@@ -579,6 +579,22 @@ containers de início) lista as partidas ativas com um botão "Assistir".
   (`matchHistory.js`) e o `endMatch` de `Match.js` só olham `match.players`,
   nunca `match.spectators`.
 
+### Histórico de versões
+
+O changelog do jogo vive em dois lugares que precisam andar juntos:
+`CHANGELOG.md` na raiz (fonte da documentação) e a modal "Novidades" do menu
+(`#changelogOverlay` no `index.html`, aberta pelo `#btnChangelog`). Ao publicar
+uma versão nova, o bloco entra nos dois e o número em `#menuVersion` é
+atualizado. O conteúdo da modal é HTML estático dentro do `index.html`, então
+`public/js/changelog.js` só cuida do abre/fecha, no mesmo padrão de
+`credits.js`. Diferente das outras modais, quem rola é o corpo
+(`#changelogBody`), não a modal inteira: o cabeçalho com o botão de fechar
+precisa continuar visível enquanto a lista de versões cresce.
+
+O texto é escrito para jogador, não para desenvolvedor: descreve o que mudou na
+partida, não o commit. Versões atuais: `beta 0.1` (sprites dos personagens e o
+jogo como estava até então) e `beta 0.2` (power-ups na arena).
+
 ### Convenção de nomes e comentários
 
 O código e os comentários existentes estão em português — siga essa convenção ao
