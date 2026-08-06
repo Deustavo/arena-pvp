@@ -166,6 +166,22 @@ export function resetHud() {
   }
 }
 
+// Preenche o lado do HUD do jogador local (nome, ícone de classe, corações e
+// escudos cheios) com o que ele já escolheu no menu, antes de qualquer
+// snapshot da partida chegar — senão o HUD fica com o placeholder genérico
+// ("Você", sem ícone nem vidas) durante toda a espera por oponente no modo
+// online. `initHearts` substitui essas fileiras pelas de verdade assim que a
+// partida é encontrada (mensagem `init`).
+export function fillLocalPlayerHud() {
+  nameP0El.textContent = state.user?.name || state.nickname || 'Você';
+  updateClassIcon(classIconP0El, classNameP0El, 0, state.classId);
+  const cls = getClass(state.classId);
+  heartsEls[0] = createHeartsRow(livesP0El, cls.maxLives);
+  prevLives[0] = cls.maxLives;
+  shieldsEls[0] = createShieldsRow(shieldsP0El, cls.shieldMaxHits);
+  prevShieldCharges[0] = cls.shieldMaxHits;
+}
+
 function triggerHeartBlink(heartEl) {
   heartEl.classList.remove('blink');
   void heartEl.offsetWidth; // force reflow to restart the animation

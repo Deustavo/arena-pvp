@@ -8,7 +8,7 @@ import { startOnline as connectOnline, closeConnection } from './network.js';
 import { startBot as startBotMatch, stopBot } from './bot.js';
 import { commitNickname } from './nickname.js';
 import { resetEscHint } from './input.js';
-import { resetHud } from './hud.js';
+import { resetHud, fillLocalPlayerHud } from './hud.js';
 import { resetMatchTimer } from './matchTimer.js';
 import { resetNearMiss } from './nearMiss.js';
 import { openBotClassSelect } from './botClassSelect.js';
@@ -48,6 +48,7 @@ function prepareNewMatch() {
   hideWaitingOverlay();
   hideCountdown();
   resetHud();
+  fillLocalPlayerHud();
   resetMatchTimer();
   resetNearMiss();
   resetEscHint();

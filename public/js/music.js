@@ -37,7 +37,7 @@ function nomeDeExibicao(arquivo) {
 }
 
 // Faixa que sempre abre a playlist, antes do embaralhamento do resto.
-const FAIXA_ABERTURA = 'Cooler Heads - Jeremy Black.mp3';
+const FAIXA_ABERTURA = 'Electrician - Jeremy Black.mp3';
 
 // Fisher-Yates: ordem nova a cada abertura do jogo, como pedido — não
 // persiste em localStorage de propósito. FAIXA_ABERTURA fica de fora do
