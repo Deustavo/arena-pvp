@@ -1,9 +1,11 @@
   /* ===== Fontes =====
      Self-hosted (sem dependência de CDN externo): Chakra Petch é a fonte-base
-     da interface (legível em tamanho pequeno pro HUD) e Metal Mania é só pros
-     títulos (h1/h2 de menu, painéis, modais e fim de jogo), pela temática de
-     demônios/arena. Arquivos em public/assets/fonts/, dois subsets cada
-     (latin + latin-ext, pro acento do português) via unicode-range. */
+     da interface (legível em tamanho pequeno pro HUD), Cinzel é a fonte dos
+     títulos (h1/h2 de painéis, modais e fim de jogo) e Metal Mania é
+     exclusiva do nome do jogo (#menuTitle) — ela só é legível em texto
+     grande, então não deve aparecer em mais nenhum lugar. Arquivos em
+     public/assets/fonts/, dois subsets cada (latin + latin-ext, pro acento
+     do português) via unicode-range. */
   @font-face {
     font-family: 'Metal Mania';
     font-style: normal;
@@ -18,6 +20,22 @@
     font-weight: 400;
     font-display: swap;
     src: url('../assets/fonts/metal-mania-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-024F, U+1E00-1EFF, U+2020, U+2113;
+  }
+  @font-face {
+    font-family: 'Cinzel';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/cinzel-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  }
+  @font-face {
+    font-family: 'Cinzel';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../assets/fonts/cinzel-latin-ext.woff2') format('woff2');
     unicode-range: U+0100-024F, U+1E00-1EFF, U+2020, U+2113;
   }
   @font-face {
@@ -195,11 +213,15 @@
     filter: brightness(0.97);
     box-shadow: none;
   }
-  /* Metal Mania é só pros títulos (menu, painéis, modais, fim de jogo) — em
-     texto corrido ou números pequenos (HUD, cronômetro) ela vira ilegível. */
+  /* Cinzel é a fonte dos títulos (painéis, modais, fim de jogo) — Metal
+     Mania é exclusiva do nome do jogo (#menuTitle), ela vira ilegível em
+     texto corrido ou números pequenos (HUD, cronômetro). */
   h1, h2 {
-    font-family: 'Metal Mania', cursive;
+    font-family: 'Cinzel', serif;
     letter-spacing: 0.5px;
+  }
+  #menuTitle {
+    font-family: 'Metal Mania', cursive;
   }
   /* Canvas do rastro de fogo do cursor (public/js/fireCursor.js): fixo por
      cima de tudo e sem capturar clique/hover, porque é puramente decorativo
