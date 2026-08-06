@@ -3,9 +3,14 @@ name: Deploy
 # Pipeline único: os testes rodam uma vez e são o gate dos dois deploys.
 # O trigger do Cloud Build precisa ficar DESABILITADO no console GCP, senão o
 # push na main dispara o deploy do backend por fora deste gate.
+# Roda em PR também (só o job test) para o check obrigatório de branch
+# protection ter status a reportar; deploy-backend/deploy-frontend só rodam
+# em push na main (github.event_name == 'push'), nunca numa PR.
 
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -31,6 +36,7 @@ jobs:
   # arriscaria chamar uma API que ainda não existe.
   deploy-backend:
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
