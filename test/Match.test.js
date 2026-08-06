@@ -1,6 +1,6 @@
 import { test, describe, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMatch, endMatch } from '../src/server/Match.js';
+import { createMatch, endMatch, attachSpectator, detachSpectator, MAX_SPECTATORS_PER_MATCH } from '../src/server/Match.js';
 import { COUNTDOWN_MS, TICK_MS } from '../shared/constants.js';
 import { MATCH_DURATION_MS, DESEMPATE_DELAY_MS, DESEMPATE_PASSO_MS } from '../shared/matchTimer.js';
 
@@ -274,5 +274,49 @@ describe('endMatch', () => {
     mock.timers.tick(TICK_MS * 10);
 
     assert.equal(wsA.sent.length, sentCountAfterEnd);
+  });
+});
+
+describe('espectadores', () => {
+  beforeEach(() => {
+    mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'] });
+  });
+
+  afterEach(() => {
+    mock.timers.reset();
+  });
+
+  test('recusa novos espectadores acima do teto, sem afetar os já conectados', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    const match = createMatch(wsA, wsB);
+
+    for (let i = 0; i < MAX_SPECTATORS_PER_MATCH; i += 1) {
+      assert.equal(attachSpectator(match, makeFakeWs()), true);
+    }
+    assert.equal(match.spectators.size, MAX_SPECTATORS_PER_MATCH);
+
+    const overflowWs = makeFakeWs();
+    assert.equal(attachSpectator(match, overflowWs), false);
+    assert.equal(match.spectators.size, MAX_SPECTATORS_PER_MATCH);
+    assert.equal(overflowWs.sent.length, 0);
+  });
+
+  test('desconectar um espectador libera vaga para outro', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    const match = createMatch(wsA, wsB);
+
+    const spectators = [];
+    for (let i = 0; i < MAX_SPECTATORS_PER_MATCH; i += 1) {
+      const spectatorWs = makeFakeWs();
+      attachSpectator(match, spectatorWs);
+      spectators.push(spectatorWs);
+    }
+
+    detachSpectator(match, spectators[0]);
+    const newSpectatorWs = makeFakeWs();
+    assert.equal(attachSpectator(match, newSpectatorWs), true);
+    assert.equal(match.spectators.size, MAX_SPECTATORS_PER_MATCH);
   });
 });

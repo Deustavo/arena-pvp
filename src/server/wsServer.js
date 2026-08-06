@@ -38,7 +38,10 @@ export function createWsServer(httpServer) {
         return;
       }
       ws.on('close', () => detachSpectator(match, ws));
-      attachSpectator(match, ws);
+      if (!attachSpectator(match, ws)) {
+        ws.send(JSON.stringify({ type: 'error', message: 'Partida com muitos espectadores' }));
+        ws.close();
+      }
       return;
     }
 

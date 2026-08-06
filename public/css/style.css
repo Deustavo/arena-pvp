@@ -798,9 +798,13 @@
     color: var(--cor-texto-fraco);
     font-size: 12px;
   }
-  #menu .live-match-watch {
+  #menu button.link-button.live-match-watch {
     font-size: 14px;
     flex-shrink: 0;
+    color: var(--cor-sucesso);
+  }
+  #menu button.link-button.live-match-watch:hover {
+    color: var(--cor-sucesso-claro);
   }
   .ranking-vazio, .ranking-erro {
     margin: 0;

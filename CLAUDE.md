@@ -463,6 +463,15 @@ containers de início) lista as partidas ativas com um botão "Assistir".
   (não manda, mas o servidor não confia nisso) não há jogador pra aplicar.
   `matchId` inválido ou de partida já encerrada recebe `{ type: 'error' }` e a
   conexão é fechada.
+- Assistir não exige fila, conta nem nickname — só saber um `matchId` (público
+  via `/api/live-matches`). Sem limite, isso seria um vetor barato de DoS: cada
+  espectador conectado multiplica o broadcast de `state` a 60hz da partida, e
+  não há verificação de origem no handshake do WS. Por isso `attachSpectator`
+  recusa conexão além de `MAX_SPECTATORS_PER_MATCH` (`Match.js`, hoje 10 —
+  valor conservador por enquanto, dá pra subir depois que houver alguma
+  métrica de uso real do painel de espectadores) —
+  devolve `false`, e `wsServer.js` manda `{ type: 'error' }` e fecha o socket,
+  sem afetar os espectadores já conectados nem a partida em si.
 - `match.spectators` (`Set` em `Match.js`) recebe o mesmo broadcast de
   `state`/`gameover` que os dois jogadores (`broadcastState`/`endMatch`). Ao
   entrar, `attachSpectator` manda um `init` com `playerIndex: null` e o

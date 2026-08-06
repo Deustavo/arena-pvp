@@ -45,6 +45,13 @@ function send(ws, payload) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
 }
 
+// Teto de espectadores por partida: sem isso, qualquer um que souber um
+// matchId (público via /api/live-matches) podia abrir conexões sem limite
+// nele e multiplicar o broadcast de `state` a 60hz por conexão — nenhuma
+// fila, nickname ou conta é exigida pra assistir, então é o caminho mais
+// barato de sobrecarregar o servidor.
+export const MAX_SPECTATORS_PER_MATCH = 10;
+
 export function createMatch(wsA, wsB, { onEnd, bot = false, botDifficulty = 'intermediario' } = {}) {
   const players = [makePlayer(wsA, 0), makePlayer(wsB, 1)];
   const match = {
@@ -146,7 +153,10 @@ function broadcastState(match) {
 // (sem `playerIndex`, já que não há "seu" personagem) com o snapshot atual —
 // a partida pode já estar em andamento havia algum tempo quando ele chega —
 // e a partir daí só acompanha o broadcast de `state` de broadcastState acima.
+// Devolve `false` (sem adicionar) quando a partida já está no teto de
+// MAX_SPECTATORS_PER_MATCH — quem chama fecha a conexão nesse caso.
 export function attachSpectator(match, ws) {
+  if (match.spectators.size >= MAX_SPECTATORS_PER_MATCH) return false;
   match.spectators.add(ws);
   send(ws, {
     type: 'init',
@@ -160,6 +170,7 @@ export function attachSpectator(match, ws) {
     matchDurationMs: MATCH_DURATION_MS,
     players: match.players.map(playerSnapshot),
   });
+  return true;
 }
 
 export function detachSpectator(match, ws) {
