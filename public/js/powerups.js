@@ -44,6 +44,12 @@ const PICKUP_LABEL_FONT = 'bold 20px "Chakra Petch", sans-serif';
 
 const ICON_PIXEL = 2.5;
 
+// Selo com a quantidade, na borda da bolha.
+const BADGE_RADIUS = 9;
+const BADGE_FONT = 'bold 13px "Chakra Petch", sans-serif';
+const BADGE_TEXT_COLOR = '#141414';
+const BADGE_STROKE = 'rgba(20, 20, 20, 0.85)';
+
 // Power-ups do frame anterior, por id. É a diferença contra este mapa que
 // revela bolha nova (id que apareceu) e coleta (id que sumiu) — ver o
 // comentário no topo.
@@ -140,6 +146,28 @@ function drawIcone(tipo, cor) {
   }
 }
 
+// Vida é o único power-up de valor variável (1 a 3 corações): sem o número, a
+// bolha não diz se vale um coração ou três. Vai num selo na borda, e não ao
+// lado do ícone, porque o coração já ocupa quase toda a largura útil da bolha.
+function drawBadgeQuantidade(quantidade, cor) {
+  const bx = POWERUP_RADIUS * 0.7;
+  const by = POWERUP_RADIUS * 0.7;
+
+  ctx.beginPath();
+  ctx.arc(bx, by, BADGE_RADIUS, 0, Math.PI * 2);
+  ctx.fillStyle = cor;
+  ctx.fill();
+  ctx.strokeStyle = BADGE_STROKE;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = BADGE_TEXT_COLOR;
+  ctx.font = BADGE_FONT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${quantidade}`, bx, by + 1);
+}
+
 // A bolha e o ícone dentro dela são desenhados sem espelhamento de visão: o
 // raio e as setas ficariam apontando para o lado errado (e o "+N" da coleta,
 // ilegível) para quem nasceu do lado direito da arena. Cancela o flip só da
@@ -197,6 +225,7 @@ function drawBolha(pu, now) {
 
     ctx.scale(escala, escala);
     drawIcone(pu.tipo, cor);
+    if (pu.tipo === 'vida') drawBadgeQuantidade(pu.quantidade, cor);
   });
 }
 
