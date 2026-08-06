@@ -245,9 +245,13 @@ conecta event listeners de UI aos módulos.
 - `tutorial/matchTutorial.js` — único tutorial do jogo (o antigo modal explicativo
   "Como jogar" em canvas foi removido): joga-se uma partida de verdade contra o
   bot enquanto uma faixa no topo da arena (`#matchTutorialBanner`) indica a
-  próxima ação (mover, atirar, escudar), avançando para o próximo passo quando
+  próxima ação (mover, atirar, escudar, pegar power-up), avançando para o
+  próximo passo quando
   `notifyMatchTutorial` é chamado com a ação correspondente — disparado de
-  `input.js` a cada tecla de movimento, clique de tiro e ativação de escudo.
+  `input.js` a cada tecla de movimento, clique de tiro e ativação de escudo, e
+  de `bot.js` na coleta do power-up (essa é a única ação do tutorial que não sai
+  do input local: quem detecta é o dono do loop, pelo evento `coletados` de
+  `tickPowerups`).
   Ao completar um passo o balão fica verde e toca `playTutorialStepSound()`
   (`audio.js`). A faixa fica na faixa de cima da arena mas afastada da borda
   (`top: 24%`) e com fonte grande — não no centro exato, porque os dois
@@ -258,12 +262,21 @@ conecta event listeners de UI aos módulos.
   `isMatchTutorialDummyInvulnerable()` (ativo e o passo atual ainda tem ação,
   isto é, até o passo final de "boa sorte") o boneco é indestrutível — o
   jogador não pode encerrar o tutorial matando o oponente antes de passar por
-  mover/atirar/escudar. A invulnerabilidade é aplicada em `botTick` **depois**
+  mover/atirar/escudar/power-up. A invulnerabilidade é aplicada em `botTick` **depois**
   da simulação e antes de publicar o estado (cargas de escudo e vidas
   restauradas, vitória do jogador ignorada no callback): antes da simulação o
   escudo furaria com vários projéteis no mesmo tick (leque do mago, classe com
   uma única carga), e restaurar depois evita que o HUD veja a perda e toque som
   de dano/escudo quebrado.
+  - O passo de power-up precisa de uma bolha na arena, mas a agenda normal é em
+    tempo restante e o relógio não corre durante o tutorial — então enquanto
+    `isMatchTutorialWaitingPowerup()`, `botTick` coloca uma bolha na mão com
+    `criarPowerupTutorial` (`shared/powerups.js`): sempre no centro de
+    `POWERUP_ZONE` e do tipo **velocidade**, o único efeito que passa sozinho,
+    para o tutorial não mudar os corações/cargas de escudo com que o jogador
+    entra na partida de verdade. Uma bolha por vez (lista vazia = precisa de
+    outra), e `isMatchTutorialWaitingPowerup()` é falso durante o flash verde,
+    senão nasceria uma bolha nova no lugar da que acabou de ser pega.
   - Controlado por uma flag em `localStorage` (`jogoDoAno.tutorialPartidaVisto`):
     roda sozinho só uma vez por navegador, na primeira partida contra bot **ou**
     online — `startOnline` (`menu.js`) redireciona a primeira partida online do

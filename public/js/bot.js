@@ -16,12 +16,13 @@ import {
   escolherPowerupAlvo, movimentoParaPowerup,
 } from '../../shared/botStrategy.js';
 import {
-  criarPowerups, tickPowerups, buffsRestantes, velocidadeAtual, cooldownDeTiro,
+  criarPowerups, criarPowerupTutorial, tickPowerups, buffsRestantes, velocidadeAtual,
+  cooldownDeTiro,
 } from '../../shared/powerups.js';
 import { updateGameScale } from './gameScale.js';
 import {
   shouldStartMatchTutorial, startMatchTutorial, isMatchTutorialActive,
-  isMatchTutorialDummyInvulnerable,
+  isMatchTutorialDummyInvulnerable, isMatchTutorialWaitingPowerup, notifyMatchTutorial,
 } from './tutorial/matchTutorial.js';
 import { atualizarCronometro, resetMatchTimer } from './matchTimer.js';
 import {
@@ -275,10 +276,20 @@ function botTick() {
   const bonecoInvulneravel = isMatchTutorialDummyInvulnerable();
   const vidasBoneco = bot.players[1].lives;
 
+  // Passo de power-up do tutorial: a bolha é colocada na mão, porque a agenda
+  // normal é em tempo restante e o relógio não corre durante o tutorial. Uma
+  // por vez — a lista vazia é o sinal de que ainda não há bolha na arena.
+  if (isMatchTutorialWaitingPowerup() && !bot.powerups.ativos.length) {
+    bot.powerups.ativos.push(criarPowerupTutorial(bot.powerups.proximoId++));
+  }
+
   const restanteMs = tempoRestanteMs(bot.cronometro, agora);
   stepPlayers(bot.players, ARENA, agora);
   // Depois de mover: quem entrou na bolha neste tick já leva o power-up.
-  tickPowerups(bot.powerups, bot.players, restanteMs, agora);
+  const eventosPowerup = tickPowerups(bot.powerups, bot.players, restanteMs, agora);
+  // Coleta é a única ação do tutorial que não sai do input: quem detecta é o
+  // dono do loop, olhando o evento da simulação.
+  if (eventosPowerup.coletados.some((c) => c.playerIndex === 0)) notifyMatchTutorial('powerup');
   bot.projectiles = stepProjectiles(bot.projectiles, bot.players, ARENA, (winnerIndex) => {
     if (bonecoInvulneravel && winnerIndex === 0) return;
     recordGameOver(resultadoDoVencedor(winnerIndex));

@@ -82,6 +82,25 @@ export function criarPowerups(rng = Math.random) {
   };
 }
 
+// Bolha do passo de power-up do tutorial interativo. A agenda normal nunca
+// dispara durante o tutorial (o relógio não corre, ver o comentário do topo),
+// então a bolha do tutorial é criada na mão pelo dono do loop — sempre no
+// centro da zona de spawn, que é o lugar onde as bolhas de verdade nascem.
+// O tipo é fixo em velocidade de propósito: é o único efeito que passa
+// sozinho, então aprender a pegar a bolha não muda os corações nem as cargas
+// de escudo com que o jogador entra na partida de verdade.
+export const POWERUP_TUTORIAL_TIPO = 'velocidade';
+
+export function criarPowerupTutorial(id) {
+  return {
+    id,
+    tipo: POWERUP_TUTORIAL_TIPO,
+    quantidade: 1,
+    x: POWERUP_ZONE.x,
+    y: POWERUP_ZONE.y,
+  };
+}
+
 export function aplicarPowerup(player, powerup, agora) {
   switch (powerup.tipo) {
     case 'vida':

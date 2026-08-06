@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  criarPowerups, tickPowerups, aplicarPowerup, cooldownDeTiro, velocidadeAtual,
+  criarPowerups, criarPowerupTutorial, tickPowerups, aplicarPowerup, cooldownDeTiro, velocidadeAtual,
   buffsRestantes, cadenciaAtiva, velocidadeAtiva,
   POWERUP_RADIUS, POWERUP_ZONE, JANELAS_SPAWN_MS, BUFF_DURACAO_MS,
   CADENCIA_FATOR, VELOCIDADE_FATOR, VIDA_MIN, VIDA_MAX,
@@ -192,6 +192,30 @@ describe('aplicarPowerup', () => {
     assert.deepEqual(buffsRestantes(p, 1000), { cadenciaMs: 0, velocidadeMs: BUFF_DURACAO_MS });
     assert.deepEqual(buffsRestantes(p, 3000), { cadenciaMs: 0, velocidadeMs: BUFF_DURACAO_MS - 2000 });
     assert.deepEqual(buffsRestantes(p, 999_999), { cadenciaMs: 0, velocidadeMs: 0 });
+  });
+});
+
+describe('criarPowerupTutorial', () => {
+  test('nasce no centro da zona de spawn e não muda vida nem escudo', () => {
+    const pu = criarPowerupTutorial(7);
+    assert.equal(pu.id, 7);
+    assert.equal(pu.x, POWERUP_ZONE.x);
+    assert.equal(pu.y, POWERUP_ZONE.y);
+    // Vida/escudo mudariam com o que o jogador entra na partida de verdade.
+    assert.ok(pu.tipo !== 'vida' && pu.tipo !== 'escudo');
+  });
+
+  test('é coletável pela mesma regra dos power-ups normais', () => {
+    const estado = { agenda: [], ativos: [criarPowerupTutorial(1)], proximoId: 2 };
+    const player = createPlayerState(0, 'atirador');
+    player.x = POWERUP_ZONE.x - PLAYER_SIZE / 2;
+    player.y = POWERUP_ZONE.y - PLAYER_SIZE / 2;
+
+    const eventos = tickPowerups(estado, [player], 60_000, 1000);
+
+    assert.equal(eventos.coletados.length, 1);
+    assert.equal(eventos.coletados[0].playerIndex, 0);
+    assert.equal(estado.ativos.length, 0);
   });
 });
 
