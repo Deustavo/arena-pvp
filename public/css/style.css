@@ -888,6 +888,7 @@
   #menu button#btnBot {
     background: var(--cor-erro-forte);
   }
+  #menu button#btnHowToPlay:hover,
   #menu button#btnBot:hover {
     background: var(--cor-erro-forte-hover);
   }
@@ -1868,7 +1869,6 @@
   #menu button#btnChangelog {
     background: var(--cor-superficie-forte);
   }
-  #menu button#btnHowToPlay:hover,
   #menu button#btnCredits:hover,
   #menu button#btnChangelog:hover {
     background: var(--cor-superficie-forte-hover);
