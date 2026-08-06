@@ -158,6 +158,37 @@ describe('matchmaking', () => {
     assert.ok(!ws.sent.find((m) => m.type === 'noOpponents'));
   });
 
+  test('mesma conta em duas abas não casa partida consigo mesma', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    wsA.userId = 'user-1';
+    wsB.userId = 'user-1';
+    matchmaking.handleConnection(wsA, 'Alice');
+    matchmaking.handleConnection(wsB, 'Alice');
+
+    assert.equal(matchmaking.activeMatchCount(), 0);
+    assert.equal(wsB.sent[wsB.sent.length - 1].type, 'waiting');
+
+    // Um oponente de verdade ainda consegue casar com quem já esperava.
+    const wsC = makeFakeWs();
+    wsC.userId = 'user-2';
+    matchmaking.handleConnection(wsC, 'Bob');
+
+    assert.equal(matchmaking.activeMatchCount(), 1);
+    const initA = wsA.sent.find((m) => m.type === 'init');
+    assert.ok(initA);
+    assert.equal(initA.players[1].name, 'Bob');
+  });
+
+  test('convidados (sem conta) podem casar entre si mesmo com o mesmo nickname', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    matchmaking.handleConnection(wsA, 'Convidado');
+    matchmaking.handleConnection(wsB, 'Convidado');
+
+    assert.equal(matchmaking.activeMatchCount(), 1);
+  });
+
   test('handleDisconnect durante partida ativa encerra a partida e declara o oponente vencedor', () => {
     const wsA = makeFakeWs();
     const wsB = makeFakeWs();

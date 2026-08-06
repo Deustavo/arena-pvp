@@ -3,7 +3,6 @@ import { createMatch as createMatchState, disconnectPlayer } from './Match.js';
 // Sala de espera: no máximo uma partida se forma por vez, o suficiente para
 // o escopo atual do jogo (1x1 simples).
 let waitingPlayer = null;
-let waitingTimer = null;
 const activeMatches = new Set();
 
 // Se ninguém mais entrar na fila nesse tempo, avisamos o jogador de que há
@@ -49,44 +48,56 @@ function startMatch(wsA, wsB, options = {}) {
   return match;
 }
 
-function notifyNoOpponents(ws) {
-  if (waitingPlayer !== ws) return;
-  waitingTimer = null;
-  ws.send(JSON.stringify({ type: 'noOpponents' }));
+// Mesma conta logada em duas abas/sessões não pode cair na mesma partida:
+// o resultado seria gravado no histórico e infla o próprio ranking de graça
+// (convidados não têm userId, então nunca disparam essa checagem entre si).
+function isSameAccount(a, b) {
+  return a.userId != null && a.userId === b.userId;
+}
+
+function beginWaiting(ws) {
+  ws.waiting = true;
+  ws.send(JSON.stringify({ type: 'waiting' }));
+  ws.waitTimer = setTimeout(() => {
+    ws.waiting = false;
+    ws.send(JSON.stringify({ type: 'noOpponents' }));
+  }, WAITING_TIMEOUT_MS);
+}
+
+function stopWaiting(ws) {
+  ws.waiting = false;
+  clearTimeout(ws.waitTimer);
+  ws.waitTimer = null;
+  if (waitingPlayer === ws) waitingPlayer = null;
 }
 
 export function handleConnection(ws, nickname = 'Jogador', classId = 'atirador') {
   ws.nickname = nickname;
   ws.classId = classId;
 
-  if (waitingPlayer === null) {
-    waitingPlayer = ws;
-    ws.send(JSON.stringify({ type: 'waiting' }));
-    waitingTimer = setTimeout(() => notifyNoOpponents(ws), WAITING_TIMEOUT_MS);
+  if (waitingPlayer !== null && !isSameAccount(waitingPlayer, ws)) {
+    const opponent = waitingPlayer;
+    stopWaiting(opponent);
+    startMatch(opponent, ws);
     return;
   }
 
-  clearTimeout(waitingTimer);
-  waitingTimer = null;
-  const opponent = waitingPlayer;
-  waitingPlayer = null;
-  startMatch(opponent, ws);
+  // Fila vazia, ou o único candidato é a própria conta em outra aba/sessão:
+  // `ws` espera por conta própria, sem mexer no estado de quem já esperava
+  // (se um jogador de verdade entrar depois, casa normalmente com ele).
+  beginWaiting(ws);
+  if (waitingPlayer === null) waitingPlayer = ws;
 }
 
 export function handleLeaveQueue(ws) {
-  if (waitingPlayer === ws) {
-    waitingPlayer = null;
-    clearTimeout(waitingTimer);
-    waitingTimer = null;
-    ws.send(JSON.stringify({ type: 'left' }));
-  }
+  if (!ws.waiting) return;
+  stopWaiting(ws);
+  ws.send(JSON.stringify({ type: 'left' }));
 }
 
 export function handleDisconnect(ws) {
-  if (waitingPlayer === ws) {
-    waitingPlayer = null;
-    clearTimeout(waitingTimer);
-    waitingTimer = null;
+  if (ws.waiting) {
+    stopWaiting(ws);
     return;
   }
   const match = ws.match;
