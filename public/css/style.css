@@ -884,6 +884,7 @@
   #nicknameError.visible {
     visibility: visible;
   }
+  #menu button#btnHowToPlay,
   #menu button#btnBot {
     background: var(--cor-erro-forte);
   }
@@ -1863,7 +1864,6 @@
     border-top: 1px solid var(--cor-borda);
     margin: 4px 0;
   }
-  #menu button#btnHowToPlay,
   #menu button#btnCredits,
   #menu button#btnChangelog {
     background: var(--cor-superficie-forte);
