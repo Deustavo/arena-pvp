@@ -31,6 +31,7 @@ const FAIXAS = [
 ];
 
 const VOLUME_MUSICA_KEY = 'jogoDoAno.volumeMusica';
+const MUDO_MUSICA_KEY = 'jogoDoAno.mudoMusica';
 
 function nomeDeExibicao(arquivo) {
   return arquivo.replace(/\.mp3$/, '').replace(/ - /, ' — ');
@@ -58,11 +59,15 @@ function lerVolumeSalvo() {
   return Number.isFinite(bruto) && bruto >= 0 && bruto <= 100 ? bruto : 10;
 }
 
+function lerMudoSalvo() {
+  return localStorage.getItem(MUDO_MUSICA_KEY) === '1';
+}
+
 let ordem = [];
 let indiceAtual = 0;
 let audio = null;
 let volumeMusica = lerVolumeSalvo();
-let mutado = false;
+let mutado = lerMudoSalvo();
 
 function faixaAtual() {
   return ordem[indiceAtual];
@@ -106,8 +111,17 @@ function alternarPlayPause() {
   else audio.pause();
 }
 
+function salvarMudo() {
+  try {
+    localStorage.setItem(MUDO_MUSICA_KEY, mutado ? '1' : '0');
+  } catch {
+    // localStorage indisponível: preferência só vale para esta sessão.
+  }
+}
+
 function alternarMute() {
   mutado = !mutado;
+  salvarMudo();
   aplicarVolume();
   atualizarIconeMute();
 }
@@ -145,6 +159,7 @@ export function initMusicPlayer() {
   audio = new Audio();
   audio.preload = 'auto';
   aplicarVolume();
+  atualizarIconeMute();
 
   ordem = embaralhar(FAIXAS);
   carregarFaixa(0);
@@ -196,6 +211,7 @@ export function initMusicPlayer() {
     }
     if (mutado && volumeMusica > 0) {
       mutado = false;
+      salvarMudo();
       atualizarIconeMute();
     }
     aplicarVolume();
