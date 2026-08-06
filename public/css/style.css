@@ -346,7 +346,8 @@
   #onlineClassOverlay.closing,
   #authOverlay.visible.closing,
   #profileOverlay.visible.closing,
-  #creditsOverlay.visible.closing {
+  #creditsOverlay.visible.closing,
+  #changelogOverlay.visible.closing {
     animation: overlay-fade-out 0.15s ease forwards;
   }
   /* ----- Controle de volume -----
@@ -883,9 +884,11 @@
   #nicknameError.visible {
     visibility: visible;
   }
+  #menu button#btnHowToPlay,
   #menu button#btnBot {
     background: var(--cor-erro-forte);
   }
+  #menu button#btnHowToPlay:hover,
   #menu button#btnBot:hover {
     background: var(--cor-erro-forte-hover);
   }
@@ -999,6 +1002,11 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+    /* Teto que dá o que quebrar para a fileira de corações/escudos (ver
+       .hearts): sem um limite de largura ela nunca passaria de uma linha e o
+       excedente do power-up de vida atravessaria a metade do oponente. */
+    max-width: 50%;
+    min-width: 0;
   }
   .hud-row-right {
     align-items: flex-end;
@@ -1055,15 +1063,24 @@
     stroke-linecap: round;
     stroke-linejoin: round;
   }
+  /* Quebra em mais de uma linha porque a fileira cresce: o power-up de vida
+     passa do máximo da classe (tank já começa com 14 corações), e sem o wrap
+     os corações extras invadiam a metade do oponente no HUD. */
   .hearts {
     display: flex;
     gap: 4px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
   .shields {
     display: flex;
     gap: 4px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+  }
+  /* Na metade direita do HUD tudo é alinhado à direita, inclusive a segunda
+     linha de corações quando ela existe. */
+  .hud-row-right .hearts,
+  .hud-row-right .shields {
+    justify-content: flex-end;
   }
   .cooldown-bar {
     width: 100%;
@@ -1848,13 +1865,16 @@
     border-top: 1px solid var(--cor-borda);
     margin: 4px 0;
   }
-  #menu button#btnHowToPlay,
-  #menu button#btnCredits {
+  #menu button#btnCredits,
+  #menu button#btnChangelog {
     background: var(--cor-superficie-forte);
   }
-  #menu button#btnHowToPlay:hover,
-  #menu button#btnCredits:hover {
+  #menu button#btnCredits:hover,
+  #menu button#btnChangelog:hover {
     background: var(--cor-superficie-forte-hover);
+  }
+  #menuVersion {
+    color: var(--cor-vermelho-destaque);
   }
   /* ----- Regra comum a todas as modais -----
      Cada modal define a própria largura, mas a altura é sempre limitada à
@@ -2634,6 +2654,159 @@
     color: var(--cor-azul-link);
   }
 
+  /* ----- Modal de novidades (histórico de versões) -----
+     Mesma carcaça da modal de créditos, só mais larga e com o corpo rolável:
+     o conteúdo é texto corrido e cresce a cada versão publicada. */
+  #changelogOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #changelogOverlay.visible {
+    display: flex;
+    animation: overlay-fade 0.15s ease;
+  }
+  #changelogOverlay .modal {
+    background: var(--cor-modal-fundo);
+    border: 2px solid var(--cor-vermelho);
+    border-radius: 10px;
+    box-shadow: var(--sombra-modal);
+    padding: 20px 24px;
+    width: 740px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    /* Quem rola é o corpo, não a modal inteira: o cabeçalho com o botão de
+       fechar precisa ficar visível o tempo todo. */
+    overflow: hidden;
+  }
+  #changelogHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  #changelogHeader h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  #btnChangelogClose {
+    width: 26px;
+    height: 26px;
+    min-width: 0;
+    padding: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--cor-texto-fraco);
+    font-size: 15px;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+  }
+  #btnChangelogClose:hover {
+    background: var(--cor-superficie-hover);
+    color: var(--cor-branco);
+  }
+  #changelogBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .changelog-versao {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--cor-superficie-baixa);
+    border-radius: 8px;
+    padding: 14px 18px 18px;
+  }
+  .changelog-versao-cabecalho {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+  .changelog-versao-cabecalho h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    margin: 0;
+    color: var(--cor-texto);
+  }
+  .changelog-tag {
+    font-size: 12px;
+    color: var(--cor-sucesso);
+    border: 1px solid var(--cor-sucesso);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  .changelog-data {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--cor-texto-fraco);
+  }
+  .changelog-versao h4 {
+    margin: 12px 0 0;
+    font-size: 15px;
+    color: var(--cor-vermelho-destaque);
+  }
+  .changelog-versao p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--cor-texto-suave);
+  }
+  .changelog-resumo {
+    color: var(--cor-texto-medio);
+  }
+  /* Galeria dos personagens no tópico "Sprites dos personagens": os 6
+     andando (animação `walk`), com nome do demônio e classe embaixo. O
+     enquadramento reusa `.class-sprite` (ver classSprite.js), só com o quadro
+     maior que o das miniaturas da lista de classes. */
+  .changelog-sprites {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .changelog-sprite-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-align: center;
+    padding: 10px 6px 8px;
+    border-radius: 8px;
+    background: var(--cor-superficie-icone);
+    border: 1px solid var(--class-color, var(--cor-borda));
+  }
+  .changelog-sprite-item .class-demon-name {
+    color: var(--class-color, var(--cor-texto));
+  }
+  .changelog-sprite.class-sprite {
+    --sprite-box: 72px;
+    --sprite-zoom: 2.4;
+    --sprite-anchor: 0.45;
+    margin-bottom: 4px;
+  }
+  /* Screenshots do jogo ilustrando um tópico, como a partida real em
+     "Partida online 1x1" e a faixa do tutorial em "Modo treino e tutorial". */
+  .changelog-topico-imagem {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 8px;
+  }
+
   @media (max-width: 700px) {
     #menuTitle {
       font-size: 44px;
@@ -2664,4 +2837,48 @@
     .class-preview-fighter.class-sprite {
       --sprite-box: 90px;
     }
+  }
+
+  /* ===== Sem suporte a celular =====
+     Marcado por public/js/mobileBlock.js quando o aparelho é touch-only. Não
+     é um overlay por cima do menu: o menu, o jogo e os painéis flutuantes
+     saem da tela por completo, porque nada deles é inicializado nesse caso. */
+  #mobileBlock {
+    display: none;
+  }
+  body.mobile-bloqueado > *:not(#mobileBlock) {
+    display: none !important;
+  }
+  body.mobile-bloqueado #mobileBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    box-sizing: border-box;
+    min-height: 100%;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  #mobileBlock h1 {
+    font-family: 'Metal Mania', cursive;
+    font-size: 48px;
+    line-height: 1.1;
+    margin: 0;
+    color: var(--cor-vermelho-destaque);
+    text-shadow: var(--sombra-foco-vermelho);
+  }
+  #mobileBlock p {
+    max-width: 32ch;
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--cor-texto-suave);
+  }
+  #mobileBlock .mobile-block-lead {
+    font-size: 20px;
+    color: var(--cor-texto);
+  }
+  #mobileBlock strong {
+    color: var(--cor-branco);
   }

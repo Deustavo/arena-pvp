@@ -13,6 +13,14 @@
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body>
+  <!-- Aviso de "sem suporte a celular" (ver public/js/mobileBlock.js). Fica
+       escondido por padrão e só aparece quando o JS marca body.mobile-bloqueado
+       — nesse caso nada mais do jogo é inicializado, nem a música. -->
+  <div id="mobileBlock">
+    <h1>Demon Arena</h1>
+    <p class="mobile-block-lead">Ainda não temos suporte para celular.</p>
+    <p>Acesse <strong id="mobileBlockUrl"></strong> no computador para entrar na arena.</p>
+  </div>
   <div id="soundSettings">
     <button type="button" id="btnSoundSettings" aria-haspopup="true" aria-expanded="false" aria-label="Configurações de som" title="Configurações de som">
       <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
@@ -105,8 +113,9 @@
         <button id="btnOnline">Jogar Online</button>
         <div id="onlineCount" class="skeleton-loading">● <span id="onlineCountValue">--</span> jogador(es) online</div>
         <button id="btnBot">Modo treino</button>
+        <button id="btnHowToPlay">Tutorial</button>
         <hr id="menuDivider">
-        <button id="btnHowToPlay">Como jogar</button>
+        <button type="button" id="btnChangelog">Novidades <span id="menuVersion">beta 0.2</span></button>
         <button type="button" id="btnCredits">Créditos</button>
       </div>
       <div id="rankingPanel">
@@ -155,6 +164,79 @@
           <p>Sprites de personagens: <strong>Tiny RPG Character Asset Pack 02</strong>, por Zerie.</p>
           <a href="https://zerie.itch.io/tiny-rpg-character-asset-pack-02" target="_blank" rel="noopener noreferrer">zerie.itch.io/tiny-rpg-character-asset-pack-02</a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Histórico de versões. O mesmo conteúdo está em CHANGELOG.md na raiz do
+       repositório, que é a fonte da documentação: ao publicar uma versão nova,
+       o bloco entra nos dois e o número em #menuVersion é atualizado. -->
+  <div id="changelogOverlay">
+    <div class="modal">
+      <div id="changelogHeader">
+        <h2>Novidades</h2>
+        <button id="btnChangelogClose" type="button" title="Fechar (Esc)" aria-label="Fechar">✕</button>
+      </div>
+      <div id="changelogBody">
+        <section class="changelog-versao">
+          <div class="changelog-versao-cabecalho">
+            <h3>beta 0.2</h3>
+            <span class="changelog-tag">versão atual</span>
+            <span class="changelog-data">6 de agosto de 2026</span>
+          </div>
+
+          <h4>Power-ups na arena</h4>
+          <p>Três bolhas nascem no círculo central ao longo da partida e valem para quem chegar primeiro. São quatro tipos: vida (de 1 a 3 corações), escudo (1 carga), cadência (cooldown de tiro pela metade por 10 segundos, com recarga na hora) e velocidade (40% mais rápido por 10 segundos).</p>
+          <p>Vida e escudo passam do máximo da classe. Se você já está com tudo cheio, o teto sobe, então dá para terminar a partida com mais coração do que a classe começa. Quem está sob efeito de cadência ou velocidade fica com um brilho na cor do buff, e dá para ver isso no adversário também.</p>
+          <p>O tutorial ganhou um passo novo: pegar uma bolha. Uma bolha de velocidade nasce no centro e o boneco de treino continua parado até você pegar.</p>
+          <img class="changelog-topico-imagem" src="assets/changelog/powerups_01.png" alt="Bolha de power-up na arena" loading="lazy">
+
+          <h4>Modo espectador</h4>
+          <p>Dá para assistir a qualquer partida online em andamento pelo painel "Partidas ao vivo", na tela inicial, sem entrar na fila e sem conta. A partida assistida tem borda amarela em vez de vermelha e uma faixa "Assistindo" abaixo do cronômetro, para não confundir com uma partida sua. Sai com Esc a qualquer momento.</p>
+          <img class="changelog-topico-imagem" src="assets/changelog/livematch_01.png" alt="Painel de partidas ao vivo com botão para assistir" loading="lazy">
+
+          <h4>Celular</h4>
+          <p>Celular e tablet agora recebem um aviso para jogar no computador em vez de uma tela quebrada. O jogo é WASD e mouse, não tem controle de toque. Notebook com tela sensível ao toque continua liberado.</p>
+
+          <h4>Segurança</h4>
+          <p>O matchmaking não deixa mais a mesma conta cair em partida contra ela mesma. Também foram fechadas brechas de paginação sem limite no histórico, mensagem de WebSocket sem limite de tamanho e tiro sem validação no servidor, e o número de espectadores por partida passou a ter teto.</p>
+        </section>
+
+        <section class="changelog-versao">
+          <div class="changelog-versao-cabecalho">
+            <h3>beta 0.1</h3>
+            <span class="changelog-data">5 de agosto de 2026</span>
+          </div>
+          <p class="changelog-resumo">Primeira versão documentada. É o jogo com os personagens no lugar dos quadrados coloridos que existiam até então.</p>
+
+          <h4>Sprites dos personagens</h4>
+          <p>Cada classe passou a ter sprite próprio, do Tiny RPG Character Asset Pack 02 do Zerie. O personagem vira na direção da mira, e o mesmo sprite aparece nos cartões de classe e no preview da tela de seleção.</p>
+                    <p>Atirador, Mago, Tank, Assassino, Duelista e Sniper, cada uma com dano, cadência, alcance, velocidade e escudo próprios. O Mago atira em leque, o Sniper ganha dano de longe e o Assassino vive de hit and run.</p>
+
+          <!-- Galeria dos 6 personagens andando. Vazia no HTML porque o sprite
+               depende de dados de shared/classes.js e characterSprites.js —
+               quem preenche é public/js/changelog.js. -->
+          <div id="changelogSprites" class="changelog-sprites"></div>
+
+          <h4>Partida online 1x1</h4>
+          <p>Fila de matchmaking, partida de 1 minuto e desempate por morte súbita: acabando o tempo com os dois vivos, a arena congela e os dois começam a perder um coração por vez até sobrar um. Zerando no mesmo passo, é empate.</p>
+          <p>O jogador sempre se vê do lado esquerdo da tela, independente de onde nasceu na arena.</p>
+          <img class="changelog-topico-imagem" src="assets/changelog/arena_01.png" alt="Duelo entre dois jogadores na arena" loading="lazy">
+
+          <h4>Modo treino e tutorial</h4>
+          <p>Partida offline contra bot, com escolha da sua classe, da classe do bot e da dificuldade, do noob ao demoníaco. O bot mira, reage, desvia e ergue escudo de acordo com a dificuldade, e joga de forma diferente conforme a classe dele.</p>
+          <p>O tutorial deixou de ser uma tela explicativa e virou uma partida de verdade contra um boneco de treino, com uma faixa no topo pedindo a próxima ação. O relógio não corre enquanto ele está rolando.</p>
+          <img class="changelog-topico-imagem" src="assets/changelog/tutorial_01.png" alt="Faixa do tutorial indicando a próxima ação na partida" loading="lazy">
+
+          <h4>Contas, ranking e perfil</h4>
+          <p>Conta com e-mail e senha, verificação de e-mail e recuperação de senha. Quem não quiser criar conta continua entrando como convidado, só com um nickname.</p>
+          <p>O ranking top 10 por vitórias fica na tela inicial. Clicando num nome abre o perfil daquele jogador, com histórico de partidas e as classes que ele mais usa. Só partida online entre contas entra no histórico.</p>
+
+          <h4>Som, música e tela inicial</h4>
+          <p>Todos os efeitos são sintetizados na hora, sem nenhum arquivo de áudio: tiro, dano, escudo bloqueando e quebrando, explosão, tiro passando raspando, tique dos últimos 10 segundos e a buzina do desempate.</p>
+          <p>A tela inicial toca música de fundo, com botão de pular faixa e mudo que fica salvo no navegador. As músicas são do Jeremy Black, e a tela de créditos mostra a trilha e os assets usados no jogo.</p>
+          <p>A tela inicial também ganhou fundo com paralaxe, rastro de fogo no cursor, fogo no título e contagem de jogadores online.</p>
+        </section>
       </div>
     </div>
   </div>

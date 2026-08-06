@@ -37,7 +37,9 @@ export const state = {
   shieldRadius: SHIELD_RADIUS,
   shieldMaxHits: [1, 1], // cargas de escudo por jogador, dependem da classe
 
-  latestState: { players: [], projectiles: [] },
+  // `powerups` são as bolhas de power-up hoje na arena (ver shared/powerups.js):
+  // no modo online vêm no snapshot do servidor, no modo treino do loop local.
+  latestState: { players: [], projectiles: [], powerups: [] },
   gameOver: false,
   matchStarted: false,
   countdownTimer: null,
@@ -132,7 +134,7 @@ export function resetMatchState() {
   state.colors = COLORS;
   state.shieldRadius = SHIELD_RADIUS;
   state.shieldMaxHits = [1, 1];
-  state.latestState = { players: [], projectiles: [] };
+  state.latestState = { players: [], projectiles: [], powerups: [] };
   state.stateBuffer = [];
   state.predicted = { x: 0, y: 0, initialized: false };
   state.lastFrameTime = null;

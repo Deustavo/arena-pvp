@@ -1,7 +1,9 @@
 import { test, describe, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { createMatch, endMatch, attachSpectator, detachSpectator, MAX_SPECTATORS_PER_MATCH } from '../src/server/Match.js';
-import { COUNTDOWN_MS, TICK_MS } from '../shared/constants.js';
+import { COUNTDOWN_MS, TICK_MS, PLAYER_SIZE } from '../shared/constants.js';
+import { CLASSES } from '../shared/classes.js';
+import { JANELAS_SPAWN_MS, POWERUP_TIPOS, POWERUP_ZONE } from '../shared/powerups.js';
 import { MATCH_DURATION_MS, DESEMPATE_DELAY_MS, DESEMPATE_PASSO_MS } from '../shared/matchTimer.js';
 
 function makeFakeWs({ classId, nickname } = {}) {
@@ -218,6 +220,83 @@ describe('cronômetro da partida', () => {
     mock.timers.tick(MATCH_DURATION_MS * 2);
     assert.equal(ultimoState(wsA).remainingMs, restanteNoFim);
     assert.equal(wsA.sent.filter((m) => m.type === 'gameover').length, 1);
+  });
+});
+
+describe('power-ups na partida', () => {
+  beforeEach(() => {
+    mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'] });
+  });
+
+  afterEach(() => {
+    mock.timers.reset();
+  });
+
+  function ultimoState(ws) {
+    return ws.sent.filter((m) => m.type === 'state').at(-1);
+  }
+
+  test('a primeira bolha aparece no snapshot dentro da janela de 0:55-0:45', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    createMatch(wsA, wsB);
+
+    mock.timers.tick(COUNTDOWN_MS);
+    mock.timers.tick(TICK_MS);
+    assert.deepEqual(ultimoState(wsA).powerups, [], 'nenhuma bolha no começo');
+
+    // Fim da primeira janela: a bolha tem de ter aparecido, onde quer que o
+    // sorteio a tenha colocado.
+    mock.timers.tick(MATCH_DURATION_MS - JANELAS_SPAWN_MS[0].ate);
+    const state = ultimoState(wsA);
+    assert.equal(state.powerups.length, 1);
+    const bolha = state.powerups[0];
+    assert.ok(POWERUP_TIPOS.includes(bolha.tipo));
+    assert.ok(
+      Math.hypot(bolha.x - POWERUP_ZONE.x, bolha.y - POWERUP_ZONE.y) <= POWERUP_ZONE.r,
+      'bolha fora do círculo central',
+    );
+  });
+
+  test('jogador que anda até a bolha coleta, e ela sai do snapshot', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    const match = createMatch(wsA, wsB);
+
+    mock.timers.tick(COUNTDOWN_MS);
+    mock.timers.tick(MATCH_DURATION_MS - JANELAS_SPAWN_MS[0].ate);
+    const bolha = ultimoState(wsA).powerups[0];
+
+    // Teleporta o jogador para cima da bolha (andar até lá levaria centenas de
+    // ticks e o que se testa aqui é a coleta, não o movimento).
+    match.players[0].x = bolha.x - PLAYER_SIZE / 2;
+    match.players[0].y = bolha.y - PLAYER_SIZE / 2;
+    mock.timers.tick(TICK_MS);
+
+    assert.deepEqual(ultimoState(wsA).powerups, []);
+    // Só o efeito genérico: qual foi o power-up sorteado é aleatório, e o que
+    // cada tipo faz já está coberto em test/powerups.test.js.
+    const p = ultimoState(wsA).players[0];
+    const mudou = p.lives > CLASSES.atirador.maxLives
+      || p.shieldMaxHits > CLASSES.atirador.shieldMaxHits
+      || p.buffs.cadenciaMs > 0
+      || p.buffs.velocidadeMs > 0;
+    assert.ok(mudou, 'a coleta não teve efeito nenhum no jogador');
+  });
+
+  test('o desempate limpa as bolhas da arena', () => {
+    const wsA = makeFakeWs();
+    const wsB = makeFakeWs();
+    createMatch(wsA, wsB);
+
+    mock.timers.tick(COUNTDOWN_MS);
+    mock.timers.tick(MATCH_DURATION_MS - JANELAS_SPAWN_MS[1].ate);
+    assert.ok(ultimoState(wsA).powerups.length > 0, 'deveria haver bolha antes do desempate');
+
+    mock.timers.tick(JANELAS_SPAWN_MS[1].ate);
+    const state = ultimoState(wsA);
+    assert.equal(state.desempate, true);
+    assert.deepEqual(state.powerups, []);
   });
 });
 

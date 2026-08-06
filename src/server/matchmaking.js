@@ -59,7 +59,10 @@ function beginWaiting(ws) {
   ws.waiting = true;
   ws.send(JSON.stringify({ type: 'waiting' }));
   ws.waitTimer = setTimeout(() => {
-    ws.waiting = false;
+    // O jogador continua na fila (`waitingPlayer` ainda aponta pra ele) —
+    // isso só avisa que a espera está demorando. Zerar `ws.waiting` aqui
+    // travava "Sair da fila"/"Modo treino" (handleLeaveQueue exige
+    // `ws.waiting`) e vazava `waitingPlayer` se o jogador só fechasse a aba.
     ws.send(JSON.stringify({ type: 'noOpponents' }));
   }, WAITING_TIMEOUT_MS);
 }

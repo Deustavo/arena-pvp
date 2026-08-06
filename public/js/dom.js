@@ -113,6 +113,10 @@ export const btnCredits = document.getElementById('btnCredits');
 export const creditsOverlayEl = document.getElementById('creditsOverlay');
 export const btnCreditsClose = document.getElementById('btnCreditsClose');
 
+export const btnChangelog = document.getElementById('btnChangelog');
+export const changelogOverlayEl = document.getElementById('changelogOverlay');
+export const btnChangelogClose = document.getElementById('btnChangelogClose');
+
 export const classListEl = document.getElementById('classList');
 export const classPreviewEl = document.getElementById('classPreview');
 export const classDetailsEl = document.getElementById('classDetails');

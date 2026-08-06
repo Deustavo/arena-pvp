@@ -3,6 +3,7 @@ import { PLAYER_SIZE } from '../../shared/constants.js';
 import { createShotProjectiles, escudoAtivo } from '../../shared/entities.js';
 import { CLASSES, DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { emDesempate } from '../../shared/matchTimer.js';
+import { cooldownDeTiro } from '../../shared/powerups.js';
 import { handleConnection, handleLeaveQueue, handleDisconnect, getMatchById } from './matchmaking.js';
 import { attachSpectator, detachSpectator } from './Match.js';
 import { parseConnectionParams, resolvePlayerIdentity } from './wsIdentity.js';
@@ -122,7 +123,8 @@ function handleShoot(ws, msg) {
 
   const cls = getClass(player.classId);
   const now = Date.now();
-  if (now - player.lastShot < cls.shotCooldownMs) return;
+  // Cooldown da classe, ou metade dele com o power-up de cadência ativo.
+  if (now - player.lastShot < cooldownDeTiro(player, cls, now)) return;
   player.lastShot = now;
 
   const cx = player.x + PLAYER_SIZE / 2;

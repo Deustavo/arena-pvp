@@ -254,17 +254,32 @@ export function updateCharacterAnimator(slot, classId, player, hitFlashUntilForS
 // só); o espelhamento de state.viewFlipped já é aplicado por fora, no
 // ctx.save()/scale(-1,1) que envolve drawPlayers inteiro em render.js, então
 // aqui só cuida da direção de movimento em espaço de mundo.
-export function drawCharacterFrame(ctx, sprite, cx, cy, size = SPRITE_DISPLAY_SIZE) {
+// `glow` (opcional) é o brilho colorido em volta da silhueta do sprite usado
+// para marcar um power-up ativo (ver POWERUP_GLOW_COLORS em render.js). É a
+// sombra do canvas, e não um tint: colorir os pixels do sprite exigiria um
+// canvas fora da tela por classe/quadro, e o brilho na cor do buff lê igual de
+// relance sem esse custo.
+export function drawCharacterFrame(ctx, sprite, cx, cy, size = SPRITE_DISPLAY_SIZE, glow = null) {
   if (!sprite || !sprite.image.complete || sprite.image.naturalWidth === 0) return false;
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   ctx.translate(cx, cy);
   if (sprite.facing < 0) ctx.scale(-1, 1);
-  ctx.drawImage(
+  const desenhar = () => ctx.drawImage(
     sprite.image,
     sprite.frame * FRAME_SIZE, 0, FRAME_SIZE, FRAME_SIZE,
     -size / 2, -size / 2, size, size,
   );
+  if (glow) {
+    // Duas passadas com sombra: uma só sai fraca demais para se ver em cima do
+    // fundo da arena. A terceira, sem sombra, devolve o sprite nítido.
+    ctx.shadowColor = glow.color;
+    ctx.shadowBlur = glow.blur;
+    desenhar();
+    desenhar();
+    ctx.shadowBlur = 0;
+  }
+  desenhar();
   ctx.restore();
   return true;
 }

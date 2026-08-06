@@ -67,6 +67,11 @@ const STEPS = [
     keys: ['shield'],
     html: htmlPassoEscudo,
   },
+  {
+    action: 'powerup',
+    html: () => 'Passe por cima da <strong>bolha</strong> no centro da arena para pegar '
+      + 'o power-up.',
+  },
   { action: null, html: () => 'Atire no inimigo até derrota-lo.' },
 ];
 
@@ -139,6 +144,16 @@ export function isMatchTutorialActive() {
 // de verdade e o bot pode morrer.
 export function isMatchTutorialDummyInvulnerable() {
   return active && STEPS[stepIndex].action !== null;
+}
+
+// true enquanto o passo de power-up espera uma bolha na arena. O dono do loop
+// da partida (bot.js) olha isso a cada tick e coloca a bolha do tutorial na
+// mão, porque a agenda normal de power-ups nunca dispara durante o tutorial —
+// ela é em tempo restante e o relógio não corre (ver adiarFim em bot.js).
+// Falso durante o flash de sucesso (`advancing`), senão outra bolha nasceria no
+// lugar da que o jogador acabou de pegar.
+export function isMatchTutorialWaitingPowerup() {
+  return active && !advancing && STEPS[stepIndex].action === 'powerup';
 }
 
 export function wasMatchTutorial() {

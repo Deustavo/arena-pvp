@@ -242,12 +242,24 @@ conecta event listeners de UI aos módulos.
   DOM nem rede.
 - `overlays.js`, `gameOver.js`, `hud.js` — overlays de espera/contagem regressiva/fim
   de jogo e HUD (vidas, cooldown, escudo).
+- `mobileBlock.js` — celular/tablet não tem como jogar (o jogo é WASD + mouse e
+  não existe controle de toque), então em aparelho touch-only `main.js` mostra
+  só o aviso `#mobileBlock` ("jogue no computador") e **não inicializa mais
+  nada** — nem a música, que ficaria tocando por cima da mensagem. A detecção
+  (`deveBloquearMobile`, pura e testada) combina client hints, user agent,
+  multitoque em `MacIntel` (iPadOS se anuncia como Mac) e, como último recurso,
+  `pointer: coarse` sem `hover`. Um notebook com tela sensível ao toque
+  continua liberado, porque tem mouse e teclado.
 - `tutorial/matchTutorial.js` — único tutorial do jogo (o antigo modal explicativo
   "Como jogar" em canvas foi removido): joga-se uma partida de verdade contra o
   bot enquanto uma faixa no topo da arena (`#matchTutorialBanner`) indica a
-  próxima ação (mover, atirar, escudar), avançando para o próximo passo quando
+  próxima ação (mover, atirar, escudar, pegar power-up), avançando para o
+  próximo passo quando
   `notifyMatchTutorial` é chamado com a ação correspondente — disparado de
-  `input.js` a cada tecla de movimento, clique de tiro e ativação de escudo.
+  `input.js` a cada tecla de movimento, clique de tiro e ativação de escudo, e
+  de `bot.js` na coleta do power-up (essa é a única ação do tutorial que não sai
+  do input local: quem detecta é o dono do loop, pelo evento `coletados` de
+  `tickPowerups`).
   Ao completar um passo o balão fica verde e toca `playTutorialStepSound()`
   (`audio.js`). A faixa fica na faixa de cima da arena mas afastada da borda
   (`top: 24%`) e com fonte grande — não no centro exato, porque os dois
@@ -258,12 +270,21 @@ conecta event listeners de UI aos módulos.
   `isMatchTutorialDummyInvulnerable()` (ativo e o passo atual ainda tem ação,
   isto é, até o passo final de "boa sorte") o boneco é indestrutível — o
   jogador não pode encerrar o tutorial matando o oponente antes de passar por
-  mover/atirar/escudar. A invulnerabilidade é aplicada em `botTick` **depois**
+  mover/atirar/escudar/power-up. A invulnerabilidade é aplicada em `botTick` **depois**
   da simulação e antes de publicar o estado (cargas de escudo e vidas
   restauradas, vitória do jogador ignorada no callback): antes da simulação o
   escudo furaria com vários projéteis no mesmo tick (leque do mago, classe com
   uma única carga), e restaurar depois evita que o HUD veja a perda e toque som
   de dano/escudo quebrado.
+  - O passo de power-up precisa de uma bolha na arena, mas a agenda normal é em
+    tempo restante e o relógio não corre durante o tutorial — então enquanto
+    `isMatchTutorialWaitingPowerup()`, `botTick` coloca uma bolha na mão com
+    `criarPowerupTutorial` (`shared/powerups.js`): sempre no centro de
+    `POWERUP_ZONE` e do tipo **velocidade**, o único efeito que passa sozinho,
+    para o tutorial não mudar os corações/cargas de escudo com que o jogador
+    entra na partida de verdade. Uma bolha por vez (lista vazia = precisa de
+    outra), e `isMatchTutorialWaitingPowerup()` é falso durante o flash verde,
+    senão nasceria uma bolha nova no lugar da que acabou de ser pega.
   - Controlado por uma flag em `localStorage` (`jogoDoAno.tutorialPartidaVisto`):
     roda sozinho só uma vez por navegador, na primeira partida contra bot **ou**
     online — `startOnline` (`menu.js`) redireciona a primeira partida online do
@@ -322,7 +343,8 @@ as partículas), `gameOver.js` (vitória/derrota — no **overlay**, não em
 derrota), `matchTimer.js` (tique dos últimos 10s, um por segundo, e buzina do
 desempate), `input.js` (escudo erguido e ação indisponível), `nearMiss.js`
 (projétil que passou raspando, detectado por frame pela distância mínima, já que
-os projéteis do snapshot não têm id) e `uiSounds.js` (hover/clique, delegados no
+os projéteis do snapshot não têm id), `powerups.js` (bolha que surgiu e power-up
+coletado, também por comparação de snapshots) e `uiSounds.js` (hover/clique, delegados no
 `document` — tudo clicável no jogo é um `<button>`).
 
 Ainda não têm som os efeitos de ambiente. Falta também expor **volume/mudo**
@@ -440,6 +462,54 @@ tick pelos dois donos de loop: `Match.js` (online) e `bot.js` (modo treino).
   cada tick em `bot.js`): quem está aprendendo os controles não está disputando
   a partida.
 
+### Power-ups na arena
+
+Três bolhas de power-up aparecem por partida, disputadas pelos dois jogadores.
+As regras vivem em `shared/powerups.js` (fonte única para servidor, modo treino
+e bot), e o desenho/som em `public/js/powerups.js`.
+
+- Quatro tipos: **vida** (1 a 3 corações), **escudo** (1 carga), **cadência**
+  (cooldown de tiro pela metade + recarga instantânea, 10s) e **velocidade**
+  (+40%, 10s).
+- Vida e escudo passam do máximo da classe de propósito: preenchem o que
+  falta e aumentam o teto se já estiver cheio. O HUD acompanha —
+  `updateHeartsRow`/`updateShieldsRow` (`hud.js`) refazem a fileira quando
+  precisam de mais ícones do que a classe tem.
+- O agendamento é em **tempo restante** (primeira bolha entre 0:55 e 0:45, a
+  segunda entre 0:35 e 0:25, a terceira entre 0:15 e 0:05), não em instante
+  absoluto. É isso que faz o
+  tutorial interativo funcionar de graça: enquanto o relógio não corre
+  (`adiarFim`), o tempo restante fica parado no máximo e nenhuma bolha aparece.
+- Tipo, valor, posição (sorteada dentro de `POWERUP_ZONE`, o círculo central
+  da arena) e horário são sorteados **uma vez** por `criarPowerups()`, do lado
+  autoritativo (`Match.js` no online, `bot.js` no treino). O cliente online só
+  desenha `msg.powerups` do snapshot, nunca sorteia nada.
+- Os buffs vão no snapshot como **tempo restante** (`buffsRestantes`), não como
+  instante de expiração: o relógio do cliente não é o do servidor e o efeito
+  visual apagaria na hora errada. Junto vão `speed` e `shotCooldownMs` já
+  calculados, para predição (`prediction.js`), barra de cooldown (`hud.js`) e
+  som de "ainda não recarregou" (`input.js`) não precisarem recalcular buff.
+- `stepPlayers` aplica a velocidade efetiva (`velocidadeAtual`), então os três
+  consumidores da simulação pegam o buff sem mudança. O cooldown efetivo
+  (`cooldownDeTiro`) é aplicado nos dois lados autoritativos: `wsServer.js`
+  (`handleShoot`) e `bot.js` (`botShoot`), e também no agendamento de tiro do
+  bot (`botAI.js`).
+- O bot vai buscar bolha: `escolherPowerupAlvo`/`movimentoParaPowerup`
+  (`shared/botStrategy.js`) só topam a corrida quando ele não está claramente
+  perdendo para o jogador, e o desvio de tiro continua tendo prioridade sobre
+  ir pegar o item.
+- No desempate as bolhas são descartadas junto com os projéteis (`congelarPartida`
+  nos dois donos de loop): a partida congela, ninguém andaria até elas.
+- Ninguém avisa o cliente que uma bolha surgiu ou foi coletada: os dois eventos
+  saem da comparação da lista do snapshot com a do frame anterior
+  (`public/js/powerups.js`), mesmo padrão de tiro/dano/bloqueio em `hud.js` —
+  vale de graça para os dois jogadores e para os três modos, incluindo
+  espectador, sem mensagem nova no protocolo.
+- Quem está sob efeito **pisca na cor do buff** (amarelo = cadência, branco =
+  velocidade; com os dois ativos, alterna). É um brilho colorido em volta da
+  silhueta (`glow` em `drawCharacterFrame`), não um tint: colorir os pixels do
+  sprite exigiria um canvas fora da tela por classe/quadro.
+
 ### Modo espectador (assistir partidas em andamento)
 
 Qualquer partida online 1x1 em andamento pode ser assistida em modo leitura,
@@ -508,6 +578,22 @@ containers de início) lista as partidas ativas com um botão "Assistir".
 - Não gera histórico nem conta como jogador: `saveMatchResult`
   (`matchHistory.js`) e o `endMatch` de `Match.js` só olham `match.players`,
   nunca `match.spectators`.
+
+### Histórico de versões
+
+O changelog do jogo vive em dois lugares que precisam andar juntos:
+`CHANGELOG.md` na raiz (fonte da documentação) e a modal "Novidades" do menu
+(`#changelogOverlay` no `index.html`, aberta pelo `#btnChangelog`). Ao publicar
+uma versão nova, o bloco entra nos dois e o número em `#menuVersion` é
+atualizado. O conteúdo da modal é HTML estático dentro do `index.html`, então
+`public/js/changelog.js` só cuida do abre/fecha, no mesmo padrão de
+`credits.js`. Diferente das outras modais, quem rola é o corpo
+(`#changelogBody`), não a modal inteira: o cabeçalho com o botão de fechar
+precisa continuar visível enquanto a lista de versões cresce.
+
+O texto é escrito para jogador, não para desenvolvedor: descreve o que mudou na
+partida, não o commit. Versões atuais: `beta 0.1` (sprites dos personagens e o
+jogo como estava até então) e `beta 0.2` (power-ups na arena).
 
 ### Convenção de nomes e comentários
 

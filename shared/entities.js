@@ -22,6 +22,9 @@ export function createPlayerState(index, classId = DEFAULT_CLASS_ID) {
     // de mundo. Segue a mira do jogador (mouse) ou, no caso do bot, a
     // posição do adversário — ver shared/botStrategy.js#computeBotFacing.
     facing: 1,
+    // Fim (timestamp) dos buffs temporários dos power-ups de cadência e
+    // velocidade — ver shared/powerups.js.
+    buffs: { cadenciaAte: 0, velocidadeAte: 0 },
   };
 }
 

@@ -15,6 +15,15 @@ export function circleHitsProjectile(player, proj, playerSize, shieldRadius, pro
   return Math.hypot(proj.x - cx, proj.y - cy) <= shieldRadius + projectileSize / 2;
 }
 
+// Círculo contra retângulo: aproxima o centro do círculo do ponto mais próximo
+// dentro do retângulo. Usado na coleta de power-up (bolha redonda contra o
+// hitbox quadrado do jogador).
+export function circleHitsRect(cx, cy, radius, rx, ry, rw, rh) {
+  const nearestX = clamp(cx, rx, rx + rw);
+  const nearestY = clamp(cy, ry, ry + rh);
+  return Math.hypot(cx - nearestX, cy - nearestY) <= radius;
+}
+
 // Vetor de movimento normalizado (diagonal não é mais rápido que ortogonal).
 export function movementDelta(input) {
   let dx = 0;
