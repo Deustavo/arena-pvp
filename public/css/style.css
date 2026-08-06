@@ -650,7 +650,7 @@
     align-items: flex-start;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 40px;
+    gap: 20px;
   }
   #rankingPanel {
     display: flex;
@@ -1452,7 +1452,7 @@
     background: var(--cor-borda);
   }
   #onlineCount {
-    margin-top: 4px;
+    margin-top: -8px;
     font-size: 14px;
     color: var(--cor-sucesso);
   }
@@ -1848,10 +1848,12 @@
     border-top: 1px solid var(--cor-borda);
     margin: 4px 0;
   }
-  #menu button#btnHowToPlay {
+  #menu button#btnHowToPlay,
+  #menu button#btnCredits {
     background: var(--cor-superficie-forte);
   }
-  #menu button#btnHowToPlay:hover {
+  #menu button#btnHowToPlay:hover,
+  #menu button#btnCredits:hover {
     background: var(--cor-superficie-forte-hover);
   }
   /* ----- Regra comum a todas as modais -----
@@ -2514,12 +2516,6 @@
     text-align: center;
   }
 
-  #btnCredits {
-    align-self: center;
-    font-size: 12px;
-    margin-top: 12px;
-  }
-
   #creditsOverlay {
     display: none;
     position: fixed;
@@ -2575,7 +2571,12 @@
   #creditsBody {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
+  }
+  .creditos-secao {
+    background: var(--cor-superficie-baixa);
+    border-radius: 8px;
+    padding: 10px 14px 14px;
   }
   .creditos-secao p {
     margin: 0 0 4px;
