@@ -98,12 +98,20 @@ function carregarFaixa(indice, { autoplay } = {}) {
   if (autoplay) audio.play().catch(() => {});
 }
 
+// `audio.paused` fica true quando a faixa termina, então ele sozinho não
+// distingue "o jogador pausou" de "a faixa acabou" — sem olhar `ended`, a
+// próxima faixa da playlist carregaria pausada e a música morreria no fim
+// da primeira.
+function estavaTocando() {
+  return !audio.paused || audio.ended;
+}
+
 function proximaFaixa() {
-  carregarFaixa(indiceAtual + 1, { autoplay: !audio.paused });
+  carregarFaixa(indiceAtual + 1, { autoplay: estavaTocando() });
 }
 
 function faixaAnterior() {
-  carregarFaixa(indiceAtual - 1, { autoplay: !audio.paused });
+  carregarFaixa(indiceAtual - 1, { autoplay: estavaTocando() });
 }
 
 function alternarPlayPause() {
