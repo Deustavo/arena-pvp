@@ -25,6 +25,17 @@ import { initFireCursor } from './fireCursor.js';
 import { initTitleFire } from './titleFire.js';
 import { ehDispositivoMobile, mostrarBloqueioMobile } from './mobileBlock.js';
 
+// Ao voltar pelo histórico do navegador (seta "voltar"/"avançar"), o Chrome/Firefox
+// podem restaurar a página do bfcache em vez de recarregar — o JS volta a rodar
+// exatamente do jeito que ficou congelado (WebSocket morto, fila/partida travada
+// na tela, loops parados). `event.persisted` é o sinal de que essa restauração
+// aconteceu; a saída mais simples e robusta é recarregar do zero.
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
+
 // Celular/tablet: só o aviso de "jogue no computador". Nada mais é
 // inicializado — em especial a música, que não deve tocar nessa tela.
 if (ehDispositivoMobile()) {
