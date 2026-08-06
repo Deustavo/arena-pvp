@@ -2798,6 +2798,14 @@
     --sprite-anchor: 0.45;
     margin-bottom: 4px;
   }
+  /* Screenshots do jogo ilustrando um tópico, como a partida real em
+     "Partida online 1x1" e a faixa do tutorial em "Modo treino e tutorial". */
+  .changelog-topico-imagem {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 8px;
+  }
 
   @media (max-width: 700px) {
     #menuTitle {
