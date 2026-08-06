@@ -76,7 +76,7 @@ function handleOnlineMessage(msg, onBackToMenu) {
       canvas.height = state.arena.h;
       state.gameOver = false;
       state.matchStarted = false;
-      state.latestState = { players: msg.players, projectiles: [] };
+      state.latestState = { players: msg.players, projectiles: [], powerups: [] };
       state.viewFlipped = computeInitialViewFlip(msg.players, state.playerIndex);
       // `initHearts` espera vidas na ordem visual [você, oponente], não na
       // ordem bruta do servidor — senão o HUD monta a fileira de corações do
@@ -158,7 +158,7 @@ function handleSpectatorMessage(msg, onBackToMenu) {
       // espectador entra direto no jogo, sem overlay de espera/contagem.
       state.matchStarted = true;
       state.viewFlipped = false;
-      state.latestState = { players: msg.players, projectiles: [] };
+      state.latestState = { players: msg.players, projectiles: [], powerups: msg.powerups ?? [] };
       initHearts(msg.players.map((p) => p.lives));
       updateHud();
       showSpectatorBanner();

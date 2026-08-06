@@ -13,7 +13,11 @@ import { getBotDifficulty } from '../../shared/botDifficulty.js';
 import {
   createBotAiState, computeBotMovement, computeAimTarget, markAttack,
   classDodgeChance, classShieldChance, findIncomingThreat, computeBotFacing,
+  escolherPowerupAlvo, movimentoParaPowerup,
 } from '../../shared/botStrategy.js';
+import {
+  criarPowerups, tickPowerups, buffsRestantes, velocidadeAtual, cooldownDeTiro,
+} from '../../shared/powerups.js';
 import { updateGameScale } from './gameScale.js';
 import {
   shouldStartMatchTutorial, startMatchTutorial, isMatchTutorialActive,
@@ -33,7 +37,7 @@ function pickRandomClassId() {
   return ids[Math.floor(Math.random() * ids.length)];
 }
 
-function snapshotPlayers(players) {
+function snapshotPlayers(players, agora = Date.now()) {
   return players.map((p, i) => ({
     x: p.x,
     y: p.y,
@@ -46,6 +50,12 @@ function snapshotPlayers(players) {
     name: i === 0 ? (state.nickname || 'Você') : BOT_NAME,
     lastShot: p.lastShot,
     facing: p.facing,
+    // Mesmos campos derivados do snapshot do servidor (ver playerSnapshot em
+    // src/server/Match.js), pro HUD e a prévia de mira não precisarem saber em
+    // que modo estão.
+    speed: velocidadeAtual(p, agora),
+    shotCooldownMs: cooldownDeTiro(p, getClass(p.classId), agora),
+    buffs: buffsRestantes(p, agora),
   }));
 }
 
@@ -66,9 +76,11 @@ export function startBot() {
     // Igual ao servidor: o tempo regulamentar só começa quando a contagem
     // regressiva termina.
     cronometro: null,
+    // Agenda das bolhas de power-up desta partida (ver shared/powerups.js).
+    powerups: criarPowerups(),
   };
 
-  state.latestState = { players: snapshotPlayers(state.bot.players), projectiles: [] };
+  state.latestState = { players: snapshotPlayers(state.bot.players), projectiles: [], powerups: [] };
   state.viewFlipped = computeInitialViewFlip(state.bot.players, state.playerIndex);
   state.shieldMaxHits = state.bot.players.map((p) => p.shieldMaxHits);
   initHearts(state.bot.players.map((p) => p.lives));
@@ -146,6 +158,18 @@ function updateBotAI() {
   enemy.input.up = dy < -4;
   enemy.input.down = dy > 4;
 
+  // Bolha de power-up ao alcance: buscar o item passa na frente do
+  // posicionamento da classe (mas não do desvio de tiro, logo abaixo) — mesma
+  // regra do bot do servidor, ver tickBot em src/server/botAI.js.
+  const alvoPowerup = escolherPowerupAlvo(enemy, me, bot.powerups.ativos);
+  if (alvoPowerup) {
+    const rumo = movimentoParaPowerup(enemy, alvoPowerup);
+    enemy.input.left = rumo.left;
+    enemy.input.right = rumo.right;
+    enemy.input.up = rumo.up;
+    enemy.input.down = rumo.down;
+  }
+
   // Desvia de tiros próximos. A decisão de desviar é tomada uma única vez
   // por projétil (não a cada tick), senão até uma chance baixa acaba quase
   // sempre acertando ao longo dos vários ticks em que o tiro fica "próximo".
@@ -183,7 +207,8 @@ function updateBotAI() {
 
   if (now >= bot.botNextShot && me.alive) {
     botAttack(bot, me, enemy);
-    bot.botNextShot = now + enemyCls.shotCooldownMs + diff.cooldownExtraMs + Math.random() * diff.shotJitterMs;
+    bot.botNextShot = now + cooldownDeTiro(enemy, enemyCls, now)
+      + diff.cooldownExtraMs + Math.random() * diff.shotJitterMs;
   }
 }
 
@@ -198,6 +223,9 @@ function resultadoDoVencedor(winnerIndex) {
 // somem (mesma regra do servidor, ver congelarPartida em Match.js).
 function congelarPartida(bot) {
   bot.projectiles = [];
+  // Mesma regra do servidor: no desempate ninguém anda, uma bolha na arena
+  // ficaria lá impossível de pegar.
+  bot.powerups.ativos = [];
   for (const p of bot.players) {
     p.input = { up: false, down: false, left: false, right: false };
     p.shielding = false;
@@ -208,6 +236,7 @@ function publicarEstadoBot(bot) {
   state.latestState = {
     players: snapshotPlayers(bot.players),
     projectiles: bot.projectiles.map((p) => ({ x: p.x, y: p.y, ownerIndex: p.ownerIndex, size: p.size })),
+    powerups: bot.powerups.ativos,
   };
   updateHud();
 }
@@ -220,7 +249,8 @@ function botTick() {
   // controles, não disputando a partida.
   if (isMatchTutorialActive()) adiarFim(bot.cronometro, TICK_MS);
 
-  const evento = tickCronometro(bot.cronometro, bot.players, Date.now());
+  const agora = Date.now();
+  const evento = tickCronometro(bot.cronometro, bot.players, agora);
   if (evento.iniciouDesempate) congelarPartida(bot);
   if (emDesempate(bot.cronometro)) {
     publicarEstadoBot(bot);
@@ -245,7 +275,10 @@ function botTick() {
   const bonecoInvulneravel = isMatchTutorialDummyInvulnerable();
   const vidasBoneco = bot.players[1].lives;
 
-  stepPlayers(bot.players, ARENA);
+  const restanteMs = tempoRestanteMs(bot.cronometro, agora);
+  stepPlayers(bot.players, ARENA, agora);
+  // Depois de mover: quem entrou na bolha neste tick já leva o power-up.
+  tickPowerups(bot.powerups, bot.players, restanteMs, agora);
   bot.projectiles = stepProjectiles(bot.projectiles, bot.players, ARENA, (winnerIndex) => {
     if (bonecoInvulneravel && winnerIndex === 0) return;
     recordGameOver(resultadoDoVencedor(winnerIndex));
@@ -276,7 +309,7 @@ function botTick() {
 
   publicarEstadoBot(bot);
   if (state.input.shield && !isShieldAvailable()) state.input.shield = false;
-  atualizarCronometro(tempoRestanteMs(bot.cronometro, Date.now()), false);
+  atualizarCronometro(restanteMs, false);
 }
 
 export function botShoot(targetX, targetY) {
@@ -290,7 +323,8 @@ export function botShoot(targetX, targetY) {
   if (escudoAtivo(me)) return;
   const cls = getClass(me.classId);
   const now = Date.now();
-  if (now - me.lastShot < cls.shotCooldownMs) return;
+  // Cooldown da classe, ou metade dele com o power-up de cadência ativo.
+  if (now - me.lastShot < cooldownDeTiro(me, cls, now)) return;
   me.lastShot = now;
 
   const cx = me.x + PLAYER_SIZE / 2;

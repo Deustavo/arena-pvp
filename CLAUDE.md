@@ -322,7 +322,8 @@ as partículas), `gameOver.js` (vitória/derrota — no **overlay**, não em
 derrota), `matchTimer.js` (tique dos últimos 10s, um por segundo, e buzina do
 desempate), `input.js` (escudo erguido e ação indisponível), `nearMiss.js`
 (projétil que passou raspando, detectado por frame pela distância mínima, já que
-os projéteis do snapshot não têm id) e `uiSounds.js` (hover/clique, delegados no
+os projéteis do snapshot não têm id), `powerups.js` (bolha que surgiu e power-up
+coletado, também por comparação de snapshots) e `uiSounds.js` (hover/clique, delegados no
 `document` — tudo clicável no jogo é um `<button>`).
 
 Ainda não têm som os efeitos de ambiente. Falta também expor **volume/mudo**
@@ -439,6 +440,54 @@ tick pelos dois donos de loop: `Match.js` (online) e `bot.js` (modo treino).
 - Enquanto o tutorial interativo roda, o relógio **não corre** (`adiarFim` a
   cada tick em `bot.js`): quem está aprendendo os controles não está disputando
   a partida.
+
+### Power-ups na arena
+
+Três bolhas de power-up aparecem por partida, disputadas pelos dois jogadores.
+As regras vivem em `shared/powerups.js` (fonte única para servidor, modo treino
+e bot), e o desenho/som em `public/js/powerups.js`.
+
+- Quatro tipos: **vida** (1 a 3 corações), **escudo** (1 carga), **cadência**
+  (cooldown de tiro pela metade + recarga instantânea, 10s) e **velocidade**
+  (+40%, 10s).
+- Vida e escudo passam do máximo da classe de propósito: preenchem o que
+  falta e aumentam o teto se já estiver cheio. O HUD acompanha —
+  `updateHeartsRow`/`updateShieldsRow` (`hud.js`) refazem a fileira quando
+  precisam de mais ícones do que a classe tem.
+- O agendamento é em **tempo restante** (primeira bolha entre 0:55 e 0:45, a
+  segunda entre 0:35 e 0:25, a terceira entre 0:15 e 0:05), não em instante
+  absoluto. É isso que faz o
+  tutorial interativo funcionar de graça: enquanto o relógio não corre
+  (`adiarFim`), o tempo restante fica parado no máximo e nenhuma bolha aparece.
+- Tipo, valor, posição (sorteada dentro de `POWERUP_ZONE`, o círculo central
+  da arena) e horário são sorteados **uma vez** por `criarPowerups()`, do lado
+  autoritativo (`Match.js` no online, `bot.js` no treino). O cliente online só
+  desenha `msg.powerups` do snapshot, nunca sorteia nada.
+- Os buffs vão no snapshot como **tempo restante** (`buffsRestantes`), não como
+  instante de expiração: o relógio do cliente não é o do servidor e o efeito
+  visual apagaria na hora errada. Junto vão `speed` e `shotCooldownMs` já
+  calculados, para predição (`prediction.js`), barra de cooldown (`hud.js`) e
+  som de "ainda não recarregou" (`input.js`) não precisarem recalcular buff.
+- `stepPlayers` aplica a velocidade efetiva (`velocidadeAtual`), então os três
+  consumidores da simulação pegam o buff sem mudança. O cooldown efetivo
+  (`cooldownDeTiro`) é aplicado nos dois lados autoritativos: `wsServer.js`
+  (`handleShoot`) e `bot.js` (`botShoot`), e também no agendamento de tiro do
+  bot (`botAI.js`).
+- O bot vai buscar bolha: `escolherPowerupAlvo`/`movimentoParaPowerup`
+  (`shared/botStrategy.js`) só topam a corrida quando ele não está claramente
+  perdendo para o jogador, e o desvio de tiro continua tendo prioridade sobre
+  ir pegar o item.
+- No desempate as bolhas são descartadas junto com os projéteis (`congelarPartida`
+  nos dois donos de loop): a partida congela, ninguém andaria até elas.
+- Ninguém avisa o cliente que uma bolha surgiu ou foi coletada: os dois eventos
+  saem da comparação da lista do snapshot com a do frame anterior
+  (`public/js/powerups.js`), mesmo padrão de tiro/dano/bloqueio em `hud.js` —
+  vale de graça para os dois jogadores e para os três modos, incluindo
+  espectador, sem mensagem nova no protocolo.
+- Quem está sob efeito **pisca na cor do buff** (amarelo = cadência, branco =
+  velocidade; com os dois ativos, alterna). É um brilho colorido em volta da
+  silhueta (`glow` em `drawCharacterFrame`), não um tint: colorir os pixels do
+  sprite exigiria um canvas fora da tela por classe/quadro.
 
 ### Modo espectador (assistir partidas em andamento)
 

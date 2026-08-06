@@ -77,6 +77,40 @@ export function computeBotMovement(classId, botCls, bot, player, aiState, now) {
   return { left: dx < -2, right: dx > 2 };
 }
 
+// Vantagem mínima (em pixels) que o bot exige para ir atrás de um power-up:
+// correr para uma bolha que o adversário vai pegar primeiro é abrir mão do
+// posicionamento da classe de graça, sem levar nada em troca.
+const POWERUP_VANTAGEM_PX = 40;
+
+// Power-up que vale a pena buscar agora: o mais próximo do bot entre os que
+// ele não está claramente perdendo para o jogador. `null` quando não há bolha
+// na arena ou todas estão do lado do adversário — aí o bot volta à estratégia
+// normal da classe.
+export function escolherPowerupAlvo(bot, player, powerups) {
+  if (!powerups || !powerups.length) return null;
+  const bcx = bot.x + PLAYER_SIZE / 2;
+  const bcy = bot.y + PLAYER_SIZE / 2;
+  const pcx = player.x + PLAYER_SIZE / 2;
+  const pcy = player.y + PLAYER_SIZE / 2;
+  let melhor = null;
+  for (const pu of powerups) {
+    const distBot = Math.hypot(pu.x - bcx, pu.y - bcy);
+    const distJogador = Math.hypot(pu.x - pcx, pu.y - pcy);
+    if (distBot > distJogador + POWERUP_VANTAGEM_PX) continue;
+    if (!melhor || distBot < melhor.dist) melhor = { powerup: pu, dist: distBot };
+  }
+  return melhor ? melhor.powerup : null;
+}
+
+// Input completo (os dois eixos) para o bot andar até a bolha — ao contrário
+// de computeBotMovement, que só decide o eixo horizontal porque o vertical
+// vem da mira.
+export function movimentoParaPowerup(bot, powerup) {
+  const dx = powerup.x - (bot.x + PLAYER_SIZE / 2);
+  const dy = powerup.y - (bot.y + PLAYER_SIZE / 2);
+  return { left: dx < -4, right: dx > 4, up: dy < -4, down: dy > 4 };
+}
+
 // Chamado quando o bot atira, para classes cuja estratégia reage ao próprio ataque.
 export function markAttack(classId, aiState, now) {
   if (classId === 'assassino') aiState.retreatUntil = now + ASSASSINO_RETREAT_MS;

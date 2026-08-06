@@ -34,7 +34,9 @@ let escResetTimer = null;
 function tiroPronto() {
   const me = state.latestState.players[state.playerIndex];
   if (!me) return true;
-  return Date.now() - (me.lastShot || 0) >= getClass(me.classId).shotCooldownMs;
+  // `shotCooldownMs` do snapshot já considera o power-up de cadência.
+  const cooldownMs = me.shotCooldownMs ?? getClass(me.classId).shotCooldownMs;
+  return Date.now() - (me.lastShot || 0) >= cooldownMs;
 }
 
 // O personagem olha para onde o mouse está mirando. `facing` só muda de

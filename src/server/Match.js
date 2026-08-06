@@ -5,8 +5,11 @@ import {
   SHIELD_RADIUS,
 } from '../../shared/constants.js';
 import { createPlayerState } from '../../shared/entities.js';
-import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
+import { DEFAULT_CLASS_ID, getClass } from '../../shared/classes.js';
 import { stepPlayers, stepProjectiles } from '../../shared/simulation.js';
+import {
+  criarPowerups, tickPowerups, buffsRestantes, velocidadeAtual, cooldownDeTiro,
+} from '../../shared/powerups.js';
 import {
   MATCH_DURATION_MS, criarCronometro, tickCronometro, emDesempate, tempoRestanteMs,
 } from '../../shared/matchTimer.js';
@@ -25,7 +28,7 @@ function makePlayer(ws, index) {
   };
 }
 
-function playerSnapshot(p) {
+function playerSnapshot(p, agora = Date.now()) {
   return {
     x: p.x,
     y: p.y,
@@ -38,6 +41,12 @@ function playerSnapshot(p) {
     name: p.name,
     lastShot: p.lastShot,
     facing: p.facing,
+    // Velocidade e cooldown já com os power-ups aplicados: o cliente (predição
+    // local, barra de cooldown do HUD) usa esses valores prontos em vez de
+    // recalcular o buff com o próprio relógio, que não é o do servidor.
+    speed: velocidadeAtual(p, agora),
+    shotCooldownMs: cooldownDeTiro(p, getClass(p.classId), agora),
+    buffs: buffsRestantes(p, agora),
   };
 }
 
@@ -64,6 +73,10 @@ export function createMatch(wsA, wsB, { onEnd, bot = false, botDifficulty = 'int
     // Só existe depois da contagem regressiva: o tempo regulamentar começa a
     // correr quando a partida de fato começa.
     cronometro: null,
+    // Agenda das bolhas de power-up da partida (tipo, posição e tempo
+    // restante em que aparecem), sorteada aqui porque o servidor é a única
+    // fonte de verdade — ver shared/powerups.js.
+    powerups: criarPowerups(),
     onEnd,
     bot,
     botState: bot ? createBotState(botDifficulty) : null,
@@ -103,7 +116,8 @@ export function createMatch(wsA, wsB, { onEnd, bot = false, botDifficulty = 'int
 function tick(match) {
   if (!match.running) return;
 
-  const evento = tickCronometro(match.cronometro, match.players, Date.now());
+  const agora = Date.now();
+  const evento = tickCronometro(match.cronometro, match.players, agora);
   if (evento.iniciouDesempate) congelarPartida(match);
   if (emDesempate(match.cronometro)) {
     // Partida congelada: ninguém se move nem atira, só os corações caem. O
@@ -115,7 +129,9 @@ function tick(match) {
   }
 
   if (match.bot) tickBot(match);
-  stepPlayers(match.players, ARENA);
+  stepPlayers(match.players, ARENA, agora);
+  // Depois de mover: quem entrou na bolha neste tick já leva o power-up.
+  tickPowerups(match.powerups, match.players, tempoRestanteMs(match.cronometro, agora), agora);
   match.projectiles = stepProjectiles(match.projectiles, match.players, ARENA, (winnerIndex) => {
     endMatch(match, winnerIndex);
   });
@@ -128,6 +144,9 @@ function tick(match) {
 // congelamento — a partir daqui só o desempate decide.
 function congelarPartida(match) {
   match.projectiles = [];
+  // No desempate ninguém mais anda: uma bolha na arena só ficaria lá parada,
+  // impossível de pegar.
+  match.powerups.ativos = [];
   for (const p of match.players) {
     p.input = { up: false, down: false, left: false, right: false };
     p.shielding = false;
@@ -135,11 +154,13 @@ function congelarPartida(match) {
 }
 
 function broadcastState(match) {
+  const agora = Date.now();
   const state = {
     type: 'state',
-    players: match.players.map(playerSnapshot),
+    players: match.players.map((p) => playerSnapshot(p, agora)),
     projectiles: match.projectiles.map((proj) => ({ x: proj.x, y: proj.y, ownerIndex: proj.ownerIndex, size: proj.size })),
-    remainingMs: tempoRestanteMs(match.cronometro, Date.now()),
+    powerups: match.powerups.ativos,
+    remainingMs: tempoRestanteMs(match.cronometro, agora),
     desempate: emDesempate(match.cronometro),
   };
   const payload = JSON.stringify(state);
@@ -168,7 +189,9 @@ export function attachSpectator(match, ws) {
     colors: COLORS,
     shieldRadius: SHIELD_RADIUS,
     matchDurationMs: MATCH_DURATION_MS,
-    players: match.players.map(playerSnapshot),
+    players: match.players.map((p) => playerSnapshot(p)),
+    // A partida pode já ter bolhas na arena quando o espectador chega.
+    powerups: match.powerups.ativos,
   });
   return true;
 }

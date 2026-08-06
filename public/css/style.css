@@ -999,6 +999,11 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+    /* Teto que dá o que quebrar para a fileira de corações/escudos (ver
+       .hearts): sem um limite de largura ela nunca passaria de uma linha e o
+       excedente do power-up de vida atravessaria a metade do oponente. */
+    max-width: 50%;
+    min-width: 0;
   }
   .hud-row-right {
     align-items: flex-end;
@@ -1055,15 +1060,24 @@
     stroke-linecap: round;
     stroke-linejoin: round;
   }
+  /* Quebra em mais de uma linha porque a fileira cresce: o power-up de vida
+     passa do máximo da classe (tank já começa com 14 corações), e sem o wrap
+     os corações extras invadiam a metade do oponente no HUD. */
   .hearts {
     display: flex;
     gap: 4px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
   .shields {
     display: flex;
     gap: 4px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+  }
+  /* Na metade direita do HUD tudo é alinhado à direita, inclusive a segunda
+     linha de corações quando ela existe. */
+  .hud-row-right .hearts,
+  .hud-row-right .shields {
+    justify-content: flex-end;
   }
   .cooldown-bar {
     width: 100%;

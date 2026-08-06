@@ -217,9 +217,21 @@ function headPosition(player) {
   return { x: player.x + state.playerSize / 2, topY: player.y };
 }
 
+// Fileiras de corações/escudos por slot visual, para poderem ser refeitas
+// quando um power-up passa do máximo da classe (ver crescerFileira abaixo).
+const livesContainers = [livesP0El, livesP1El];
+const shieldsContainers = [shieldsP0El, shieldsP1El];
+
 function updateHeartsRow(row, lives, rawIndex, player) {
-  const hearts = heartsEls[row];
+  let hearts = heartsEls[row];
   if (!hearts.length) return;
+  // O power-up de vida passa do máximo da classe de propósito: a fileira
+  // cresce em vez de engolir os corações que não caberiam.
+  const necessarios = Math.ceil(lives);
+  if (necessarios > hearts.length) {
+    hearts = createHeartsRow(livesContainers[row], necessarios);
+    heartsEls[row] = hearts;
+  }
   const prev = prevLives[row];
   const wholeLives = Math.floor(lives);
   // Dano fracionário (ex.: duelista tira meio coração por tiro) deixa `lives`
@@ -251,8 +263,15 @@ function updateHeartsRow(row, lives, rawIndex, player) {
 }
 
 function updateShieldsRow(row, charges, player) {
-  const shields = shieldsEls[row];
+  let shields = shieldsEls[row];
   if (!shields.length) return;
+  // Mesmo caso dos corações: com o escudo cheio, o power-up de escudo aumenta
+  // o teto de cargas da classe e a fileira precisa acompanhar.
+  const necessarios = Math.max(charges, player?.shieldMaxHits ?? 0);
+  if (necessarios > shields.length) {
+    shields = createShieldsRow(shieldsContainers[row], necessarios);
+    shieldsEls[row] = shields;
+  }
   for (let i = 0; i < shields.length; i++) {
     shields[i].classList.toggle('lost', i >= charges);
   }
@@ -292,7 +311,9 @@ export function isShieldAvailable() {
 
 function updateCooldownBar(el, player, now) {
   if (!player) return;
-  const cooldownMs = getClass(player.classId).shotCooldownMs;
+  // `shotCooldownMs` vem do snapshot já com o power-up de cadência aplicado —
+  // a barra recarrega no dobro da velocidade enquanto o buff durar.
+  const cooldownMs = player.shotCooldownMs ?? getClass(player.classId).shotCooldownMs;
   const ratio = Math.min(1, (now - (player.lastShot || 0)) / cooldownMs);
   el.style.width = `${ratio * 100}%`;
   el.classList.toggle('ready', ratio >= 1);

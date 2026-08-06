@@ -239,6 +239,23 @@ export const playUnavailableSound = efeito('unavailable', 500, () => {
   nota({ type: 'triangle', freq: 150, dur: 0.05, gain: 0.08 });
 });
 
+// --- Power-ups -------------------------------------------------------------
+
+// Bolha de power-up apareceu na arena. Discreto e "borbulhante": avisa sem
+// competir com o combate que está acontecendo na hora.
+export const playPowerupSpawnSound = efeito('powerupSpawn', 500, () => {
+  nota({ type: 'sine', freq: 500, to: 1200, dur: 0.22, gain: 0.14, attack: 0.02 });
+});
+
+// Power-up coletado. Arpejo subindo, o som mais "recompensa" da partida — quem
+// pegou precisa ter certeza de que pegou, e quem perdeu também.
+export const playPowerupPickupSound = efeito('powerupPickup', 400, () => {
+  sequencia(
+    [{ freq: 659.25 }, { freq: 880 }, { freq: 1174.66 }, { freq: 1568, dur: 0.2 }],
+    { type: 'square', dur: 0.06, gain: 0.18 },
+  );
+});
+
 // --- Fim de partida --------------------------------------------------------
 
 // Um jogador zerou as vidas. Casa com as partículas de explosions.js.

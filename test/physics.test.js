@@ -1,6 +1,31 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { clamp, rectsIntersect, circleHitsProjectile, movementDelta } from '../shared/physics.js';
+import {
+  clamp, rectsIntersect, circleHitsProjectile, circleHitsRect, movementDelta,
+} from '../shared/physics.js';
+
+describe('circleHitsRect', () => {
+  test('círculo em cima do retângulo colide', () => {
+    assert.equal(circleHitsRect(50, 50, 20, 40, 40, 30, 30), true);
+  });
+
+  test('círculo longe não colide', () => {
+    assert.equal(circleHitsRect(200, 200, 20, 40, 40, 30, 30), false);
+  });
+
+  test('encosta na borda pelo raio, sem sobrepor o retângulo', () => {
+    // Retângulo de x=100 a x=130; círculo de raio 20 centrado em x=81 alcança
+    // x=101, então toca. Centrado em x=79 (alcance 99) ainda não.
+    assert.equal(circleHitsRect(81, 115, 20, 100, 100, 30, 30), true);
+    assert.equal(circleHitsRect(79, 115, 20, 100, 100, 30, 30), false);
+  });
+
+  test('canto do retângulo conta pela diagonal, não pelos eixos', () => {
+    // 10px em cada eixo do canto = 14.1px de distância real: fora de um raio 12.
+    assert.equal(circleHitsRect(90, 90, 12, 100, 100, 30, 30), false);
+    assert.equal(circleHitsRect(90, 90, 15, 100, 100, 30, 30), true);
+  });
+});
 
 describe('clamp', () => {
   test('retorna o valor quando dentro dos limites', () => {

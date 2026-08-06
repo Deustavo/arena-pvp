@@ -4,15 +4,18 @@
 // exatamente as mesmas regras.
 
 import { clamp, rectsIntersect, circleHitsProjectile, movementDelta } from './physics.js';
-import { PLAYER_SIZE, PROJECTILE_SIZE, PLAYER_SPEED, SHIELD_RADIUS } from './constants.js';
+import { PLAYER_SIZE, PROJECTILE_SIZE, SHIELD_RADIUS } from './constants.js';
+import { velocidadeAtual } from './powerups.js';
 
-export function stepPlayers(players, arena) {
+export function stepPlayers(players, arena, agora = Date.now()) {
   for (const p of players) {
     if (!p.alive) continue;
     // Escudo esgotado não pode mais ser usado.
     if (p.shielding && p.shieldHits >= p.shieldMaxHits) p.shielding = false;
     const { dx, dy } = movementDelta(p.input);
-    const speed = p.speed ?? PLAYER_SPEED;
+    // Velocidade da classe, 40% maior enquanto o power-up de velocidade
+    // estiver ativo (ver shared/powerups.js).
+    const speed = velocidadeAtual(p, agora);
     p.x = clamp(p.x + dx * speed, 0, arena.w - PLAYER_SIZE);
     p.y = clamp(p.y + dy * speed, 0, arena.h - PLAYER_SIZE);
   }

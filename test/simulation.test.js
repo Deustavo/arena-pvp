@@ -4,6 +4,7 @@ import { stepPlayers, stepProjectiles } from '../shared/simulation.js';
 import { createPlayerState, createProjectile } from '../shared/entities.js';
 import { ARENA, PLAYER_SIZE, PLAYER_SPEED } from '../shared/constants.js';
 import { CLASSES } from '../shared/classes.js';
+import { VELOCIDADE_FATOR } from '../shared/powerups.js';
 
 describe('stepPlayers', () => {
   test('move o jogador de acordo com o input', () => {
@@ -12,6 +13,25 @@ describe('stepPlayers', () => {
     p.input.right = true;
     stepPlayers([p], ARENA);
     assert.equal(p.x, startX + PLAYER_SPEED);
+  });
+
+  // O power-up de velocidade vive em shared/powerups.js, mas quem aplica o
+  // multiplicador é o passo de movimento — os três consumidores da simulação
+  // pegam o efeito de graça.
+  test('power-up de velocidade acelera o movimento enquanto durar', () => {
+    const p = createPlayerState(0);
+    const agora = 10_000;
+    p.buffs.velocidadeAte = agora + 5000;
+    p.input.right = true;
+
+    const startX = p.x;
+    stepPlayers([p], ARENA, agora);
+    assert.equal(p.x, startX + PLAYER_SPEED * VELOCIDADE_FATOR);
+
+    // Buff expirado: volta à velocidade da classe.
+    const meioX = p.x;
+    stepPlayers([p], ARENA, agora + 5000);
+    assert.equal(p.x, meioX + PLAYER_SPEED);
   });
 
   test('jogador morto não se move', () => {

@@ -13,7 +13,9 @@ import { getBotDifficulty } from '../../shared/botDifficulty.js';
 import {
   createBotAiState, computeBotMovement, computeAimTarget, markAttack,
   classDodgeChance, classShieldChance, findIncomingThreat, computeBotFacing,
+  escolherPowerupAlvo, movimentoParaPowerup,
 } from '../../shared/botStrategy.js';
+import { cooldownDeTiro } from '../../shared/powerups.js';
 
 export function createBotState(difficultyId) {
   return {
@@ -61,6 +63,17 @@ export function tickBot(match) {
   bot.input.up = dy < -4;
   bot.input.down = dy > 4;
 
+  // Bolha de power-up ao alcance: buscar o item passa na frente do
+  // posicionamento da classe (mas não do desvio de tiro, logo abaixo).
+  const alvoPowerup = escolherPowerupAlvo(bot, player, match.powerups?.ativos);
+  if (alvoPowerup) {
+    const rumo = movimentoParaPowerup(bot, alvoPowerup);
+    bot.input.left = rumo.left;
+    bot.input.right = rumo.right;
+    bot.input.up = rumo.up;
+    bot.input.down = rumo.down;
+  }
+
   // Desvia de tiros próximos (decisão travada por projétil, não por tick).
   const incoming = findIncomingThreat(bot, match.projectiles);
   if (incoming) {
@@ -89,7 +102,8 @@ export function tickBot(match) {
 
   if (!bot.shielding && now >= state.nextShotAt && player.alive) {
     botAttack(match, diff, player, bot);
-    state.nextShotAt = now + botCls.shotCooldownMs + diff.cooldownExtraMs + Math.random() * diff.shotJitterMs;
+    state.nextShotAt = now + cooldownDeTiro(bot, botCls, now)
+      + diff.cooldownExtraMs + Math.random() * diff.shotJitterMs;
   }
 
   // Descarta decisões de desvio/escudo de projéteis que já sumiram, para os

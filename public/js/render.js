@@ -5,6 +5,7 @@ import { advancePrediction, getRenderState } from './prediction.js';
 import { updateAndDrawExplosions } from './explosions.js';
 import { updateAndDrawFloatingIcons } from './floatingIcons.js';
 import { checkNearMiss } from './nearMiss.js';
+import { drawPowerupZone, updateAndDrawPowerups, drawPowerupPickups } from './powerups.js';
 import { showGameOverOverlay } from './gameOver.js';
 import { getClass } from '../../shared/classes.js';
 import {
@@ -18,6 +19,35 @@ const OWN_SHOT_COLOR = '#facc15';
 const ENEMY_SHOT_COLOR = '#ff4d4d';
 const AIM_PREVIEW_COLOR = '#9ca3af';
 const HITBOX_DEBUG_COLOR = '#22ff22';
+
+// Personagem sob efeito de power-up pisca na cor do buff: amarelo para
+// cadência, branco para velocidade (as mesmas cores da bolha, ver
+// public/js/powerups.js). Com os dois ativos, alterna entre as duas — assim
+// nenhum dos efeitos fica invisível.
+const POWERUP_GLOW = {
+  cadencia: '#facc15',
+  velocidade: '#ffffff',
+};
+const POWERUP_GLOW_BLUR = 22;
+const POWERUP_BLINK_MS = 160;
+// Cada cor fica um tempo maior que uma piscada antes de dar lugar à outra,
+// senão as duas viram um piscar único de cor indefinida.
+const POWERUP_COR_ALTERNA_MS = 640;
+
+// `null` quando nenhum buff está ativo, ou quando é o meio-tempo "apagado" da
+// piscada. `buffs` vem do snapshot em milissegundos restantes (ver
+// buffsRestantes em shared/powerups.js), então não depende do relógio local.
+function powerupGlow(player, now) {
+  const buffs = player.buffs;
+  if (!buffs) return null;
+  const cores = [];
+  if (buffs.cadenciaMs > 0) cores.push(POWERUP_GLOW.cadencia);
+  if (buffs.velocidadeMs > 0) cores.push(POWERUP_GLOW.velocidade);
+  if (!cores.length) return null;
+  if (Math.floor(now / POWERUP_BLINK_MS) % 2 !== 0) return null;
+  const cor = cores[Math.floor(now / POWERUP_COR_ALTERNA_MS) % cores.length];
+  return { color: cor, blur: POWERUP_GLOW_BLUR };
+}
 
 // Debug visual da caixa de colisão real de cada jogador (o mesmo retângulo
 // usado por rectsIntersect em shared/physics.js), ativado por `?debug=1` na
@@ -206,9 +236,12 @@ function drawPlayers(renderState, now) {
 
     const cx = p.x + ox + state.playerSize / 2;
     const cy = p.y + oy + state.playerSize / 2;
+    // Piscada de power-up ativo. Vale para os dois jogadores, nos três modos:
+    // sai do snapshot, não do input local.
+    const glow = p.alive ? powerupGlow(p, now) : null;
     if (sprite) {
-      if (!drawCharacterFrame(ctx, sprite, cx, cy + getSpriteOffsetY(p.classId))) {
-        ctx.fillStyle = cls.color;
+      if (!drawCharacterFrame(ctx, sprite, cx, cy + getSpriteOffsetY(p.classId), undefined, glow)) {
+        ctx.fillStyle = glow ? glow.color : cls.color;
         ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
       }
     } else {
@@ -217,7 +250,9 @@ function drawPlayers(renderState, now) {
         const flicker = Math.floor(t * 12) % 2 === 0;
         ctx.fillStyle = flicker ? '#ffffff' : cls.color;
       } else {
-        ctx.fillStyle = cls.color;
+        // Sem sprite não há silhueta para brilhar em volta: o quadrado pisca
+        // direto na cor do buff.
+        ctx.fillStyle = glow ? glow.color : cls.color;
       }
       ctx.fillRect(p.x + ox, p.y + oy, state.playerSize, state.playerSize);
     }
@@ -294,7 +329,11 @@ export function render() {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
       }
+      // Zona de spawn primeiro: é fundo, fica por baixo de jogadores e tiros.
+      drawPowerupZone();
+      updateAndDrawPowerups(now);
       drawPlayers(renderState, now);
+      drawPowerupPickups(now);
       drawProjectiles(renderState);
       updateAndDrawExplosions(now);
       updateAndDrawFloatingIcons(now);
