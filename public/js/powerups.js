@@ -13,10 +13,16 @@ import { state } from './state.js';
 import { HEART_PIXELS, SHIELD_PIXELS } from './hud.js';
 import { playPowerupSpawnSound, playPowerupPickupSound } from './audio.js';
 import { POWERUP_RADIUS, POWERUP_ZONE } from '../../shared/powerups.js';
+import {
+  PX, snap, pxCirculo, pxAnel, pxGrade, pxTextoCentro, alphaEmDegraus,
+} from './pixel.js';
 
 // Cinza um pouco mais escuro que o fundo da arena (ARENA_BG_COLOR em
 // render.js): marca a região onde as bolhas nascem sem virar decoração.
 const ZONE_BORDER_COLOR = 'rgba(0, 0, 0, 0.6)';
+// A borda da zona é pontilhada: um bloco a cada tantos passos de ângulo. Um
+// círculo contínuo de 4px de espessura viraria uma parede desenhada no chão.
+const ZONE_DOT_PASSOS = 90;
 
 const CORES = {
   vida: '#e63946',
@@ -26,29 +32,41 @@ const CORES = {
 };
 
 const BUBBLE_FILL = 'rgba(255, 255, 255, 0.10)';
-const BUBBLE_STROKE = 'rgba(255, 255, 255, 0.55)';
-const BUBBLE_HIGHLIGHT = 'rgba(255, 255, 255, 0.75)';
+const BUBBLE_STROKE = '#e8e8e8';
+const BUBBLE_HIGHLIGHT = '#ffffff';
 
 // Sobe e desce no lugar enquanto ninguém pega — é o "pulando" que faz a bolha
-// chamar atenção em cima do fundo estático da arena.
-const BOB_AMPLITUDE_PX = 7;
+// chamar atenção em cima do fundo estático da arena. A altura é contada em
+// blocos inteiros (não em pixels de tela): meio bloco de deslocamento
+// desalinharia a bolha da grade e borraria a borda dela.
+const BOB_BLOCOS = 2;
 const BOB_PERIODO_MS = 900;
 
 // Aparecer do nada, em cima de uma troca de tiros, passa batido: a bolha entra
 // crescendo (com um pequeno estouro) neste tempo.
 const SPAWN_ANIM_MS = 320;
+// O ícone só entra quando a bolha já está quase do tamanho final. Escalar
+// pixel art por um fator fracionário destrói a grade — melhor o ícone
+// aparecer inteiro um pouco depois do que crescer borrado junto.
+const SPAWN_ICONE_A_PARTIR_DE = 0.75;
 
 const PICKUP_ANIM_MS = 650;
 const PICKUP_RISE_PX = 34;
-const PICKUP_LABEL_FONT = 'bold 20px "Chakra Petch", sans-serif';
 
-const ICON_PIXEL = 2.5;
+// A bolha tem só 40px de diâmetro (POWERUP_RADIUS é o raio de coleta, não dá
+// para desenhá-la maior do que ela realmente é). Num bloco de 4px o coração
+// de 7 células já ocuparia quase toda a largura útil e a bolha viraria um
+// borrão colorido — então o conteúdo dela usa a grade fina de 2px, a mesma
+// escala dos corações do HUD (HEART_PIXEL_SIZE em hud.js). A bolha em si, o
+// halo e o anel continuam na grade de PX.
+const ICON_PX = PX / 2;
 
-// Selo com a quantidade, na borda da bolha.
-const BADGE_RADIUS = 9;
-const BADGE_FONT = 'bold 13px "Chakra Petch", sans-serif';
+// Selo com a quantidade, na borda da bolha: um quadrado com moldura escura,
+// porque em pixel art um círculo pequeno com contorno não sobra pixel para
+// ler o número dentro. Em células de ICON_PX, como o resto do conteúdo.
+const BADGE_BLOCOS = 5;
 const BADGE_TEXT_COLOR = '#141414';
-const BADGE_STROKE = 'rgba(20, 20, 20, 0.85)';
+const BADGE_STROKE = '#141414';
 
 // Power-ups do frame anterior, por id. É a diferença contra este mapa que
 // revela bolha nova (id que apareceu) e coleta (id que sumiu) — ver o
@@ -97,52 +115,35 @@ function diffPowerups(lista, now) {
   anteriores = atuais;
 }
 
-function drawPixelGrid(pixels, originX, originY, cor, pixel = ICON_PIXEL) {
-  ctx.fillStyle = cor;
-  for (const [row, col] of pixels) {
-    ctx.fillRect(originX + col * pixel, originY + row * pixel, pixel, pixel);
-  }
-}
-
-// Cadência: só "2x". Qualquer desenho (raio, chama, seta de recarga) exige
-// saber de antemão o que ele quer dizer; o número diz direto que o tiro sai no
-// dobro da velocidade.
-const ICONE_CADENCIA_FONT = 'bold 21px "Chakra Petch", sans-serif';
-function drawIconeCadencia(cor) {
-  ctx.fillStyle = cor;
-  ctx.font = ICONE_CADENCIA_FONT;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('2x', 0, 1);
-}
-
 // Velocidade: as duas setas para o lado, o mesmo símbolo que o painel de stats
 // da classe já usa na linha "Velocidade" — quem viu a modal de seleção
-// reconhece na arena.
-function drawIconeVelocidade(cor) {
-  ctx.strokeStyle = cor;
-  ctx.lineWidth = 3;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  for (const offsetX of [-8, 1]) {
-    ctx.beginPath();
-    ctx.moveTo(offsetX, -7);
-    ctx.lineTo(offsetX + 7, 0);
-    ctx.lineTo(offsetX, 7);
-    ctx.stroke();
-  }
+// reconhece na arena. Como grade de pixels (e não dois `stroke()` com ponta
+// arredondada), no mesmo formato de HEART_PIXELS/SHIELD_PIXELS.
+const VELOCIDADE_PIXELS = [];
+for (const offset of [0, 3]) {
+  VELOCIDADE_PIXELS.push(
+    [0, offset], [1, offset + 1], [2, offset + 2], [3, offset + 1], [4, offset],
+  );
 }
+const VELOCIDADE_COLS = 6;
+const VELOCIDADE_ROWS = 5;
 
-// Ícone centrado na origem atual do contexto.
+// Ícone centrado na origem atual do contexto (que já está travada na grade).
+// Cadência é só "2x" na fonte bitmap: qualquer desenho (raio, chama, seta de
+// recarga) exige saber de antemão o que ele quer dizer, e o número diz direto
+// que o tiro sai no dobro da velocidade.
 function drawIcone(tipo, cor) {
   if (tipo === 'vida') {
-    drawPixelGrid(HEART_PIXELS, -(7 * ICON_PIXEL) / 2, -(6 * ICON_PIXEL) / 2, cor);
+    pxGrade(ctx, HEART_PIXELS, -(7 * ICON_PX) / 2, -(6 * ICON_PX) / 2, cor, ICON_PX);
   } else if (tipo === 'escudo') {
-    drawPixelGrid(SHIELD_PIXELS, -(7 * ICON_PIXEL) / 2, -(8 * ICON_PIXEL) / 2, cor);
+    pxGrade(ctx, SHIELD_PIXELS, -(7 * ICON_PX) / 2, -(8 * ICON_PX) / 2, cor, ICON_PX);
   } else if (tipo === 'cadencia') {
-    drawIconeCadencia(cor);
+    pxTextoCentro(ctx, '2x', 0, 0, cor, ICON_PX / PX);
   } else {
-    drawIconeVelocidade(cor);
+    pxGrade(
+      ctx, VELOCIDADE_PIXELS,
+      -(VELOCIDADE_COLS * ICON_PX) / 2, -(VELOCIDADE_ROWS * ICON_PX) / 2, cor, ICON_PX,
+    );
   }
 }
 
@@ -150,22 +151,15 @@ function drawIcone(tipo, cor) {
 // bolha não diz se vale um coração ou três. Vai num selo na borda, e não ao
 // lado do ícone, porque o coração já ocupa quase toda a largura útil da bolha.
 function drawBadgeQuantidade(quantidade, cor) {
-  const bx = POWERUP_RADIUS * 0.7;
-  const by = POWERUP_RADIUS * 0.7;
+  const bx = snap(POWERUP_RADIUS * 0.7);
+  const by = snap(POWERUP_RADIUS * 0.7);
+  const lado = BADGE_BLOCOS * ICON_PX;
 
-  ctx.beginPath();
-  ctx.arc(bx, by, BADGE_RADIUS, 0, Math.PI * 2);
+  ctx.fillStyle = BADGE_STROKE;
+  ctx.fillRect(bx - lado / 2 - ICON_PX, by - lado / 2 - ICON_PX, lado + ICON_PX * 2, lado + ICON_PX * 2);
   ctx.fillStyle = cor;
-  ctx.fill();
-  ctx.strokeStyle = BADGE_STROKE;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = BADGE_TEXT_COLOR;
-  ctx.font = BADGE_FONT;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(`${quantidade}`, bx, by + 1);
+  ctx.fillRect(bx - lado / 2, by - lado / 2, lado, lado);
+  pxTextoCentro(ctx, `${quantidade}`, bx, by, BADGE_TEXT_COLOR, ICON_PX / PX);
 }
 
 // A bolha e o ícone dentro dela são desenhados sem espelhamento de visão: o
@@ -189,44 +183,45 @@ function drawBolha(pu, now) {
   const cor = CORES[pu.tipo] || CORES.vida;
   const nasceuEm = vistosEm.get(pu.id) ?? now;
   const t = Math.min(1, (now - nasceuEm) / SPAWN_ANIM_MS);
-  // Cresce passando um pouco do tamanho final antes de assentar.
+  // Cresce passando um pouco do tamanho final antes de assentar. O raio é
+  // travado na grade, então o crescimento acontece em degraus de um bloco.
   const escala = t >= 1 ? 1 : Math.sin((t * Math.PI) / 2) * (1 + (1 - t) * 0.25);
-  const bob = Math.sin(now / BOB_PERIODO_MS * Math.PI * 2) * BOB_AMPLITUDE_PX * t;
-  const cy = pu.y + bob;
-  const r = POWERUP_RADIUS * escala;
+  const bob = Math.round(Math.sin(now / BOB_PERIODO_MS * Math.PI * 2) * BOB_BLOCOS * t) * PX;
+  const cy = snap(pu.y) + bob;
+  const r = snap(POWERUP_RADIUS * escala);
+  const x = snap(pu.x);
 
   comFlipCancelado(pu.x, () => {
-    ctx.translate(pu.x, cy);
+    ctx.translate(x, cy);
 
     // Halo na cor do tipo: é o que dá para identificar o power-up de longe,
-    // antes de o ícone ficar legível.
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = cor;
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 1.45, 0, Math.PI * 2);
-    ctx.fill();
+    // antes de o ícone ficar legível. Em pixel art ele não é um alpha que
+    // desvanece, e sim dois anéis de intensidade diferente.
+    pxAnel(ctx, 0, 0, r * 1.5, PX * 2, hexComAlpha(cor, 0.22));
+    pxAnel(ctx, 0, 0, r * 1.25, PX * 2, hexComAlpha(cor, 0.4));
 
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = BUBBLE_FILL;
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = BUBBLE_STROKE;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    pxCirculo(ctx, 0, 0, r, BUBBLE_FILL);
+    pxAnel(ctx, 0, 0, r, PX, BUBBLE_STROKE);
 
-    // Brilho no canto superior esquerdo: o que faz a bolha parecer vidro em
-    // vez de um círculo vazado.
-    ctx.strokeStyle = BUBBLE_HIGHLIGHT;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 0.72, Math.PI * 1.05, Math.PI * 1.45);
-    ctx.stroke();
+    // Reflexo: três pixels soltos no quadrante superior esquerdo. É o mínimo
+    // que faz a bolha parecer vidro — um arco de brilho, na escala dela,
+    // ocuparia metade da borda.
+    ctx.fillStyle = BUBBLE_HIGHLIGHT;
+    ctx.fillRect(-snap(r * 0.6), -snap(r * 0.5), PX, PX);
+    ctx.fillRect(-snap(r * 0.5), -snap(r * 0.62), PX, PX);
+    ctx.fillRect(-snap(r * 0.38), -snap(r * 0.68), PX, PX);
 
-    ctx.scale(escala, escala);
+    if (escala < SPAWN_ICONE_A_PARTIR_DE) return;
     drawIcone(pu.tipo, cor);
     if (pu.tipo === 'vida') drawBadgeQuantidade(pu.quantidade, cor);
   });
+}
+
+// As cores dos power-ups são hex de 6 dígitos (CORES acima); o halo precisa
+// delas com transparência sem duplicar cada cor numa versão rgba.
+function hexComAlpha(hex, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
 // Coleta: anel se abrindo e o ícone subindo com o valor ganho ("+2" no power-up
@@ -237,22 +232,17 @@ function drawColeta(coleta, now) {
   const cy = coleta.y - t * PICKUP_RISE_PX;
 
   comFlipCancelado(coleta.x, () => {
-    ctx.globalAlpha = Math.max(0, 1 - t);
-    ctx.translate(coleta.x, cy);
+    // Some em degraus, não num fade contínuo: a bolha vai perdendo etapas
+    // visíveis, como o resto da arte.
+    ctx.globalAlpha = alphaEmDegraus(1 - t);
+    ctx.translate(snap(coleta.x), snap(cy));
 
-    ctx.strokeStyle = cor;
-    ctx.lineWidth = 3 * (1 - t);
-    ctx.beginPath();
-    ctx.arc(0, 0, POWERUP_RADIUS * (1 + t * 1.6), 0, Math.PI * 2);
-    ctx.stroke();
+    // O anel abre e afina em blocos inteiros.
+    const espessura = t < 0.5 ? PX * 2 : PX;
+    pxAnel(ctx, 0, 0, POWERUP_RADIUS * (1 + t * 1.6), espessura, cor);
 
     if (coleta.tipo === 'vida' || coleta.tipo === 'escudo') {
-      const label = `+${coleta.quantidade}`;
-      ctx.font = PICKUP_LABEL_FONT;
-      ctx.fillStyle = cor;
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'center';
-      ctx.fillText(label, 0, -POWERUP_RADIUS - 6);
+      pxTextoCentro(ctx, `+${coleta.quantidade}`, 0, -POWERUP_RADIUS - PX * 3, cor);
     }
     drawIcone(coleta.tipo, cor);
   });
@@ -262,11 +252,18 @@ function drawColeta(coleta, now) {
 // fundo (e antes de tudo o mais) para ficar por baixo de jogadores e tiros.
 export function drawPowerupZone() {
   ctx.save();
-  ctx.strokeStyle = ZONE_BORDER_COLOR;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(POWERUP_ZONE.x, POWERUP_ZONE.y, POWERUP_ZONE.r, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.fillStyle = ZONE_BORDER_COLOR;
+  for (let i = 0; i < ZONE_DOT_PASSOS; i++) {
+    // Um bloco sim, um não: é o pontilhado, feito no ângulo em vez de com
+    // setLineDash (que num círculo sai serrilhado e anti-aliased).
+    if (i % 2 !== 0) continue;
+    const ang = (i / ZONE_DOT_PASSOS) * Math.PI * 2;
+    ctx.fillRect(
+      snap(POWERUP_ZONE.x + Math.cos(ang) * POWERUP_ZONE.r),
+      snap(POWERUP_ZONE.y + Math.sin(ang) * POWERUP_ZONE.r),
+      PX, PX,
+    );
+  }
   ctx.restore();
 }
 

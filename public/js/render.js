@@ -14,12 +14,20 @@ import { getClass } from '../../shared/classes.js';
 import {
   hasCharacterSprite, updateCharacterAnimator, drawCharacterFrame, getSpriteOffsetY,
 } from './characterSprites.js';
+import { PX, snap, pxCirculo, pxAnel } from './pixel.js';
 
 const GAMEOVER_OVERLAY_DELAY = 2000;
 const HIT_FLASH_DURATION = 400;
 const OWN_PLAYER_BORDER_COLOR = '#facc15';
 const OWN_SHOT_COLOR = '#facc15';
 const ENEMY_SHOT_COLOR = '#ff4d4d';
+// Rastro do projétil: dois degraus escurecidos da própria cor do tiro (o
+// primeiro bloco atrás dele, e um mais apagado atrás desse). Brilho no miolo.
+const OWN_SHOT_TRAIL_1 = '#c79f14';
+const OWN_SHOT_TRAIL_2 = '#7a5c0a';
+const ENEMY_SHOT_TRAIL_1 = '#c23a3a';
+const ENEMY_SHOT_TRAIL_2 = '#752020';
+const SHOT_CORE_COLOR = '#fff7c2';
 const AIM_PREVIEW_COLOR = '#9ca3af';
 const HITBOX_DEBUG_COLOR = '#22ff22';
 
@@ -69,41 +77,59 @@ const ARENA_BORDER_COLOR = '#8b0000';
 // "isso não é a sua partida" que o banner "Assistindo" já dá em texto.
 const ARENA_BORDER_COLOR_SPECTATOR = '#facc15';
 const ARENA_BORDER_WIDTH = 4;
+// Bisel da borda: a faixa de fora é mais escura que a de dentro, o mesmo
+// truque de dois tons que dá volume ao botão de pedra no CSS. Uma borda de
+// cor chapada lê como uma linha desenhada por cima; com o bisel, a arena
+// parece ter parede.
+const ARENA_BORDER_SHADE = {
+  '#8b0000': '#5a0000',
+  '#facc15': '#a37f00',
+};
 
 // Desenhada por último e sempre, mesmo no fim de partida (que pinta o canvas
 // inteiro por cima). O inset de metade da espessura mantém o traço todo dentro
 // do canvas, sem meia borda cortada.
 function drawArenaBorder() {
-  const inset = ARENA_BORDER_WIDTH / 2;
+  const cor = state.mode === 'spectator' ? ARENA_BORDER_COLOR_SPECTATOR : ARENA_BORDER_COLOR;
+  const w = ARENA_BORDER_WIDTH;
   ctx.save();
-  ctx.strokeStyle = state.mode === 'spectator' ? ARENA_BORDER_COLOR_SPECTATOR : ARENA_BORDER_COLOR;
-  ctx.lineWidth = ARENA_BORDER_WIDTH;
-  ctx.strokeRect(inset, inset, canvas.width - ARENA_BORDER_WIDTH, canvas.height - ARENA_BORDER_WIDTH);
+  // Duas molduras de faixas cheias em vez de um traço: a de fora escura, a de
+  // dentro na cor da borda. Preencher o canvas e recortar o miolo apagaria a
+  // partida — esta é a última coisa desenhada no frame.
+  drawMoldura(0, ARENA_BORDER_SHADE[cor] || cor, w);
+  drawMoldura(w, cor, w);
   ctx.restore();
 }
 
+// Moldura de `espessura` px encostada `inset` px para dentro das bordas do
+// canvas, feita de quatro faixas.
+function drawMoldura(inset, cor, espessura) {
+  const w = canvas.width - inset * 2;
+  const h = canvas.height - inset * 2;
+  ctx.fillStyle = cor;
+  ctx.fillRect(inset, inset, w, espessura);
+  ctx.fillRect(inset, inset + h - espessura, w, espessura);
+  ctx.fillRect(inset, inset, espessura, h);
+  ctx.fillRect(inset + w - espessura, inset, espessura, h);
+}
+
+const SHIELD_COLOR = '#7dd3fc';
+const SHIELD_FILL = 'rgba(125, 211, 252, 0.16)';
+
 function drawShield(cx, cy, charges, maxHits, now) {
   if (charges <= 0) return;
-  const pulse = 1 + Math.sin(now / 120) * 0.03;
-  const r = state.shieldRadius * pulse;
+  // A pulsação é de um bloco inteiro, alternando, em vez de uma senoide de
+  // 3% que só serviria para reamostrar o anel a cada frame.
+  const r = state.shieldRadius + (Math.floor(now / 400) % 2 ? PX : 0);
 
   ctx.save();
-  ctx.globalAlpha = 0.18;
-  ctx.fillStyle = '#7dd3fc';
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fill();
+  pxCirculo(ctx, cx, cy, r - PX, SHIELD_FILL);
 
-  ctx.globalAlpha = 0.9;
-  ctx.strokeStyle = '#7dd3fc';
-  ctx.lineWidth = 3;
   const gap = 0.18;
   const step = (Math.PI * 2) / maxHits;
   for (let i = 0; i < charges; i++) {
     const start = -Math.PI / 2 + i * step + gap / 2;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, start, start + step - gap);
-    ctx.stroke();
+    pxAnel(ctx, cx, cy, r, PX * 2, SHIELD_COLOR, start, start + step - gap);
   }
   ctx.restore();
 }
@@ -126,34 +152,40 @@ function drawShotPreview(cx, cy, classId) {
   const length = Number.isFinite(cls.range) ? cls.range : INFINITE_PREVIEW_LENGTH;
 
   ctx.save();
-  ctx.globalAlpha = 0.45;
-  ctx.strokeStyle = AIM_PREVIEW_COLOR;
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([6, 6]);
+  ctx.fillStyle = AIM_PREVIEW_COLOR;
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? 0 : i / (count - 1) - 0.5;
     const angle = baseAngle + t * spreadRad;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(angle) * length, cy + Math.sin(angle) * length);
-    ctx.stroke();
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+    // Blocos espaçados ao longo da reta, em vez de setLineDash: um traço
+    // tracejado em diagonal sai serrilhado e anti-aliased, que é exatamente o
+    // que a arte não pode ter.
+    for (let d = AIM_PREVIEW_PASSO; d < length; d += AIM_PREVIEW_PASSO) {
+      ctx.fillRect(snap(cx + dx * d), snap(cy + dy * d), PX, PX);
+    }
   }
   ctx.restore();
 }
+
+// Distância entre os blocos da prévia de mira.
+const AIM_PREVIEW_PASSO = PX * 4;
 
 // Indica o jogador controlado por este cliente sem cobrir o personagem: uma
 // meia-lua pulsante no chão, aos pés (só a metade de baixo da elipse, pra não
 // virar um anel fechado competindo com o desenho) — a borda amarela ao redor
 // do sprite/quadrado antes usada atrapalhava a visualização do personagem.
 function drawOwnPlayerMarker(cx, feetY, now) {
-  const pulse = 1 + Math.sin(now / 300) * 0.12;
+  // Meia-lua em blocos: uma faixa aos pés e um bloco subindo em cada ponta.
+  // O pulso alterna entre dois tamanhos inteiros, no lugar da senoide.
+  const meia = (Math.floor(now / 300) % 2 ? 5 : 4) * PX;
+  const x = snap(cx);
+  const y = snap(feetY);
   ctx.save();
-  ctx.strokeStyle = OWN_PLAYER_BORDER_COLOR;
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.8;
-  ctx.beginPath();
-  ctx.ellipse(cx, feetY, 15 * pulse, 5 * pulse, 0, 0, Math.PI);
-  ctx.stroke();
+  ctx.fillStyle = OWN_PLAYER_BORDER_COLOR;
+  ctx.fillRect(x - meia, y, meia * 2, PX);
+  ctx.fillRect(x - meia - PX, y - PX, PX, PX);
+  ctx.fillRect(x + meia, y - PX, PX, PX);
   ctx.restore();
 }
 
@@ -161,25 +193,18 @@ function drawOwnPlayerMarker(cx, feetY, now) {
 // cliente, exibida só no começo da partida (antes do contador acabar) para
 // ajudar a identificar qual dos dois é o "você".
 function drawPlayerIndicatorArrow(cx, topY, now) {
-  const bounce = Math.sin(now / 200) * 5;
-  const tipY = topY - 10 + bounce; // ponta, mais próxima do jogador
-  const headWidth = 16;
-  const headHeight = 10;
-  const shaftWidth = 6;
-  const shaftHeight = 12;
+  // Ponta triangular em três degraus + haste, tudo em blocos. O balanço anda
+  // em passos de um bloco (3 posições) em vez de uma senoide contínua.
+  const bounce = (Math.floor(now / 220) % 3) * PX;
+  const x = snap(cx);
+  const tipY = snap(topY - PX * 3) + bounce;
 
   ctx.save();
-  ctx.fillStyle = '#facc15';
-  ctx.beginPath();
-  ctx.moveTo(cx, tipY);
-  ctx.lineTo(cx - headWidth / 2, tipY - headHeight);
-  ctx.lineTo(cx - shaftWidth / 2, tipY - headHeight);
-  ctx.lineTo(cx - shaftWidth / 2, tipY - headHeight - shaftHeight);
-  ctx.lineTo(cx + shaftWidth / 2, tipY - headHeight - shaftHeight);
-  ctx.lineTo(cx + shaftWidth / 2, tipY - headHeight);
-  ctx.lineTo(cx + headWidth / 2, tipY - headHeight);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillStyle = OWN_PLAYER_BORDER_COLOR;
+  ctx.fillRect(x - PX / 2, tipY, PX, PX);
+  ctx.fillRect(x - PX * 1.5, tipY - PX, PX * 3, PX);
+  ctx.fillRect(x - PX * 2.5, tipY - PX * 2, PX * 5, PX);
+  ctx.fillRect(x - PX * 1.5, tipY - PX * 5, PX * 3, PX * 3);
   ctx.restore();
 }
 
@@ -228,12 +253,17 @@ function drawPlayers(renderState, now) {
     if (flashRemaining > 0) {
       const t = 1 - flashRemaining / HIT_FLASH_DURATION;
       const shake = (1 - t) * 4;
-      ox = (Math.random() - 0.5) * shake;
-      oy = (Math.random() - 0.5) * shake;
+      // Em pixels inteiros: meio pixel de tremida reamostra o sprite e o
+      // personagem fica borrado justamente no frame do dano.
+      ox = Math.round((Math.random() - 0.5) * shake);
+      oy = Math.round((Math.random() - 0.5) * shake);
     }
 
-    const cx = p.x + ox + state.playerSize / 2;
-    const cy = p.y + oy + state.playerSize / 2;
+    // O sprite é desenhado sempre em coordenada inteira, pelo mesmo motivo:
+    // a posição vem da física em ponto flutuante, e a arte não pode cair
+    // entre dois pixels de tela.
+    const cx = Math.round(p.x + ox + state.playerSize / 2);
+    const cy = Math.round(p.y + oy + state.playerSize / 2);
     // Piscada de power-up ativo. Vale para os dois jogadores, nos três modos:
     // sai do snapshot, não do input local.
     const glow = p.alive ? powerupGlow(p, now) : null;
@@ -291,14 +321,33 @@ function drawProjectiles(renderState) {
   const ownColorIndex = state.playerIndex ?? 0;
   for (const proj of renderState.projectiles) {
     const size = proj.size ?? state.projectileSize;
-    if (proj.ownerIndex === ownColorIndex) {
-      ctx.fillStyle = OWN_SHOT_COLOR;
-    } else {
-      ctx.fillStyle = ENEMY_SHOT_COLOR;
+    const proprio = proj.ownerIndex === ownColorIndex;
+    const cor = proprio ? OWN_SHOT_COLOR : ENEMY_SHOT_COLOR;
+    const x = snap(proj.x);
+    const y = snap(proj.y);
+
+    // Rastro: dois blocos atrás do tiro, esmaecendo em degraus na direção
+    // contrária ao movimento. É o que faz um projétil de poucos pixels
+    // continuar legível em movimento — muito mais que aumentar o tamanho.
+    const dir = Math.sign(proj.vx || 0);
+    if (dir) {
+      ctx.fillStyle = proprio ? OWN_SHOT_TRAIL_2 : ENEMY_SHOT_TRAIL_2;
+      ctx.fillRect(x - dir * PX * 4, y, PX * 2, PX);
+      ctx.fillStyle = proprio ? OWN_SHOT_TRAIL_1 : ENEMY_SHOT_TRAIL_1;
+      ctx.fillRect(x - dir * PX * 2, y, PX * 2, PX);
     }
-    ctx.beginPath();
-    ctx.arc(proj.x, proj.y, size / 2, 0, Math.PI * 2);
-    ctx.fill();
+
+    // Corpo do tiro: um bloco quadrado dimensionado pelo tamanho real do
+    // projétil (o mago tem projétil menor que o tanque), com um pixel claro
+    // no meio como brilho.
+    const blocos = Math.max(1, Math.round(size / PX));
+    const lado = blocos * PX;
+    ctx.fillStyle = cor;
+    ctx.fillRect(x - lado / 2, y - lado / 2, lado, lado);
+    if (blocos >= 2) {
+      ctx.fillStyle = SHOT_CORE_COLOR;
+      ctx.fillRect(x - PX / 2, y - PX / 2, PX, PX);
+    }
   }
 }
 

@@ -3,6 +3,11 @@
 
 export const canvas = document.getElementById('game');
 export const ctx = canvas.getContext('2d');
+// Nada no jogo é desenhado com interpolação: a arte é pixel art (ver
+// public/js/pixel.js) e qualquer imagem escalada com suavização vira um borrão
+// ao lado dos sprites. Ligado uma vez aqui, vale para o contexto inteiro —
+// characterSprites.js já fazia isso localmente.
+ctx.imageSmoothingEnabled = false;
 
 export const livesP0El = document.getElementById('livesP0');
 export const livesP1El = document.getElementById('livesP1');

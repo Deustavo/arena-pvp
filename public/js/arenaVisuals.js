@@ -13,11 +13,12 @@ import { ctx, canvas } from './dom.js';
 import { state } from './state.js';
 import {
   terremotoProgresso, terremotoIntensidade, TERREMOTO_DURACAO_MS, ventoDirecao,
-  ERUPCAO_RAIO, faseFinalFator,
+  ERUPCAO_RAIO, ERUPCAO_AVISO_MS, faseFinalFator,
 } from '../../shared/arenaEvents.js';
 import { playEruptionSound, playEruptionWarningSound, playTerremotoSound } from './audio.js';
 import { spawnExplosion } from './explosions.js';
 import { isMatchTutorialActive } from './tutorial/matchTutorial.js';
+import { PX, snap, pxCirculo, pxAnel } from './pixel.js';
 
 const hasDom = typeof Image !== 'undefined';
 
@@ -98,15 +99,21 @@ export function terremotoShakeOffset(now) {
   // state.remainingMs deixa o tremor mais forte nos últimos segundos de
   // partida (ver faseFinalFator em shared/arenaEvents.js).
   const intensidade = terremotoIntensidade(now, state.remainingMs) * envelope;
+  // O deslocamento é travado na grade: a câmera de um jogo pixel art anda em
+  // pixels inteiros. Meio pixel de translate joga a cena inteira (fundo,
+  // sprites, tudo o que pixel.js desenha) fora do alinhamento e a arena toda
+  // fica borrada justamente durante o tremor.
   return {
-    x: (Math.random() - 0.5) * intensidade,
-    y: (Math.random() - 0.5) * intensidade,
+    x: snap((Math.random() - 0.5) * intensidade),
+    y: snap((Math.random() - 0.5) * intensidade),
   };
 }
 
 // --- Vento (areia) -----------------------------------------------------
 
-const VENTO_PARTICLE_COLOR = 'rgba(214, 194, 145, 0.55)';
+// Três tons de areia em vez de uma cor translúcida só: os riscos passam a ler
+// como camadas a distâncias diferentes, e não como um chuvisco uniforme.
+const VENTO_TONS = ['#d6c291', '#a89468', '#7d6d4c'];
 const VENTO_SPAWN_INTERVAL_MS = 45;
 
 let particulasVento = [];
@@ -129,21 +136,23 @@ export function updateAndDrawVento(now) {
       x: direcao > 0 ? -10 : state.arena.w + 10,
       y: Math.random() * state.arena.h,
       vx: direcao * (5 + Math.random() * 3) * fator,
-      len: 14 + Math.random() * 10,
+      // Comprimento em blocos da grade, para o risco nunca terminar no meio
+      // de um pixel de arte.
+      blocos: 4 + Math.floor(Math.random() * 4),
+      tom: VENTO_TONS[Math.floor(Math.random() * VENTO_TONS.length)],
     });
   }
 
   if (!particulasVento.length) return;
   ctx.save();
-  ctx.strokeStyle = VENTO_PARTICLE_COLOR;
-  ctx.lineWidth = 2;
   particulasVento = particulasVento.filter((p) => {
     p.x += p.vx;
     if (p.x < -20 || p.x > state.arena.w + 20) return false;
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    ctx.lineTo(p.x - Math.sign(p.vx) * p.len, p.y);
-    ctx.stroke();
+    const largura = p.blocos * PX;
+    const x = snap(p.x);
+    ctx.fillStyle = p.tom;
+    // O risco sai de trás da ponta, no sentido contrário ao da rajada.
+    ctx.fillRect(p.vx > 0 ? x - largura : x, snap(p.y), largura, PX);
     return true;
   });
   ctx.restore();
@@ -151,9 +160,26 @@ export function updateAndDrawVento(now) {
 
 // --- Erupções (fogo) -----------------------------------------------------
 
-const ERUPCAO_AVISO_FILL = 'rgba(255, 100, 20, 0.35)';
-const ERUPCAO_AVISO_STROKE = 'rgba(255, 170, 60, 0.9)';
-const ERUPCAO_EXPLOSAO_COLOR = 'rgba(255, 214, 120, 0.85)';
+// Aviso: preenchimento translúcido. O xadrez de blocos (a translucidez
+// "certa" em pixel art) chegou a ser usado aqui e foi trocado de volta por
+// opacidade — o círculo é grande e o xadrez em cima do chão texturizado da
+// arena de fogo virava ruído, além de brigar com os sprites por cima dele.
+// A pulsação é a troca entre os dois níveis abaixo, e acelera perto da hora
+// de explodir.
+const ERUPCAO_AVISO_FILL = '#ff6414';
+const ERUPCAO_AVISO_ALPHA = 0.3;
+const ERUPCAO_AVISO_ALPHA_FORTE = 0.5;
+const ERUPCAO_AVISO_STROKE = '#ffaa3c';
+const ERUPCAO_AVISO_INTERNO = '#ff8a1f';
+const ERUPCAO_AVISO_INTERNO_FORTE = '#ffd678';
+const ERUPCAO_EXPLOSAO_COLOR = '#ffd678';
+const ERUPCAO_EXPLOSAO_MEIO = '#ff8a1f';
+const ERUPCAO_EXPLOSAO_BORDA = '#c62828';
+// Período da piscada do aviso, em ms — e o trecho final, mais rápido, que
+// avisa que a lava está prestes a cair.
+const ERUPCAO_PISCA_MS = 240;
+const ERUPCAO_PISCA_RAPIDA_MS = 120;
+const ERUPCAO_PISCA_RAPIDA_A_PARTIR_DE = 0.7;
 
 // Cor das partículas da explosão da erupção: lava, não o vermelho de jogador
 // morrendo (ver EXPLOSION_COLOR em explosions.js).
@@ -164,11 +190,16 @@ const ERUPCAO_PARTICULA_COLOR = '#ff8a1f';
 // 'aviso' = a lava vai cair aqui (alarme), 'aviso' -> 'explosao' = caiu
 // (estrondo + partículas).
 let fasesAnteriores = new Map();
+// Quando cada aviso foi visto por aqui, para saber o quanto falta para a lava
+// cair (e acelerar a piscada no fim). O `explodeEm` do snapshot não serve:
+// ele está no relógio do servidor, que não é o do cliente.
+let avisosVistosEm = new Map();
 
 function diffErupcoes(lista) {
   for (const e of lista) {
     const antes = fasesAnteriores.get(e.id);
     if (antes === undefined && e.fase === 'aviso') {
+      avisosVistosEm.set(e.id, Date.now());
       playEruptionWarningSound();
     } else if (antes === 'aviso' && e.fase === 'explosao') {
       playEruptionSound();
@@ -183,6 +214,9 @@ function diffErupcoes(lista) {
     }
   }
   fasesAnteriores = new Map(lista.map((e) => [e.id, e.fase]));
+  for (const id of avisosVistosEm.keys()) {
+    if (!fasesAnteriores.has(id)) avisosVistosEm.delete(id);
+  }
 }
 
 export function updateAndDrawErupcoes(now) {
@@ -196,21 +230,43 @@ export function updateAndDrawErupcoes(now) {
     const raio = e.raio ?? ERUPCAO_RAIO;
     ctx.save();
     if (e.fase === 'explosao') {
-      ctx.fillStyle = ERUPCAO_EXPLOSAO_COLOR;
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, raio * 1.3, 0, Math.PI * 2);
-      ctx.fill();
+      // A lava caiu: três anéis concêntricos do miolo claro à borda em brasa.
+      // Dura um tick só — o resto do efeito são as partículas de spawnExplosion.
+      pxCirculo(ctx, e.x, e.y, raio * 0.9, ERUPCAO_EXPLOSAO_COLOR);
+      pxAnel(ctx, e.x, e.y, raio * 1.15, PX * 3, ERUPCAO_EXPLOSAO_MEIO);
+      pxAnel(ctx, e.x, e.y, raio * 1.35, PX * 2, ERUPCAO_EXPLOSAO_BORDA);
     } else {
-      const pulse = 1 + Math.sin(now / 120) * 0.08;
-      ctx.globalAlpha = 0.55;
-      ctx.fillStyle = ERUPCAO_AVISO_FILL;
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, raio * pulse, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 0.9;
-      ctx.strokeStyle = ERUPCAO_AVISO_STROKE;
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      const vistoEm = avisosVistosEm.get(e.id) ?? now;
+      const decorrido = (now - vistoEm) / ERUPCAO_AVISO_MS;
+      // Perto da hora a piscada dobra de velocidade: é o último aviso para
+      // sair de dentro do círculo.
+      const periodo = decorrido >= ERUPCAO_PISCA_RAPIDA_A_PARTIR_DE
+        ? ERUPCAO_PISCA_RAPIDA_MS
+        : ERUPCAO_PISCA_MS;
+      const denso = Math.floor(now / periodo) % 2 === 0;
+
+      // Só o miolo é translúcido; o anel e as marcas continuam sólidos, senão
+      // a borda do alvo — que é o que diz até onde a lava pega — some junto.
+      ctx.globalAlpha = denso ? ERUPCAO_AVISO_ALPHA_FORTE : ERUPCAO_AVISO_ALPHA;
+      pxCirculo(ctx, e.x, e.y, raio, ERUPCAO_AVISO_FILL);
+      ctx.globalAlpha = 1;
+
+      pxAnel(ctx, e.x, e.y, raio, PX, ERUPCAO_AVISO_STROKE);
+      pxAnel(
+        ctx, e.x, e.y, raio - PX * 3, PX,
+        denso ? ERUPCAO_AVISO_INTERNO_FORTE : ERUPCAO_AVISO_INTERNO,
+      );
+
+      // Quatro marcas em volta, como a mira de um alvo: separam o aviso do
+      // chão da arena de fogo, que já é alaranjado.
+      ctx.fillStyle = ERUPCAO_AVISO_INTERNO_FORTE;
+      for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+        ctx.fillRect(
+          snap(e.x + dx * (raio + PX * 2)) - PX / 2,
+          snap(e.y + dy * (raio + PX * 2)) - PX / 2,
+          PX, PX,
+        );
+      }
     }
     ctx.restore();
   }
@@ -224,5 +280,6 @@ export function resetArenaVisuals() {
   particulasVento = [];
   ultimoSpawnVento = 0;
   fasesAnteriores = new Map();
+  avisosVistosEm = new Map();
   terremotoPulsoAntes = null;
 }

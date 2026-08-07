@@ -151,16 +151,24 @@
     --cor-botao-flutuante-fundo: rgba(58, 58, 58, 0.85);
     --cor-botao-flutuante-fundo-hover: rgba(78, 78, 78, 0.92);
 
-    /* Sombras repetidas */
-    --sombra-modal: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 6px 1px rgba(255, 0, 0, 0.3);
+    /* ===== Pixel art =====
+       A arte do jogo é pixel art (sprites das classes, arenas e tudo o que
+       public/js/pixel.js desenha no canvas), então painéis e modais não usam
+       canto arredondado nem sombra borrada: sombra aqui é um bloco sólido
+       deslocado, no mesmo múltiplo de 4px do "pixel de arte" do canvas.
+
+       Botão é a exceção — ele mantém a sombra suave e o hover interpolado de
+       sempre (ver a regra de `button` abaixo), por isso --sombra-flutuante
+       continua desfocada. */
+    --sombra-modal: 8px 8px 0 rgba(0, 0, 0, 0.45);
     --sombra-flutuante: 0 8px 20px rgba(0, 0, 0, 0.35);
-    --sombra-foco-vermelho: 0 0 6px 1px rgba(255, 0, 0, 0.4);
-    /* Bloco de pedra saltando da tela: sombra externa funda pra separar do
-       fundo + bisel interno (claro em cima, escuro embaixo) simulando a borda
-       desgastada de uma laje de pedra. */
-    --sombra-pedra: 0 20px 44px rgba(55, 55, 55, 0.35), 0 4px 12px rgba(55, 55, 55, 0.25),
-      inset 0 2px 0 rgba(255, 255, 255, 0.06), inset 0 -5px 10px rgba(0, 0, 0, 0.7),
-      inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+    /* Foco/seleção: anel sólido de 4px em vez de brilho difuso. */
+    --sombra-foco-vermelho: 0 0 0 4px rgba(255, 77, 77, 0.55);
+    /* Painel "de pedra" (menu principal e ranking): bisel interno de 4px (luz
+       em cima/à esquerda, sombra embaixo/à direita) + sombra dura deslocada. */
+    --sombra-pedra: 8px 8px 0 rgba(0, 0, 0, 0.4),
+      inset 4px 4px 0 rgba(255, 255, 255, 0.05),
+      inset -4px -4px 0 rgba(0, 0, 0, 0.55);
   }
   /* O flex centralizado é só do body. O html fica um bloco comum de altura
      100% — é o overflow dele que a viewport usa para rolar, então ele não pode
@@ -202,7 +210,13 @@
   }
   /* Hover "levanta" o botão com leve escala/brilho/sombra — exceto os que já
      têm semântica própria de hover (link de texto sublinhado, item de lista
-     de classe/ranking, cujo destaque é a borda/fundo da linha inteira). */
+     de classe/ranking, cujo destaque é a borda/fundo da linha inteira).
+
+     Botão é a exceção deliberada ao vocabulário de pixel art do resto da
+     interface (canto reto, sombra dura, estado em degrau): a versão em
+     "bloco de pedra" — bisel de 4px, espessura e sombra sólida em cada um —
+     carregava demais a tela, porque punha peso de arte em cima de todo
+     elemento clicável. Aqui o botão é suporte, não arte. */
   button:not(:disabled):not(.link-button):not(.class-card):not(.ranking-nome):hover {
     transform: translateY(-2px) scale(1.03);
     filter: brightness(1.08);
@@ -249,7 +263,7 @@
   }
   *::-webkit-scrollbar-thumb {
     background-color: var(--cor-cinza-medio);
-    border-radius: 8px;
+    border-radius: 0;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
@@ -282,6 +296,9 @@
      ranking) e mostra esse esqueleto animado no lugar do conteúdo real até a
      primeira resposta chegar, sem alterar a estrutura da página — o JS só
      alterna a classe/conteúdo, os elementos e o layout continuam os mesmos. */
+  /* O brilho anda em passos (`steps`) e o gradiente tem paradas duras em vez
+     de transições suaves: é uma faixa de blocos deslizando, não um degradê
+     varrendo a linha. */
   @keyframes skeleton-shimmer {
     0% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
@@ -295,17 +312,23 @@
     content: "";
     position: absolute;
     inset: 0;
-    border-radius: 6px;
-    background: linear-gradient(90deg, var(--cor-superficie-alta) 25%, var(--cor-superficie-hover) 37%, var(--cor-superficie-alta) 63%);
+    border-radius: 0;
+    background: linear-gradient(90deg,
+      var(--cor-superficie-alta) 0 30%,
+      var(--cor-superficie-hover) 30% 40%,
+      var(--cor-superficie-alta) 40% 100%);
     background-size: 400% 100%;
-    animation: skeleton-shimmer 1.4s ease infinite;
+    animation: skeleton-shimmer 1.4s steps(12) infinite;
   }
   .skeleton-row {
     height: 14px;
-    border-radius: 6px;
-    background: linear-gradient(90deg, var(--cor-superficie-alta) 25%, var(--cor-superficie-hover) 37%, var(--cor-superficie-alta) 63%);
+    border-radius: 0;
+    background: linear-gradient(90deg,
+      var(--cor-superficie-alta) 0 30%,
+      var(--cor-superficie-hover) 30% 40%,
+      var(--cor-superficie-alta) 40% 100%);
     background-size: 400% 100%;
-    animation: skeleton-shimmer 1.4s ease infinite;
+    animation: skeleton-shimmer 1.4s steps(12) infinite;
   }
   /* ----- Animações de entrada -----
      Padrão para qualquer elemento que "aparece" na tela (menu, modais,
@@ -400,7 +423,7 @@
     box-sizing: border-box;
     background: rgba(29, 29, 29, 0.92);
     border: 1px solid var(--cor-borda);
-    border-radius: 10px;
+    border-radius: 0;
     box-shadow: var(--sombra-flutuante);
     backdrop-filter: blur(6px);
   }
@@ -476,7 +499,7 @@
     box-sizing: border-box;
     background: rgba(29, 29, 29, 0.92);
     border: 1px solid var(--cor-borda);
-    border-radius: 10px;
+    border-radius: 0;
     box-shadow: var(--sombra-flutuante);
     backdrop-filter: blur(6px);
   }
@@ -498,7 +521,7 @@
     padding: 4px 6px;
     margin-left: -6px;
     margin-right: -6px;
-    border-radius: 6px;
+    border-radius: 0;
     cursor: pointer;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
@@ -515,7 +538,7 @@
     color: var(--cor-sucesso);
     background: rgba(29, 29, 29, 0.92);
     border: 1px solid var(--cor-borda);
-    border-radius: 6px;
+    border-radius: 0;
     padding: 4px 10px;
     white-space: nowrap;
     opacity: 0;
@@ -663,7 +686,7 @@
     box-sizing: border-box;
     padding: 16px 24px 24px 16px;
     background: var(--cor-painel-pedra-veu);
-    border-radius: 16px;
+    border-radius: 0;
     border: 1px solid var(--cor-pedra-borda);
     box-shadow: var(--sombra-pedra);
     /* Entra um instante depois de #menuBody, pra guiar o olho da esquerda pra
@@ -764,7 +787,7 @@
     box-sizing: border-box;
     padding: 16px 24px 24px;
     background: var(--cor-painel-pedra-veu);
-    border-radius: 16px;
+    border-radius: 0;
     border: 1px solid var(--cor-pedra-borda);
     box-shadow: var(--sombra-pedra);
     animation: entrada-fade 0.5s ease 0.2s both;
@@ -824,7 +847,7 @@
     box-sizing: border-box;
     padding: 24px;
     background: var(--cor-painel-pedra-veu);
-    border-radius: 16px;
+    border-radius: 0;
     border: 1px solid var(--cor-pedra-borda);
     box-shadow: var(--sombra-pedra);
     animation: entrada-fade 0.5s ease both;
@@ -861,7 +884,7 @@
   #nicknameInput {
     font-size: 18px;
     padding: 10px 14px;
-    border-radius: 8px;
+    border-radius: 0;
     border: 2px solid var(--cor-branco);
     background: var(--cor-superficie-elevada);
     color: var(--cor-texto);
@@ -911,7 +934,7 @@
     box-sizing: border-box;
     font-size: 18px;
     padding: 6px 10px;
-    border-radius: 6px;
+    border-radius: 0;
     background: var(--cor-superficie);
     border: 1px solid var(--cor-borda);
     /* #game-wrap (pai) alterna display none/flex a cada partida (menu.js,
@@ -950,7 +973,7 @@
     left: 50%;
     transform: translateX(-50%);
     padding: 2px 12px;
-    border-radius: 6px;
+    border-radius: 0;
     background: var(--cor-superficie-icone);
     border: 1px solid var(--cor-borda);
     color: var(--cor-texto);
@@ -983,7 +1006,7 @@
     left: 50%;
     transform: translateX(-50%);
     padding: 2px 12px;
-    border-radius: 6px;
+    border-radius: 0;
     background: var(--cor-superficie-icone);
     border: 1px solid var(--cor-ouro-suave);
     color: var(--cor-ouro-suave);
@@ -1046,7 +1069,7 @@
     flex: none;
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1085,15 +1108,23 @@
   .cooldown-bar {
     width: 100%;
     height: 6px;
-    border-radius: 3px;
+    border-radius: 0;
     background: var(--cor-superficie-icone);
     border: 1px solid var(--cor-borda);
     overflow: hidden;
   }
+  /* A barra enche em blocos, não num preenchimento liso: o gradiente repetido
+     desenha um bloco de 6px e um vão de 2px, então o que cresce são as
+     divisões — a mesma leitura "em degraus" da arte do canvas. */
   .cooldown-fill {
     height: 100%;
     width: 0%;
-    background: var(--cor-azul-classe);
+    background-color: var(--cor-azul-classe);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0 6px,
+      var(--cor-superficie-icone) 6px 8px
+    );
     transition: background-color 0.15s;
   }
   .cooldown-fill.ready {
@@ -1143,6 +1174,14 @@
     background: var(--cor-superficie-elevada);
     border: none;
     display: block;
+    /* O buffer do canvas é sempre 800x600 e o CSS o reduz para caber na tela
+       (gameScale.js), quase nunca por um fator inteiro. Sem isto o navegador
+       interpola essa redução e borra a arena inteira — sprites, bolhas,
+       explosões, tudo — desfazendo o trabalho de desenhar em grade
+       (public/js/pixel.js). Com `pixelated` a redução é por vizinho mais
+       próximo: perde-se uma coluna aqui e ali, mas a arte continua nítida,
+       que é o que a estética pede. */
+    image-rendering: pixelated;
   }
   /* Só o fundo inicial, antes do primeiro frame: o fundo e a borda da arena
      são desenhados dentro do canvas (render.js), porque o canvas é reduzido por
@@ -1174,7 +1213,7 @@
     padding: 16px 28px;
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid var(--cor-borda-media);
-    border-radius: 10px;
+    border-radius: 0;
     color: var(--cor-texto);
     font-size: clamp(18px, 4.6vw, 24px);
     line-height: 1.35;
@@ -1219,7 +1258,7 @@
     height: 40px;
     padding: 0 10px;
     border: 2px solid var(--cor-borda-media);
-    border-radius: 8px;
+    border-radius: 0;
     background: var(--cor-superficie);
     color: var(--cor-texto-fraco);
     font-size: 18px;
@@ -1657,7 +1696,7 @@
     flex: none;
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1682,7 +1721,7 @@
     box-sizing: border-box;
     background: var(--cor-superficie-baixa);
     border: 2px solid var(--cor-borda);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 12px 14px;
     min-height: 118px;
   }
@@ -1759,7 +1798,7 @@
     overflow: hidden;
     background: var(--cor-superficie-icone);
     border: 2px solid var(--cor-borda);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 8px 0 0;
     display: flex;
     flex-direction: column;
@@ -1789,7 +1828,7 @@
     flex: none;
     width: 22px;
     height: 22px;
-    border-radius: 3px;
+    border-radius: 0;
     border: 2px solid var(--cor-ouro);
     box-sizing: border-box;
   }
@@ -1827,7 +1866,7 @@
     justify-content: center;
     background: var(--cor-superficie-hover-alta);
     border: 2px solid var(--cor-cinza-claro);
-    border-radius: 4px;
+    border-radius: 0;
     color: var(--cor-texto-suave);
   }
   .class-preview-dummy svg {
@@ -1905,7 +1944,7 @@
     max-height: none;
     overflow: visible;
     border: 2px solid var(--cor-vermelho);
-    border-radius: 10px;
+    border-radius: 0;
     box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 420px;
@@ -2032,7 +2071,7 @@
     right: 0;
     background: var(--cor-superficie-alta);
     border: 2px solid var(--cor-borda);
-    border-radius: 8px;
+    border-radius: 0;
     box-shadow: var(--sombra-flutuante);
     z-index: 20;
     display: flex;
@@ -2052,7 +2091,7 @@
   }
   .dropdown-item {
     padding: 9px 10px;
-    border-radius: 6px;
+    border-radius: 0;
     color: var(--cor-texto-suave);
     font-size: 14px;
     cursor: pointer;
@@ -2090,7 +2129,7 @@
   #onlineClassOverlay .modal {
     background: var(--cor-modal-fundo);
     border: 2px solid var(--cor-vermelho);
-    border-radius: 10px;
+    border-radius: 0;
     box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 540px;
@@ -2205,7 +2244,7 @@
   #authOverlay .modal {
     background: var(--cor-modal-fundo);
     border: 2px solid var(--cor-vermelho);
-    border-radius: 10px;
+    border-radius: 0;
     box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 360px;
@@ -2260,7 +2299,7 @@
   .auth-field input {
     font-size: 16px;
     padding: 10px 14px;
-    border-radius: 8px;
+    border-radius: 0;
     border: 2px solid var(--cor-branco);
     background: var(--cor-superficie-elevada);
     color: var(--cor-texto);
@@ -2323,7 +2362,7 @@
     font-size: 13px;
     line-height: 1.5;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: 0;
   }
   #authFeedback.visible, #resetFeedback.visible {
     display: block;
@@ -2379,7 +2418,7 @@
   #profileOverlay .modal {
     background: var(--cor-modal-fundo);
     border: 2px solid var(--cor-vermelho);
-    border-radius: 10px;
+    border-radius: 0;
     box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 460px;
@@ -2469,7 +2508,7 @@
     align-items: center;
     gap: 4px;
     background: var(--cor-superficie-forte);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 8px 6px;
     animation: entrada-pop 0.25s ease both;
   }
@@ -2511,7 +2550,7 @@
     /* Mais claro que o fundo da modal (`--cor-modal-fundo`), não mais escuro:
        com um tom parecido os cartões desapareciam dentro da modal. */
     background: var(--cor-superficie-forte);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 8px 12px;
     animation: entrada-fade 0.25s ease both;
   }
@@ -2560,7 +2599,7 @@
   #creditsOverlay .modal {
     background: var(--cor-modal-fundo);
     border: 2px solid var(--cor-vermelho);
-    border-radius: 10px;
+    border-radius: 0;
     box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 420px;
@@ -2603,7 +2642,7 @@
   }
   .creditos-secao {
     background: var(--cor-superficie-baixa);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 10px 14px 14px;
   }
   .creditos-secao p {
@@ -2636,7 +2675,7 @@
     gap: 16px;
     background: var(--cor-superficie-alta);
     border: 2px solid var(--cor-borda-media);
-    border-radius: 12px;
+    border-radius: 0;
     padding: 24px;
     box-sizing: border-box;
   }
@@ -2686,7 +2725,7 @@
   #changelogOverlay .modal {
     background: var(--cor-modal-fundo);
     border: 2px solid var(--cor-vermelho);
-    border-radius: 10px;
+    border-radius: 0;
     box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 740px;
@@ -2737,7 +2776,7 @@
     flex-direction: column;
     gap: 6px;
     background: var(--cor-superficie-baixa);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 14px 18px 18px;
   }
   .changelog-versao-cabecalho {
@@ -2759,7 +2798,7 @@
     font-size: 12px;
     color: var(--cor-sucesso);
     border: 1px solid var(--cor-sucesso);
-    border-radius: 999px;
+    border-radius: 0;
     padding: 1px 8px;
   }
   .changelog-data {
@@ -2798,7 +2837,7 @@
     gap: 2px;
     text-align: center;
     padding: 10px 6px 8px;
-    border-radius: 8px;
+    border-radius: 0;
     background: var(--cor-superficie-icone);
     border: 1px solid var(--class-color, var(--cor-borda));
   }
@@ -2817,7 +2856,7 @@
     display: block;
     width: 100%;
     margin-top: 10px;
-    border-radius: 8px;
+    border-radius: 0;
   }
 
   @media (max-width: 700px) {

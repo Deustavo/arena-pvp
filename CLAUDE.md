@@ -363,6 +363,56 @@ Ainda não têm som os efeitos de ambiente. Falta também expor **volume/mudo**
 na interface — o `GainNode` master já está no lugar, só não há controle nem
 preferência salva.
 
+#### Pixel art (`public/js/pixel.js`)
+
+Toda a arte do jogo é pixel art, e não só os assets: os personagens
+(spritesheets) e as arenas já eram, e **tudo o que é desenhado por código**
+— canvas e CSS — segue a mesma estética. Na prática isso significa três
+proibições, que valem para qualquer desenho novo:
+
+- **No canvas, nada de forma vetorial.** Sem `arc`, `stroke`, `ellipse`,
+  `setLineDash` ou `ctx.font`. Só `fillRect` alinhado a uma grade, pelas
+  primitivas de `public/js/pixel.js`: `PX` (o "pixel de arte", 4 unidades de
+  canvas), `snap`, `pxCirculo`, `pxAnel`, `pxGrade`,
+  `pxTexto`/`pxTextoCentro` (fonte bitmap 3x5, para os números desenhados na
+  arena) e `alphaEmDegraus`. O módulo é puro (recebe o contexto por
+  parâmetro) e é testado em `test/pixel.test.js`.
+- **Nada de posição fracionária.** Posição, raio, espessura, tremida de
+  câmera e deslocamento de dano passam por `snap` (ou ao menos
+  `Math.round`, no caso dos sprites, que têm resolução própria). Meio pixel
+  de deslocamento reamostra o desenho e o borra. Por isso o canvas tem
+  `image-rendering: pixelated` no CSS e `imageSmoothingEnabled = false` em
+  `dom.js`: `gameScale.js` reduz os 800x600 por um fator quase nunca
+  inteiro, e sem isso a arena inteira sai interpolada.
+- **Nada de transição contínua.** O que desaparece perde etapas visíveis
+  (`alphaEmDegraus`), e pulsação/balanço alternam entre posições e tamanhos
+  inteiros em vez de seguir uma senoide. A exceção é o aviso de erupção da
+  arena de fogo, que é uma área grande e usa opacidade de verdade (dois
+  níveis alternando) — dithering em xadrez ali virava ruído sobre o chão
+  texturizado.
+
+O conteúdo da bolha de power-up usa uma grade fina de `PX / 2`: a bolha tem
+40px de diâmetro (`POWERUP_RADIUS` é o raio de coleta, não dá para desenhá-la
+maior do que ela é) e um ícone de 7 células em blocos de 4px a preencheria
+inteira. É a mesma escala dos corações do HUD.
+
+No CSS, painéis e modais seguem o mesmo vocabulário: canto reto e sombra
+sólida deslocada (`8px 8px 0`) em vez de desfoque, skeleton de loading em
+passos (`steps()`) e barra de cooldown enchendo em blocos.
+
+**Duas exceções deliberadas**, que já foram tentadas em pixel art e
+revertidas por deixarem a interface carregada — não "conserte" nenhuma das
+duas:
+
+- **Botões** continuam com `border-radius`, sombra suave no hover e
+  `transition`/`scale`. A versão em "bloco de pedra" (bisel de 4px,
+  espessura e sombra dura em cada botão) punha peso de arte em cima de todo
+  elemento clicável. Botão aqui é suporte, não arte.
+- **Ícones das seis classes** (`shared/classes.js`) continuam sendo SVG de
+  traço fino (`fill: none; stroke: currentColor; stroke-width: 2`). A versão
+  em grade 16x16 preenchida ficava pesada e menos legível no tamanho em que
+  os ícones aparecem (16–20px no HUD e nos cartões).
+
 #### Paleta de cores (`public/css/style.css`)
 
 Todas as cores da interface ficam em **variáveis CSS no `:root`**, no topo do
