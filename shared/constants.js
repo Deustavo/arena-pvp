@@ -3,7 +3,17 @@
 // mudança de balanceamento é feita aqui, nunca duplicada.
 
 export const ARENA = { w: 800, h: 600 };
-export const PLAYER_SIZE = 30;
+// A arte animada dos personagens (SPRITE_DISPLAY_SIZE = 220px em
+// public/js/characterSprites.js) ocupa bem mais espaço na tela do que esse
+// valor sugere à primeira vista: o quadro da spritesheet é 100x100, mas o
+// próprio boneco (sem contar arma) preenche só uma faixa central dele. Medido
+// nos sprites de idle das 6 classes, essa faixa vai de ~17x20px (atirador,
+// a mais magra) a ~33x28px (mago, a mais larga) dentro do quadro 100x100 —
+// escalado pelos 2.2x do display (220/100), isso é ~37x44 a ~73x62px de
+// personagem visível. 44 é o valor que cobre o corpo das 6 classes com folga
+// pequena sem incluir a arma (espada do duelista, cajado do mago), que fica
+// de fora da hitbox de propósito.
+export const PLAYER_SIZE = 44;
 export const PLAYER_SPEED = 4;
 export const PROJECTILE_SIZE = 8;
 export const PROJECTILE_SPEED = 9;
