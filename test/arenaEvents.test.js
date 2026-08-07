@@ -2,11 +2,20 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ARENA_TIPOS, sortearArena, terremotoAtivo, terremotoProgresso, terremotoIntensidade,
-  ventoDirecao, VENTO_FORCA, criarErupcoes, tickErupcoes, ERUPCAO_RAIO,
+  ventoDirecao, VENTO_FORCA, criarErupcoes, tickErupcoes, ERUPCAO_RAIO, ERUPCAO_KNOCKBACK,
+  ARENA_FASE_FINAL_MS, faseFinalFator,
 } from '../shared/arenaEvents.js';
 import { createPlayerState } from '../shared/entities.js';
 import { stepPlayers } from '../shared/simulation.js';
 import { ARENA, PLAYER_SIZE, PLAYER_SPEED } from '../shared/constants.js';
+
+describe('faseFinalFator', () => {
+  test('é 1 fora dos últimos ARENA_FASE_FINAL_MS e maior que 1 dentro deles', () => {
+    assert.equal(faseFinalFator(ARENA_FASE_FINAL_MS + 1), 1);
+    assert.ok(faseFinalFator(ARENA_FASE_FINAL_MS) > 1);
+    assert.ok(faseFinalFator(0) > 1);
+  });
+});
 
 describe('sortearArena', () => {
   test('sempre devolve um dos quatro tipos', () => {
@@ -39,6 +48,12 @@ describe('terremoto (terra)', () => {
     assert.ok(intensidades.size > 1, 'ciclos diferentes deveriam ter intensidades diferentes');
   });
 
+  test('fica mais forte nos últimos segundos de partida', () => {
+    const foraDaFaseFinal = terremotoIntensidade(0, ARENA_FASE_FINAL_MS + 1);
+    const naFaseFinal = terremotoIntensidade(0, ARENA_FASE_FINAL_MS);
+    assert.ok(naFaseFinal > foraDaFaseFinal);
+  });
+
   test('é só visual: não muda o movimento em stepPlayers', () => {
     const p = createPlayerState(0);
     p.input.right = true;
@@ -63,6 +78,13 @@ describe('vento (areia)', () => {
     stepPlayers([p], ARENA, 0, 'areia');
     assert.equal(p.x, startX + VENTO_FORCA);
   });
+
+  test('empurra mais forte nos últimos segundos de partida', () => {
+    const p = createPlayerState(0);
+    const startX = p.x;
+    stepPlayers([p], ARENA, 0, 'areia', ARENA_FASE_FINAL_MS);
+    assert.ok(p.x - startX > VENTO_FORCA);
+  });
 });
 
 describe('gelo', () => {
@@ -76,6 +98,27 @@ describe('gelo', () => {
     p.input.right = false;
     stepPlayers([p], ARENA, 0, 'gelo');
     assert.ok(p.x > xComInput, 'deveria continuar deslizando por embalo');
+  });
+
+  test('escorrega mais nos últimos segundos de partida', () => {
+    // Mesmo embalo (`vx`) nas duas fases, no meio da arena (sem clampar em
+    // nenhuma borda): solta a tecla e compara o quanto sobra desse embalo no
+    // tick seguinte — quanto mais perto de 1 o atrito, mais desliza.
+    const p1 = createPlayerState(0);
+    p1.x = ARENA.w / 2;
+    p1.vx = PLAYER_SPEED;
+    const xAntesNormal = p1.x;
+    stepPlayers([p1], ARENA, 0, 'gelo');
+    const deslizeNormal = p1.x - xAntesNormal;
+
+    const p2 = createPlayerState(0);
+    p2.x = ARENA.w / 2;
+    p2.vx = PLAYER_SPEED;
+    const xAntesFinal = p2.x;
+    stepPlayers([p2], ARENA, 0, 'gelo', ARENA_FASE_FINAL_MS);
+    const deslizeFinal = p2.x - xAntesFinal;
+
+    assert.ok(deslizeFinal > deslizeNormal);
   });
 });
 
@@ -132,6 +175,21 @@ describe('erupções (fogo)', () => {
     // Um tick depois, as explosões somem da lista.
     tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 2001);
     assert.equal(estado.ativas.length, 0);
+  });
+
+  test('nos últimos segundos de partida a onda vem maior e empurra mais forte', () => {
+    const estadoNormal = criarErupcoes(() => 0.5);
+    const players = [createPlayerState(0), createPlayerState(1)];
+    const itemNormal = estadoNormal.agenda[0];
+    tickErupcoes('fogo', estadoNormal, players, itemNormal.surgeEmRestanteMs, 0);
+    assert.equal(estadoNormal.ativas[0].raio, ERUPCAO_RAIO);
+    assert.equal(estadoNormal.ativas[0].knockback, ERUPCAO_KNOCKBACK);
+
+    const estadoFinal = criarErupcoes(() => 0.5);
+    const item = estadoFinal.agenda[0];
+    tickErupcoes('fogo', estadoFinal, players, Math.min(item.surgeEmRestanteMs, ARENA_FASE_FINAL_MS), 0);
+    assert.ok(estadoFinal.ativas[0].raio > ERUPCAO_RAIO);
+    assert.ok(estadoFinal.ativas[0].knockback > ERUPCAO_KNOCKBACK);
   });
 
   test('jogador que sai do alvo antes da explosão não toma dano', () => {

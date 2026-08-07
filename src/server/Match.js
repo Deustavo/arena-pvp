@@ -136,8 +136,8 @@ function tick(match) {
   }
 
   if (match.bot) tickBot(match);
-  stepPlayers(match.players, ARENA, agora, match.arenaTipo);
   const restanteMs = tempoRestanteMs(match.cronometro, agora);
+  stepPlayers(match.players, ARENA, agora, match.arenaTipo, restanteMs);
   // Depois de mover: quem entrou na bolha neste tick já leva o power-up.
   tickPowerups(match.powerups, match.players, restanteMs, agora);
   // Erupções (arena de fogo) podem matar um ou os dois jogadores no mesmo

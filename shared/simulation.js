@@ -6,17 +6,20 @@
 import { clamp, rectsIntersect, circleHitsProjectile, movementDelta } from './physics.js';
 import { PLAYER_SIZE, PROJECTILE_SIZE, SHIELD_RADIUS } from './constants.js';
 import { velocidadeAtual } from './powerups.js';
-import { ventoDirecao, VENTO_FORCA, GELO_ATRITO } from './arenaEvents.js';
+import { ventoDirecao, ventoForca, geloAtrito } from './arenaEvents.js';
 
 // `arenaTipo` vem do sorteio da partida (ver shared/arenaEvents.js) — cada
 // arena interfere de um jeito diferente no movimento: areia empurra os dois
 // jogadores nas rajadas de vento e gelo troca a parada instantânea por
 // deslize (terra e fogo não mexem no movimento, só em velocidade/dano fora
 // daqui). Os três consumidores da simulação (servidor, bot e o próprio
-// teste) pegam o efeito de graça.
-export function stepPlayers(players, arena, agora = Date.now(), arenaTipo = null) {
+// teste) pegam o efeito de graça. `restanteMs` (tempo restante de partida)
+// intensifica vento e gelo nos últimos segundos — ver faseFinalFator em
+// shared/arenaEvents.js.
+export function stepPlayers(players, arena, agora = Date.now(), arenaTipo = null, restanteMs = Infinity) {
   const gelo = arenaTipo === 'gelo';
-  const vento = ventoDirecao(arenaTipo, agora) * VENTO_FORCA;
+  const atrito = geloAtrito(restanteMs);
+  const vento = ventoDirecao(arenaTipo, agora) * ventoForca(restanteMs);
 
   for (const p of players) {
     if (!p.alive) continue;
@@ -30,8 +33,8 @@ export function stepPlayers(players, arena, agora = Date.now(), arenaTipo = null
     if (gelo) {
       // Cada tick só se aproxima da velocidade "alvo" do input, mantendo
       // parte do embalo do tick anterior — é o que dá a sensação de deslize.
-      p.vx = p.vx * GELO_ATRITO + dx * speed * (1 - GELO_ATRITO);
-      p.vy = p.vy * GELO_ATRITO + dy * speed * (1 - GELO_ATRITO);
+      p.vx = p.vx * atrito + dx * speed * (1 - atrito);
+      p.vy = p.vy * atrito + dy * speed * (1 - atrito);
       p.x = clamp(p.x + p.vx + vento, 0, arena.w - PLAYER_SIZE);
       p.y = clamp(p.y + p.vy, 0, arena.h - PLAYER_SIZE);
     } else {

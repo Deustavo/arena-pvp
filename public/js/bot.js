@@ -294,7 +294,7 @@ function botTick() {
   }
 
   const restanteMs = tempoRestanteMs(bot.cronometro, agora);
-  stepPlayers(bot.players, ARENA, agora, state.arenaTipo);
+  stepPlayers(bot.players, ARENA, agora, state.arenaTipo, restanteMs);
   // Depois de mover: quem entrou na bolha neste tick já leva o power-up.
   const eventosPowerup = tickPowerups(bot.powerups, bot.players, restanteMs, agora);
   // Coleta é a única ação do tutorial que não sai do input: quem detecta é o

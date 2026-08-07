@@ -12,6 +12,12 @@
 // partida e posição capturada em tempo real (mira nos jogadores, ver mais
 // abaixo), por isso é o único dos quatro com agenda e estado próprio,
 // sincronizado via snapshot (`erupcoes`).
+//
+// Todos os quatro ficam mais intensos nos últimos ARENA_FASE_FINAL_MS de
+// partida (ver faseFinalFator abaixo), a partir do tempo restante
+// (`restanteMs`) — o mesmo valor que já vai no HUD e no snapshot (`remainingMs`),
+// então a escalada continua determinística: servidor e cliente concordam sem
+// precisar de nada novo no protocolo.
 
 import { ARENA, PLAYER_SIZE } from './constants.js';
 import { circleHitsRect, clamp } from './physics.js';
@@ -20,6 +26,21 @@ export const ARENA_TIPOS = ['terra', 'areia', 'gelo', 'fogo'];
 
 export function sortearArena(rng = Math.random) {
   return ARENA_TIPOS[Math.floor(rng() * ARENA_TIPOS.length)];
+}
+
+// ---------------------------------------------------------------------------
+// Nos últimos ARENA_FASE_FINAL_MS de partida todo evento de arena fica mais
+// intenso — pressiona quem está levando a partida para o fim do tempo
+// regulamentar, e não só o desempate. `restanteMs` é o mesmo tempo restante
+// de shared/matchTimer.js, então os efeitos escalam junto com o relógio que
+// já aparece no HUD, sem precisar de nenhum estado novo.
+// ---------------------------------------------------------------------------
+
+export const ARENA_FASE_FINAL_MS = 15000;
+const ARENA_FASE_FINAL_FATOR = 1.6;
+
+export function faseFinalFator(restanteMs = Infinity) {
+  return restanteMs <= ARENA_FASE_FINAL_MS ? ARENA_FASE_FINAL_FATOR : 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,9 +75,12 @@ export function terremotoProgresso(agora) {
 
 // Intensidade-base (px) deste terremoto — muda a cada ocorrência (índice do
 // ciclo), então uma hora é só um tremor leve e em outra é bem mais forte.
-export function terremotoIntensidade(agora) {
+// Nos últimos ARENA_FASE_FINAL_MS de partida (`restanteMs`) o tremor fica
+// mais forte ainda, ver faseFinalFator.
+export function terremotoIntensidade(agora, restanteMs = Infinity) {
   const ciclo = Math.floor(agora / TERREMOTO_CICLO_MS);
-  return TERREMOTO_INTENSIDADES[ciclo % TERREMOTO_INTENSIDADES.length];
+  const base = TERREMOTO_INTENSIDADES[ciclo % TERREMOTO_INTENSIDADES.length];
+  return base * faseFinalFator(restanteMs);
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +103,12 @@ export function ventoDirecao(arenaTipo, agora) {
   return ciclo % 2 === 0 ? 1 : -1;
 }
 
+// Força efetiva do vento (px/tick), mais forte nos últimos ARENA_FASE_FINAL_MS
+// de partida — ver faseFinalFator.
+export function ventoForca(restanteMs = Infinity) {
+  return VENTO_FORCA * faseFinalFator(restanteMs);
+}
+
 // ---------------------------------------------------------------------------
 // Gelo: piso escorregadio o jogo inteiro. Em vez do movimento parar assim que
 // solta a tecla (como nas outras arenas), a velocidade desliza: cada tick só
@@ -87,6 +117,13 @@ export function ventoDirecao(arenaTipo, agora) {
 // ---------------------------------------------------------------------------
 
 export const GELO_ATRITO = 0.92;
+// Nos últimos ARENA_FASE_FINAL_MS de partida o piso fica ainda mais
+// escorregadio (atrito mais perto de 1 = mais embalo retido por tick).
+const GELO_ATRITO_FASE_FINAL = 0.97;
+
+export function geloAtrito(restanteMs = Infinity) {
+  return restanteMs <= ARENA_FASE_FINAL_MS ? GELO_ATRITO_FASE_FINAL : GELO_ATRITO;
+}
 
 // ---------------------------------------------------------------------------
 // Fogo: erupções mirando os jogadores. Cada onda cai com **as duas** ao mesmo
@@ -141,6 +178,14 @@ export function tickErupcoes(arenaTipo, estado, players, restanteMs, agora) {
   for (const item of estado.agenda) {
     if (item.surgiu || restanteMs > item.surgeEmRestanteMs) continue;
     item.surgiu = true;
+    // Nos últimos ARENA_FASE_FINAL_MS a onda vem maior, empurra mais forte e
+    // avisa por menos tempo — ver faseFinalFator. O raio vai no snapshot
+    // (`e.raio`) para o cliente desenhar o círculo de aviso/explosão do
+    // tamanho certo, em vez do ERUPCAO_RAIO fixo.
+    const fator = faseFinalFator(restanteMs);
+    const raio = ERUPCAO_RAIO * fator;
+    const knockback = ERUPCAO_KNOCKBACK * fator;
+    const avisoMs = ERUPCAO_AVISO_MS / fator;
     // As duas caem juntas, cada uma mirada na posição atual de um jogador —
     // depois disso o alvo é fixo (não persegue quem se move durante o aviso).
     for (const alvo of players) {
@@ -148,8 +193,10 @@ export function tickErupcoes(arenaTipo, estado, players, restanteMs, agora) {
         id: estado.proximoId++,
         x: alvo.x + PLAYER_SIZE / 2,
         y: alvo.y + PLAYER_SIZE / 2,
-        explodeEm: agora + ERUPCAO_AVISO_MS,
+        explodeEm: agora + avisoMs,
         fase: 'aviso',
+        raio,
+        knockback,
       });
     }
   }
@@ -161,12 +208,12 @@ export function tickErupcoes(arenaTipo, estado, players, restanteMs, agora) {
     if (agora < e.explodeEm) return true;
     e.fase = 'explosao';
     for (const p of players) {
-      if (!p.alive || !circleHitsRect(e.x, e.y, ERUPCAO_RAIO, p.x, p.y, PLAYER_SIZE, PLAYER_SIZE)) continue;
+      if (!p.alive || !circleHitsRect(e.x, e.y, e.raio, p.x, p.y, PLAYER_SIZE, PLAYER_SIZE)) continue;
       const cx = p.x + PLAYER_SIZE / 2;
       const cy = p.y + PLAYER_SIZE / 2;
       const ang = Math.atan2(cy - e.y, cx - e.x) || 0;
-      p.x = clamp(p.x + Math.cos(ang) * ERUPCAO_KNOCKBACK, 0, ARENA.w - PLAYER_SIZE);
-      p.y = clamp(p.y + Math.sin(ang) * ERUPCAO_KNOCKBACK, 0, ARENA.h - PLAYER_SIZE);
+      p.x = clamp(p.x + Math.cos(ang) * e.knockback, 0, ARENA.w - PLAYER_SIZE);
+      p.y = clamp(p.y + Math.sin(ang) * e.knockback, 0, ARENA.h - PLAYER_SIZE);
       p.lives = Math.max(0, p.lives - ERUPCAO_DANO);
       if (p.lives === 0) p.alive = false;
     }

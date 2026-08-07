@@ -12,7 +12,7 @@
 import { ctx, canvas } from './dom.js';
 import { state } from './state.js';
 import {
-  terremotoProgresso, terremotoIntensidade, ventoDirecao, ERUPCAO_RAIO,
+  terremotoProgresso, terremotoIntensidade, ventoDirecao, ERUPCAO_RAIO, faseFinalFator,
 } from '../../shared/arenaEvents.js';
 import { playEruptionSound, playTerremotoSound } from './audio.js';
 
@@ -82,7 +82,9 @@ export function terremotoShakeOffset(now) {
   if (!ativo) return null;
 
   const envelope = Math.sin(progresso * Math.PI); // 0 -> 1 no meio -> 0
-  const intensidade = terremotoIntensidade(now) * envelope;
+  // state.remainingMs deixa o tremor mais forte nos últimos segundos de
+  // partida (ver faseFinalFator em shared/arenaEvents.js).
+  const intensidade = terremotoIntensidade(now, state.remainingMs) * envelope;
   return {
     x: (Math.random() - 0.5) * intensidade,
     y: (Math.random() - 0.5) * intensidade,
@@ -102,12 +104,16 @@ let ultimoSpawnVento = 0;
 // aparece separada do movimento normal).
 export function updateAndDrawVento(now) {
   const direcao = ventoDirecao(state.arenaTipo, now);
-  if (direcao !== 0 && now - ultimoSpawnVento > VENTO_SPAWN_INTERVAL_MS) {
+  // Nos últimos segundos de partida a rajada empurra mais forte (ver
+  // faseFinalFator) — as partículas nascem mais rápido e mais depressa para
+  // a rajada parecer tão mais intensa quanto a física por trás dela.
+  const fator = faseFinalFator(state.remainingMs);
+  if (direcao !== 0 && now - ultimoSpawnVento > VENTO_SPAWN_INTERVAL_MS / fator) {
     ultimoSpawnVento = now;
     particulasVento.push({
       x: direcao > 0 ? -10 : state.arena.w + 10,
       y: Math.random() * state.arena.h,
-      vx: direcao * (5 + Math.random() * 3),
+      vx: direcao * (5 + Math.random() * 3) * fator,
       len: 14 + Math.random() * 10,
     });
   }
@@ -150,18 +156,22 @@ export function updateAndDrawErupcoes(now) {
   diffErupcoes(lista);
 
   for (const e of lista) {
+    // `e.raio` vem do snapshot já com a intensificação de fase final aplicada
+    // (ver tickErupcoes em shared/arenaEvents.js); ERUPCAO_RAIO é só o
+    // fallback para snapshots antigos/sem o campo.
+    const raio = e.raio ?? ERUPCAO_RAIO;
     ctx.save();
     if (e.fase === 'explosao') {
       ctx.fillStyle = ERUPCAO_EXPLOSAO_COLOR;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, ERUPCAO_RAIO * 1.3, 0, Math.PI * 2);
+      ctx.arc(e.x, e.y, raio * 1.3, 0, Math.PI * 2);
       ctx.fill();
     } else {
       const pulse = 1 + Math.sin(now / 120) * 0.08;
       ctx.globalAlpha = 0.55;
       ctx.fillStyle = ERUPCAO_AVISO_FILL;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, ERUPCAO_RAIO * pulse, 0, Math.PI * 2);
+      ctx.arc(e.x, e.y, raio * pulse, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 0.9;
       ctx.strokeStyle = ERUPCAO_AVISO_STROKE;
