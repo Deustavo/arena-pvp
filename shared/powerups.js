@@ -1,6 +1,6 @@
 // Power-ups que surgem na arena durante a partida.
 //
-// Três bolhas por partida, sorteadas em posição (dentro do círculo central da
+// Quatro bolhas por partida, sorteadas em posição (dentro do círculo central da
 // arena) e em tipo. Como mexem em vidas, escudo, cadência e velocidade, são
 // regra de jogo e moram aqui em shared/ — a mesma função é usada pelo servidor
 // (partidas online) e pelo loop do modo treino no cliente, e o bot decide se
@@ -34,12 +34,14 @@ export const VELOCIDADE_FATOR = 1.4;
 
 export const POWERUP_TIPOS = ['vida', 'escudo', 'cadencia', 'velocidade'];
 
-// Janelas de spawn, em tempo restante de partida: a primeira entre 0:55 e
-// 0:45, a segunda entre 0:35 e 0:25, a terceira entre 0:15 e 0:05.
+// Janelas de spawn, em tempo restante de partida: 0:52–0:44, 0:40–0:32,
+// 0:28–0:20 e 0:16–0:08. Quatro janelas de 8s espaçadas por 4s, para as bolhas
+// ficarem distribuídas pelo minuto inteiro sem duas nascerem quase juntas.
 export const JANELAS_SPAWN_MS = [
-  { de: 55000, ate: 45000 },
-  { de: 35000, ate: 25000 },
-  { de: 15000, ate: 5000 },
+  { de: 52000, ate: 44000 },
+  { de: 40000, ate: 32000 },
+  { de: 28000, ate: 20000 },
+  { de: 16000, ate: 8000 },
 ];
 
 function entre(rng, min, max) {

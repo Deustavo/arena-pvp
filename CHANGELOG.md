@@ -11,7 +11,7 @@ correspondente lá e atualize o número em `#menuVersion`.
 
 ### Power-ups na arena
 
-Três bolhas nascem no círculo central ao longo da partida e valem para quem
+Quatro bolhas nascem no círculo central ao longo da partida e valem para quem
 chegar primeiro. São quatro tipos: vida (de 1 a 3 corações), escudo (1 carga),
 cadência (cooldown de tiro pela metade por 10 segundos, com recarga na hora) e
 velocidade (40% mais rápido por 10 segundos).

@@ -526,7 +526,7 @@ tick pelos dois donos de loop: `Match.js` (online) e `bot.js` (modo treino).
 
 ### Power-ups na arena
 
-Três bolhas de power-up aparecem por partida, disputadas pelos dois jogadores.
+Quatro bolhas de power-up aparecem por partida, disputadas pelos dois jogadores.
 As regras vivem em `shared/powerups.js` (fonte única para servidor, modo treino
 e bot), e o desenho/som em `public/js/powerups.js`.
 
@@ -537,8 +537,8 @@ e bot), e o desenho/som em `public/js/powerups.js`.
   falta e aumentam o teto se já estiver cheio. O HUD acompanha —
   `updateHeartsRow`/`updateShieldsRow` (`hud.js`) refazem a fileira quando
   precisam de mais ícones do que a classe tem.
-- O agendamento é em **tempo restante** (primeira bolha entre 0:55 e 0:45, a
-  segunda entre 0:35 e 0:25, a terceira entre 0:15 e 0:05), não em instante
+- O agendamento é em **tempo restante** (0:52–0:44, 0:40–0:32, 0:28–0:20 e
+  0:16–0:08 — quatro janelas de 8s espaçadas por 4s), não em instante
   absoluto. É isso que faz o
   tutorial interativo funcionar de graça: enquanto o relógio não corre
   (`adiarFim`), o tempo restante fica parado no máximo e nenhuma bolha aparece.

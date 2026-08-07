@@ -176,8 +176,8 @@ export const ERUPCAO_DANO = 1;
 export const ERUPCAO_KNOCKBACK = 22;
 
 // Janelas de onda em tempo restante de partida (mesma convenção de
-// JANELAS_SPAWN_MS em shared/powerups.js). Seis janelas (o dobro das três
-// originais) para a arena de fogo pressionar mais: uma onda nova (duas
+// JANELAS_SPAWN_MS em shared/powerups.js). Seis janelas (contra as quatro dos
+// power-ups) para a arena de fogo pressionar mais: uma onda nova (duas
 // erupções, uma por jogador) a cada ~9-10s de partida.
 const ERUPCAO_JANELAS_MS = [
   { de: 55000, ate: 48000 },

@@ -18,9 +18,9 @@ function rngFake(valores) {
 }
 
 describe('criarPowerups', () => {
-  test('agenda três bolhas, uma por janela de tempo', () => {
+  test('agenda quatro bolhas, uma por janela de tempo', () => {
     const { agenda } = criarPowerups(rngFake([0.5]));
-    assert.equal(agenda.length, 3);
+    assert.equal(agenda.length, 4);
     assert.equal(agenda.length, JANELAS_SPAWN_MS.length);
     agenda.forEach((item, i) => {
       const janela = JANELAS_SPAWN_MS[i];
