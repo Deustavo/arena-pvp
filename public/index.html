@@ -115,7 +115,7 @@
         <button id="btnBot">Modo treino</button>
         <button id="btnHowToPlay">Tutorial</button>
         <hr id="menuDivider">
-        <button type="button" id="btnChangelog">Novidades <span id="menuVersion">beta 0.2</span></button>
+        <button type="button" id="btnChangelog">Novidades <span id="menuVersion">beta 0.3</span></button>
         <button type="button" id="btnCredits">Créditos</button>
       </div>
       <div id="rankingPanel">
@@ -183,8 +183,34 @@
       <div id="changelogBody">
         <section class="changelog-versao">
           <div class="changelog-versao-cabecalho">
-            <h3>beta 0.2</h3>
+            <h3>beta 0.3</h3>
             <span class="changelog-tag">versão atual</span>
+            <span class="changelog-data">7 de agosto de 2026</span>
+          </div>
+
+          <h4>Quatro arenas, cada uma com seu evento</h4>
+          <p>A arena da partida agora é sorteada entre quatro mapas, e cada um interfere no duelo de um jeito diferente. <strong>Terra</strong>: terremotos periódicos sacodem a tela — não machucam ninguém, só atrapalham a mira, e vêm em intensidades diferentes, do tremor leve ao devastador. <strong>Areia</strong>: rajadas de vento empurram os dois jogadores para o mesmo lado, alternando de direção a cada rajada. <strong>Gelo</strong>: o piso é escorregadio a partida inteira, soltar a tecla não para o personagem na hora. <strong>Fogo</strong>: erupções caem miradas em cima dos dois jogadores ao mesmo tempo, avisando antes de explodir — dá para escapar andando para longe. É a arena mais agressiva das quatro, com uma onda nova a cada 9 segundos.</p>
+          <img class="changelog-topico-imagem" src="assets/changelog/0.3/new_arenas_01.png" alt="As quatro arenas novas: terra, gelo, fogo e areia" loading="lazy">
+          <p>Nos últimos 15 segundos os eventos ficam mais intensos: terremoto e vento deixam de ter pausa e não param mais. Mas tudo isso some no último segundo de partida e durante o desempate — o momento que decide a partida é limpo.</p>
+          <p>Durante o tutorial os mapas não têm efeito nenhum: quem está aprendendo os controles não precisa lidar com terremoto e erupção ainda.</p>
+
+          <h4>HUD novo</h4>
+          <p>Vida e escudo deixaram de ser fileiras de ícones e viraram barras segmentadas, com um contador do lado. O que muda com a classe e com os power-ups é o número de divisões da barra, não o tamanho dela — antes o HUD do tank com power-up de vida crescia até quebrar em outra linha no meio da partida. O que passa do máximo da sua classe aparece em dourado.</p>
+          <img class="changelog-topico-imagem" src="assets/changelog/0.3/hud_01.png" alt="HUD com vida e escudo em barras segmentadas e o cronômetro no centro" loading="lazy">
+
+          <h4>Equilíbrio das seis classes</h4>
+          <p>O mago estava vencendo 80% das partidas por causa de um bug: o leque de três projéteis dele gastava uma carga de escudo por projétil no mesmo instante, furando o escudo inteiro do tank ou do duelista com um disparo só. Agora um disparo gasta no máximo uma carga.</p>
+          <p>Com isso corrigido, dano, cadência e vida das seis classes foram reajustados. O atirador e o duelista atiram mais rápido, o sniper ficou mais forte de perto, o mago perdeu dano e cadência, e o assassino ficou um pouco menos letal. A diferença de aproveitamento entre a melhor e a pior classe caiu de 46 para cerca de 8 pontos.</p>
+          <p>A hitbox dos personagens também cresceu para acompanhar o tamanho dos sprites — antes dava para acertar visualmente e o tiro passar.</p>
+
+          <h4>Mais um power-up e classes liberadas</h4>
+          <p>Agora são quatro bolhas de power-up por partida, em vez de três.</p>
+          <p>Jogar online sem conta antes só liberava o atirador. Agora todas as classes estão livres para convidado, menos o assassino.</p>
+        </section>
+
+        <section class="changelog-versao">
+          <div class="changelog-versao-cabecalho">
+            <h3>beta 0.2</h3>
             <span class="changelog-data">6 de agosto de 2026</span>
           </div>
 

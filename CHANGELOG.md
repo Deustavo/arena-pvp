@@ -7,6 +7,63 @@ Este arquivo é a fonte da documentação. O jogador vê a mesma lista na modal
 (`#changelogOverlay`): ao adicionar uma versão aqui, adicione o bloco
 correspondente lá e atualize o número em `#menuVersion`.
 
+## beta 0.3 (7 de agosto de 2026)
+
+### Quatro arenas, cada uma com seu evento
+
+A arena da partida agora é sorteada entre quatro mapas, e cada um interfere no
+duelo de um jeito diferente:
+
+- **Terra**: terremotos periódicos sacodem a tela. Não machucam ninguém, só
+  atrapalham a mira — e vêm em intensidades diferentes, do tremor leve ao
+  devastador.
+- **Areia**: rajadas de vento empurram os dois jogadores para o mesmo lado,
+  alternando de direção a cada rajada.
+- **Gelo**: o piso é escorregadio a partida inteira. Soltar a tecla não para o
+  personagem na hora, ele desliza.
+- **Fogo**: erupções caem miradas em cima dos dois jogadores ao mesmo tempo.
+  Elas avisam antes de explodir, então dá para escapar andando para longe — é a
+  arena mais agressiva das quatro, com uma onda nova a cada ~9 segundos.
+
+Nos últimos 15 segundos os eventos ficam mais intensos: terremoto e vento
+deixam de ter pausa e não param mais. Mas tudo isso some no último segundo de
+partida e durante o desempate — o momento que decide a partida é limpo.
+
+Os efeitos de arena também são desenhados em pixel art agora, no mesmo estilo do
+resto do jogo. Durante o tutorial os mapas não têm efeito nenhum: quem está
+aprendendo os controles não precisa lidar com terremoto e erupção ainda.
+
+### HUD novo
+
+Vida e escudo deixaram de ser fileiras de ícones e viraram barras segmentadas,
+com um contador do lado. O que muda com a classe e com os power-ups é o número
+de divisões da barra, não o tamanho dela — antes o HUD do tank com power-up de
+vida crescia até quebrar em outra linha no meio da partida. O que passa do
+máximo da sua classe aparece em dourado.
+
+### Equilíbrio das seis classes
+
+O mago estava vencendo 80% das partidas por causa de um bug: o leque de três
+projéteis dele gastava uma carga de escudo por projétil no mesmo instante,
+furando o escudo inteiro do tank ou do duelista com um disparo só. Agora um
+disparo gasta no máximo uma carga.
+
+Com isso corrigido, dano, cadência e vida das seis classes foram reajustados. O
+atirador e o duelista atiram mais rápido, o sniper ficou mais forte de perto, o
+mago perdeu dano e cadência, e o assassino ficou um pouco menos letal. A
+diferença de aproveitamento entre a melhor e a pior classe caiu de 46 para cerca
+de 8 pontos.
+
+A hitbox dos personagens também cresceu para acompanhar o tamanho dos sprites —
+antes dava para acertar visualmente e o tiro passar.
+
+### Mais um power-up e classes liberadas
+
+Agora são quatro bolhas de power-up por partida, em vez de três.
+
+Jogar online sem conta antes só liberava o atirador. Agora todas as classes
+estão livres para convidado, menos o assassino.
+
 ## beta 0.2 (6 de agosto de 2026)
 
 ### Power-ups na arena

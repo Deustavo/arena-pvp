@@ -850,7 +850,8 @@ precisa continuar visível enquanto a lista de versões cresce.
 
 O texto é escrito para jogador, não para desenvolvedor: descreve o que mudou na
 partida, não o commit. Versões atuais: `beta 0.1` (sprites dos personagens e o
-jogo como estava até então) e `beta 0.2` (power-ups na arena).
+jogo como estava até então), `beta 0.2` (power-ups na arena) e `beta 0.3`
+(quatro arenas com eventos, HUD em barras e rebalanceamento das classes).
 
 ### Convenção de nomes e comentários
 
