@@ -293,8 +293,14 @@ function botTick() {
     bot.powerups.ativos.push(criarPowerupTutorial(bot.powerups.proximoId++));
   }
 
+  // Durante o tutorial os mapas não têm efeito nenhum (vento, gelo, fogo,
+  // terremoto) — quem está aprendendo os controles não deveria lidar com
+  // isso ainda. `state.arenaTipo` continua valendo pro visual (fundo da
+  // arena), só a física/eventos são desligados aqui.
+  const arenaEfeitos = isMatchTutorialActive() ? null : state.arenaTipo;
+
   const restanteMs = tempoRestanteMs(bot.cronometro, agora);
-  stepPlayers(bot.players, ARENA, agora, state.arenaTipo, restanteMs);
+  stepPlayers(bot.players, ARENA, agora, arenaEfeitos, restanteMs);
   // Depois de mover: quem entrou na bolha neste tick já leva o power-up.
   const eventosPowerup = tickPowerups(bot.powerups, bot.players, restanteMs, agora);
   // Coleta é a única ação do tutorial que não sai do input: quem detecta é o
@@ -306,7 +312,7 @@ function botTick() {
   // aqui, olhando quem ainda está vivo depois do dano. Mesma regra do boneco
   // de treino: enquanto ele é invulnerável, uma "morte" dele não conta (as
   // vidas são restauradas mais abaixo).
-  tickErupcoes(state.arenaTipo, bot.erupcoes, bot.players, restanteMs, agora);
+  tickErupcoes(arenaEfeitos, bot.erupcoes, bot.players, restanteMs, agora);
   const [p0, p1] = bot.players;
   if (!bonecoInvulneravel && (!p0.alive || !p1.alive)) {
     recordGameOver(resultadoDoVencedor(!p0.alive && !p1.alive ? null : (p0.alive ? 0 : 1)));

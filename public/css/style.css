@@ -2616,6 +2616,11 @@
     font-size: 13px;
     word-break: break-all;
   }
+  .creditos-divisor {
+    border: none;
+    border-top: 1px solid var(--cor-superficie-hover);
+    margin: 10px 0;
+  }
 
   /* ----- Página isolada (redefinição de senha) ----- */
   body.standalone-page {

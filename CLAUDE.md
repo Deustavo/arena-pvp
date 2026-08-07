@@ -580,6 +580,13 @@ espectador).
   terremoto dispara `playTerremotoSound` na borda de subida de
   `terremotoProgresso(now)` (calculado localmente, sem precisar de snapshot). O
   vento ainda não tem som próprio (só o visual).
+- Enquanto o tutorial interativo roda (`isMatchTutorialActive()`), os mapas
+  não têm efeito nenhum: `bot.js` passa `arenaTipo: null` para `stepPlayers` e
+  `tickErupcoes` (desliga vento/gelo/fogo) e `arenaVisuals.js` zera o tremor
+  de câmera e as partículas de vento — quem está aprendendo os controles não
+  deveria lidar com isso ainda. `state.arenaTipo` continua valendo pro fundo
+  da arena (só a física/eventos são desligados), e como o tutorial só roda no
+  modo bot, o servidor nunca precisa dessa checagem.
 
 ### Modo espectador (assistir partidas em andamento)
 

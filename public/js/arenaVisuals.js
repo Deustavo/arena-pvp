@@ -15,6 +15,7 @@ import {
   terremotoProgresso, terremotoIntensidade, ventoDirecao, ERUPCAO_RAIO, faseFinalFator,
 } from '../../shared/arenaEvents.js';
 import { playEruptionSound, playTerremotoSound } from './audio.js';
+import { isMatchTutorialActive } from './tutorial/matchTutorial.js';
 
 const hasDom = typeof Image !== 'undefined';
 
@@ -75,6 +76,7 @@ let terremotoAtivoAntes = false;
 // um envelope em sino (sobe, sustenta perto do pico, cai) em vez de ligar e
 // desligar de repente.
 export function terremotoShakeOffset(now) {
+  if (isMatchTutorialActive()) return null;
   const progresso = state.arenaTipo === 'terra' ? terremotoProgresso(now) : null;
   const ativo = progresso !== null;
   if (ativo && !terremotoAtivoAntes) playTerremotoSound();
@@ -103,7 +105,7 @@ let ultimoSpawnVento = 0;
 // de que o vento está empurrando os dois jogadores agora (a física em si não
 // aparece separada do movimento normal).
 export function updateAndDrawVento(now) {
-  const direcao = ventoDirecao(state.arenaTipo, now);
+  const direcao = isMatchTutorialActive() ? 0 : ventoDirecao(state.arenaTipo, now);
   // Nos últimos segundos de partida a rajada empurra mais forte (ver
   // faseFinalFator) — as partículas nascem mais rápido e mais depressa para
   // a rajada parecer tão mais intensa quanto a física por trás dela.
