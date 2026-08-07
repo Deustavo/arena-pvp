@@ -49,6 +49,13 @@ export function stepPlayers(players, arena, agora = Date.now(), arenaTipo = null
 // última vida — quem chama decide o que isso significa (fim de partida
 // online, fim de partida local contra o bot, etc.).
 export function stepProjectiles(projectiles, players, arena, onPlayerDown) {
+  // Projéteis de um mesmo disparo em leque (ex.: o cone de 3 tiros do mago)
+  // chegam ao alvo no mesmo tick. Sem esse controle, cada um deles gastava uma
+  // carga de escudo separada e um único disparo furava o escudo inteiro de
+  // classes frágeis (assassino, duelista) de uma vez só — o escudo bloqueia o
+  // leque todo como um único evento de defesa, gastando no máximo 1 carga por
+  // tick, igual a levar um tiro só.
+  const escudoGastoNesteTick = new Set();
   return projectiles.filter((proj) => {
     proj.x += proj.vx;
     proj.y += proj.vy;
@@ -70,8 +77,11 @@ export function stepProjectiles(projectiles, players, arena, onPlayerDown) {
 
     if (target.alive && target.shielding && target.shieldHits < target.shieldMaxHits &&
       circleHitsProjectile(target, proj, PLAYER_SIZE, SHIELD_RADIUS, size)) {
-      target.shieldHits += 1;
-      if (target.shieldHits >= target.shieldMaxHits) target.shielding = false;
+      if (!escudoGastoNesteTick.has(target)) {
+        target.shieldHits += 1;
+        if (target.shieldHits >= target.shieldMaxHits) target.shielding = false;
+        escudoGastoNesteTick.add(target);
+      }
       return false;
     }
 
