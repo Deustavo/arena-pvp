@@ -16,7 +16,7 @@ import { POWERUP_RADIUS, POWERUP_ZONE } from '../../shared/powerups.js';
 
 // Cinza um pouco mais escuro que o fundo da arena (ARENA_BG_COLOR em
 // render.js): marca a região onde as bolhas nascem sem virar decoração.
-const ZONE_COLOR = '#333333';
+const ZONE_BORDER_COLOR = 'rgba(0, 0, 0, 0.6)';
 
 const CORES = {
   vida: '#e63946',
@@ -262,10 +262,11 @@ function drawColeta(coleta, now) {
 // fundo (e antes de tudo o mais) para ficar por baixo de jogadores e tiros.
 export function drawPowerupZone() {
   ctx.save();
-  ctx.fillStyle = ZONE_COLOR;
+  ctx.strokeStyle = ZONE_BORDER_COLOR;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.arc(POWERUP_ZONE.x, POWERUP_ZONE.y, POWERUP_ZONE.r, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.stroke();
   ctx.restore();
 }
 

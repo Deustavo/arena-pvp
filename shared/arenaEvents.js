@@ -100,8 +100,8 @@ export const GELO_ATRITO = 0.92;
 // pré-sorteada — por isso precisa de estado + agenda e vai no snapshot.
 // ---------------------------------------------------------------------------
 
-export const ERUPCAO_RAIO = 55;
-export const ERUPCAO_AVISO_MS = 1400;
+export const ERUPCAO_RAIO = 110;
+export const ERUPCAO_AVISO_MS = 1100;
 export const ERUPCAO_DANO = 1;
 export const ERUPCAO_KNOCKBACK = 22;
 

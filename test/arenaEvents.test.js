@@ -144,7 +144,7 @@ describe('erupções (fogo)', () => {
     // o dano, já que a mira não persegue quem se mexe depois.
     const fugitivo = players[0];
     const vidasAntes = fugitivo.lives;
-    fugitivo.x = estado.ativas[0].x + ERUPCAO_RAIO * 5;
+    fugitivo.x = estado.ativas[0].x - ERUPCAO_RAIO * 5;
     fugitivo.y = estado.ativas[0].y;
 
     tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 2000);
