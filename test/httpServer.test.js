@@ -1,7 +1,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'http';
-import { createHttpServer, logXffDiagnostico } from '../src/server/httpServer.js';
+import { createHttpServer } from '../src/server/httpServer.js';
 
 function startServer() {
   return new Promise((resolve) => {
@@ -128,81 +128,5 @@ describe('httpServer', () => {
   test('bloqueia path traversal para fora do diretório shared', async () => {
     const res = await get(port, '/shared/../../package.json');
     assert.equal(res.status, 403);
-  });
-});
-
-// Diagnóstico temporário do warning de rate limiting do Better Auth (ver
-// CLAUDE.md): loga só nos dois casos que fariam o Better Auth não conseguir
-// resolver o IP do cliente, pra descobrir o formato real do
-// x-forwarded-for que o Cloud Run manda em produção.
-describe('logXffDiagnostico', () => {
-  function requisicao(headers) {
-    return {
-      method: 'POST',
-      url: '/api/auth/sign-in/email',
-      headers,
-      socket: { remoteAddress: '10.1.2.3' },
-    };
-  }
-
-  function chamadasDoWarn() {
-    const chamadas = [];
-    const original = console.warn;
-    console.warn = (...args) => chamadas.push(args);
-    return { chamadas, restaurar: () => { console.warn = original; } };
-  }
-
-  test('loga quando o header está ausente', () => {
-    const { chamadas, restaurar } = chamadasDoWarn();
-    try {
-      logXffDiagnostico(requisicao({}));
-      assert.equal(chamadas.length, 1);
-      assert.equal(chamadas[0][0], '[auth][debug-xff]');
-      assert.equal(chamadas[0][3].xff, null);
-      assert.equal(chamadas[0][3].remoteAddress, '10.1.2.3');
-    } finally {
-      restaurar();
-    }
-  });
-
-  test('loga quando o header tem mais de um IP', () => {
-    const { chamadas, restaurar } = chamadasDoWarn();
-    try {
-      logXffDiagnostico(requisicao({ 'x-forwarded-for': '203.0.113.5, 169.254.1.1' }));
-      assert.equal(chamadas.length, 1);
-    } finally {
-      restaurar();
-    }
-  });
-
-  test('não loga quando o header tem um único IP', () => {
-    const { chamadas, restaurar } = chamadasDoWarn();
-    try {
-      logXffDiagnostico(requisicao({ 'x-forwarded-for': '203.0.113.5' }));
-      assert.equal(chamadas.length, 0);
-    } finally {
-      restaurar();
-    }
-  });
-
-  test('inclui forwarded, via e user-agent no log, sem authorization nem cookie', () => {
-    const { chamadas, restaurar } = chamadasDoWarn();
-    try {
-      logXffDiagnostico(requisicao({
-        forwarded: 'for=203.0.113.5',
-        via: '1.1 google',
-        'user-agent': 'Mozilla/5.0',
-        authorization: 'Bearer segredo',
-        cookie: 'session=segredo',
-      }));
-      const payload = chamadas[0][3];
-      assert.equal(payload.forwarded, 'for=203.0.113.5');
-      assert.equal(payload.via, '1.1 google');
-      assert.equal(payload.userAgent, 'Mozilla/5.0');
-      assert.equal('authorization' in payload, false);
-      assert.equal('cookie' in payload, false);
-    } finally {
-      restaurar();
-    }
   });
 });
