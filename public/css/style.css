@@ -145,6 +145,20 @@
     --cor-azul-link: #7fb2d0;
     --cor-azul-ranking: #9ecbff;
 
+    /* Cores do HUD (vida, escudo e barra de tiro). Ficam separadas das
+       variáveis genéricas (--cor-erro, --cor-azul-escudo, --cor-sucesso)
+       porque o HUD é lido de relance no meio da partida e precisa de tons
+       vivos, enquanto as mesmas cores na interface (erro de formulário,
+       vitória no ranking) não seguem esse ajuste. O tom de *texto* é mais
+       claro que o da barra: número pequeno sobre o trilho escuro precisa de
+       mais contraste que um bloco cheio. */
+    --cor-hud-vida: #b00813;
+    --cor-hud-vida-texto: #d4212c;
+    --cor-hud-escudo: #196fb5;
+    --cor-hud-escudo-texto: #2885c7;
+    --cor-hud-tiro: #e0a81c;
+    --cor-hud-tiro-pronto: #28d868;
+
     /* Fundo dos botões flutuantes de canto (volume, música): mais claro que
        as superfícies normais, de propósito, pra ter contraste sobre
        qualquer fundo (arena escura ou parede clara do menu). */
@@ -1193,8 +1207,8 @@
   .cooldown-fill {
     height: 100%;
     width: 0%;
-    /* Vermelho enquanto recarrega, verde quando o tiro está disponível. */
-    background-color: var(--cor-erro);
+    /* Amarelo enquanto recarrega, verde quando o tiro está disponível. */
+    background-color: var(--cor-hud-tiro);
     background-image: repeating-linear-gradient(
       90deg,
       transparent 0 6px,
@@ -1204,7 +1218,7 @@
   }
   /* Só a cor muda: `background` no atalho apagaria os blocos do gradiente. */
   .cooldown-fill.ready {
-    background-color: var(--cor-sucesso);
+    background-color: var(--cor-hud-tiro-pronto);
   }
   /* ===== Barras de vida e escudo =====
      Um segmento por coração/carga: a largura é sempre a da linha do jogador e
@@ -1261,17 +1275,17 @@
     background: var(--cor-borda-media);
   }
   .hearts .segment.filled {
-    background: var(--cor-erro);
+    background: var(--cor-hud-vida);
   }
   .shields .segment.filled {
-    background: var(--cor-azul-escudo);
+    background: var(--cor-hud-escudo);
   }
   /* Meio coração (dano fracionário do duelista): corte seco na metade, sem
      transição de cor. Não existe meia carga de escudo. */
   .hearts .segment.half {
     background: linear-gradient(
       90deg,
-      var(--cor-erro) 0 50%,
+      var(--cor-hud-vida) 0 50%,
       var(--cor-borda-media) 50% 100%
     );
   }
@@ -1282,7 +1296,7 @@
   .hud-row-right .hearts .segment.half {
     background: linear-gradient(
       270deg,
-      var(--cor-erro) 0 50%,
+      var(--cor-hud-vida) 0 50%,
       var(--cor-borda-media) 50% 100%
     );
   }
@@ -1338,11 +1352,11 @@
   }
   .hearts .resource-count {
     font-size: 14px;
-    color: var(--cor-erro);
+    color: var(--cor-hud-vida-texto);
   }
   .shields .resource-count {
     font-size: 11px;
-    color: var(--cor-azul-escudo);
+    color: var(--cor-hud-escudo-texto);
   }
   .resource-max {
     font-weight: 400;
