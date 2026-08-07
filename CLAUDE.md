@@ -241,7 +241,7 @@ conecta event listeners de UI aos módulos.
   `profileStats.js`, que é puro e testado (`test/profileStats.test.js`), sem
   DOM nem rede.
 - `overlays.js`, `gameOver.js`, `hud.js` — overlays de espera/contagem regressiva/fim
-  de jogo e HUD (vidas, cooldown, escudo).
+  de jogo e HUD (vidas, cooldown, escudo — ver "HUD de vida e escudo" abaixo).
 - `mobileBlock.js` — celular/tablet não tem como jogar (o jogo é WASD + mouse e
   não existe controle de toque), então em aparelho touch-only `main.js` mostra
   só o aviso `#mobileBlock` ("jogue no computador") e **não inicializa mais
@@ -296,6 +296,45 @@ conecta event listeners de UI aos módulos.
   - O botão "Como jogar" do menu (`main.js`) chama `forceNextMatchTutorial()` e
     inicia uma partida de bot, reabrindo o tutorial mesmo que já tenha sido
     visto antes.
+
+#### HUD de vida e escudo (`public/js/hud.js`)
+
+Vida e escudo são **barras segmentadas**, não fileiras de ícones: um segmento
+por coração/carga, com um contador (ícone pixel-art + `valor/teto`) do lado. O
+que muda com a classe e com os power-ups é o **número de divisões**, nunca a
+largura — como fileira de um ícone por unidade o HUD crescia até quebrar em
+outra linha no meio da partida (o tank abre com 14 vidas e 5 cargas, e os dois
+power-ups passam do máximo da classe).
+
+- As duas barras são a mesma peça (`createResourceBar`/`updateResourceBar`,
+  parametrizadas por `'vida'`/`'escudo'`). Quem diferencia os recursos é a
+  **caixa** que os contém — `.hearts` e `.shields` no CSS: cor, espessura da
+  barra e tamanho do número saem de lá, não de uma classe por tipo no JS. A
+  barra de escudo é mais fina de propósito: sem essa diferença, vida, escudo e
+  cooldown viram três listras iguais na mesma coluna.
+- `updateResourceBar(barra, valor, max, base)` recebe `base` = máximo da
+  **classe** e `max` = teto de agora; o que passa de `base` é excedente de
+  power-up e vai em **dourado**, para não ler como vida/carga normal. O teto
+  nunca cai no meio da partida (`Math.max(..., barra.max)`): gastar a vida
+  extra deixa o segmento vazio em vez de redividir a barra a cada hit.
+- Meio coração (dano fracionário do duelista) é um segmento com corte seco em
+  50% e um `8,5` no contador. Não existe meia carga de escudo.
+- O piscar do dano continua existindo, agora nos **segmentos** que apagaram
+  naquele hit (`triggerSegmentBlink`) — os sons e os ícones flutuantes não
+  mudaram, porque continuam saindo da comparação de snapshots.
+- No HUD o contador fica do lado **de fora** e as barras crescem para o meio da
+  arena, como num placar de luta: os números longe do centro deixam o
+  cronômetro livre, e a linha da direita inverte também os segmentos, para as
+  duas barras esvaziarem se afastando do meio.
+- Cada coluna do HUD é **metade exata** da largura (`flex: 1 1 0`), e não o
+  tamanho do seu conteúdo — barras de largura relativa dentro de uma coluna
+  dimensionada pelo conteúdo encolheriam até a largura do nome. Por isso `#hud`
+  reserva um vão central do tamanho do estado mais largo do cronômetro
+  (`DESEMPATE`): sem ele as duas barras correriam por baixo de `#matchTimer`,
+  que é absoluto e centralizado.
+- O preview de classe da modal de seleção (`classPreview.js`) reusa as mesmas
+  barras em miniatura, sempre cheias (valor = teto = máximo da classe), dentro
+  de caixas com as mesmas classes `.hearts`/`.shields`.
 
 #### Efeitos sonoros (`public/js/audio.js`)
 
@@ -400,14 +439,56 @@ No CSS, painéis e modais seguem o mesmo vocabulário: canto reto e sombra
 sólida deslocada (`8px 8px 0`) em vez de desfoque, skeleton de loading em
 passos (`steps()`) e barra de cooldown enchendo em blocos.
 
-**Quatro exceções deliberadas**, que já foram tentadas em pixel art e
+Os **botões de ação** (menu, overlays de fim de jogo/espera, confirmar das
+modais de classe, enviar dos formulários de conta) têm moldura de fliperama:
+contorno de 2px (`--espessura-borda-botao`) e cantos em escadinha de dois
+degraus de 4px — o degrau é o pixel de arte cheio, o contorno é metade dele,
+senão a moldura pesa mais que o próprio botão nos botões pequenos. O contorno
+**não é preto**: é a própria cor do botão num tom mais escuro. Como
+`clip-path` não recorta buraco, a moldura são duas camadas, as duas com
+`background: inherit` — `::before` cobre a silhueta inteira e escurece
+(`--escurecimento-borda-botao`), `::after` repinta o miolo no tom original,
+recuado pela espessura da borda. Assim cada botão continua definindo a própria cor (inclusive
+hover e `:disabled`) onde já definia e a moldura acompanha, sem uma cor de
+borda por botão. Uma `border` não serviria:
+recortada pelo clip-path, ela some na diagonal dos cantos. O hover desses
+botões continua sendo o movimento interpolado de sempre (`transform`/`filter`)
+— só a sombra desfocada sumiu, porque o clip-path recorta o que é pintado fora
+da silhueta.
+
+**Campos de texto, dropdowns e cartões de classe** usam a mesma silhueta, mas
+a borda deles tem cor própria (branco, cinza, ou o vermelho de foco/seleção),
+não um tom do fundo. Cada componente segue decidindo as duas cores nas regras
+dele, agora por `--cor-borda-campo`/`--cor-fundo-campo`. O desenho não pode
+usar pseudo-elemento (`<input>` não tem ::before/::after), então são quatro
+camadas de `background-image`: a de baixo pinta a cor da borda na caixa
+inteira e as três de cima repintam o miolo — três porque a escadinha,
+recortada em retângulos, é a faixa larga, a faixa alta e o quadrado que liga
+as duas nos cantos.
+
+Nos campos de texto a moldura fica num **invólucro** (`.campo-pixel`), nunca
+no próprio `<input>`, e isso não é estilo: ao autopreencher, o Chrome força
+`background-image: none !important` no campo — regra de folha do navegador,
+que a cascata do autor não vence — e levaria a moldura inteira junto. O recuo
+horizontal de 10px do invólucro (8px de canto + 2px de borda) é o que mantém
+o retângulo do input coincidindo com a faixa alta do miolo: assim o único
+fundo que o navegador ainda controla não tem como encostar na moldura. A cor
+do autofill continua sendo coberta pelo `box-shadow` interno de sempre (que é
+recortado pela caixa do input) e o texto por `-webkit-text-fill-color`.
+
+Ficaram de fora só os elementos pequenos demais para a moldura não virar
+ruído: botão-link, nome do ranking, item de dropdown e os botões de ícone
+(som/música, fechar ✕).
+
+Em nenhum desses componentes existe mais `box-shadow` **externo** — o
+clip-path recorta o que é pintado fora da silhueta. Anel de foco, anel de
+seleção do cartão de classe e o brilho vermelho do dropdown aberto viraram a
+própria cor da borda; não tente devolvê-los como sombra.
+
+**Três exceções deliberadas**, que já foram tentadas em pixel art e
 revertidas por deixarem a interface carregada — não "conserte" nenhuma
 delas:
 
-- **Botões** continuam com `border-radius`, sombra suave no hover e
-  `transition`/`scale`. A versão em "bloco de pedra" (bisel de 4px,
-  espessura e sombra dura em cada botão) punha peso de arte em cima de todo
-  elemento clicável. Botão aqui é suporte, não arte.
 - **Ícones das seis classes** (`shared/classes.js`) continuam sendo SVG de
   traço fino (`fill: none; stroke: currentColor; stroke-width: 2`). A versão
   em grade 16x16 preenchida ficava pesada e menos legível no tamanho em que
@@ -542,8 +623,8 @@ e bot), e o desenho/som em `public/js/powerups.js`.
   (+40%, 10s).
 - Vida e escudo passam do máximo da classe de propósito: preenchem o que
   falta e aumentam o teto se já estiver cheio. O HUD acompanha —
-  `updateHeartsRow`/`updateShieldsRow` (`hud.js`) refazem a fileira quando
-  precisam de mais ícones do que a classe tem.
+  `updateHeartsRow`/`updateShieldsRow` (`hud.js`) dividem a barra do recurso em
+  mais segmentos e pintam o excedente em dourado (ver "HUD de vida e escudo").
 - O agendamento é em **tempo restante** (0:52–0:44, 0:40–0:32, 0:28–0:20 e
   0:16–0:08 — quatro janelas de 8s espaçadas por 4s), não em instante
   absoluto. É isso que faz o

@@ -16,7 +16,6 @@ export const HEART_PIXELS = [
   [4, 2], [4, 3], [4, 4],
   [5, 3],
 ];
-const HEART_PIXEL_SIZE = 3;
 const HIT_FLASH_DURATION = 400;
 
 export const SHIELD_PIXELS = [
@@ -29,13 +28,12 @@ export const SHIELD_PIXELS = [
   [6, 2], [6, 3], [6, 4],
   [7, 3],
 ];
-const SHIELD_PIXEL_SIZE = 3;
-
-let heartsEls = [[], []];
+// Barras de vida e de escudo por slot visual (`null` = ainda não há partida).
+let barrasVida = [null, null];
+let barrasEscudo = [null, null];
 let prevLives = [0, 0];
 export let hitFlashUntil = [0, 0];
 let prevClassIds = [null, null];
-let shieldsEls = [[], []];
 // Cargas de escudo do tick anterior, por slot visual. É a comparação com elas
 // que revela um bloqueio: nem o servidor nem a simulação avisam "bloqueou", só
 // mandam o estado novo. `null` = ainda não há partida para comparar.
@@ -54,65 +52,103 @@ function updateClassIcon(el, nameEl, row, classId) {
   if (nameEl) nameEl.textContent = cls.name || '';
 }
 
-// `pixelSize` é opcional (padrão = tamanho do HUD real) para permitir reusar
-// os mesmos corações/escudos pixel-art em miniatura, como no preview de
-// classe da modal de seleção online.
-export function createHeartEl(pixelSize = HEART_PIXEL_SIZE) {
-  const heart = document.createElement('div');
-  heart.className = 'heart';
-  heart.style.width = `${7 * pixelSize}px`;
-  heart.style.height = `${6 * pixelSize}px`;
-  for (const [row, col] of HEART_PIXELS) {
+// ===== Barras segmentadas de vida e escudo =====
+// Vida e escudo são a mesma peça: uma barra de largura fixa dividida em um
+// segmento por coração/carga, com um contador (ícone + número) do lado. O que
+// muda com a classe e com os power-ups é o *número de divisões*, nunca a
+// largura — antes eram fileiras de um ícone por unidade, que cresciam até
+// quebrar em outra linha no meio da partida (o tank abre com 14 vidas e 5
+// cargas, e os dois power-ups passam do máximo da classe).
+//
+// Quem diferencia os dois recursos é a caixa que os contém (`.hearts` e
+// `.shields` no CSS): cor, espessura da barra e tamanho do número saem de lá,
+// não de uma classe por tipo aqui.
+const RECURSOS = {
+  vida: { pixels: HEART_PIXELS, altura: 6 },
+  escudo: { pixels: SHIELD_PIXELS, altura: 8 },
+};
+// Pixel do ícone do contador. É parâmetro porque o preview de classe da modal
+// de seleção reusa a mesma barra em miniatura.
+const CONTADOR_PIXEL = 2;
+
+// Ícone pixel-art de vida/escudo em DOM: um div por pixel da grade, igual ao
+// resto da arte do jogo.
+export function createResourceIcon(tipo, pixelSize = CONTADOR_PIXEL) {
+  const { pixels, altura } = RECURSOS[tipo];
+  const icone = document.createElement('div');
+  icone.className = 'resource-icon';
+  icone.style.width = `${7 * pixelSize}px`;
+  icone.style.height = `${altura * pixelSize}px`;
+  for (const [row, col] of pixels) {
     const px = document.createElement('div');
-    // Metade esquerda/direita separadas para permitir colorir só a metade
-    // direita em cinza quando o jogador perde meio coração (dano fracionário).
-    px.className = col <= 3 ? 'heart-pixel heart-pixel-left' : 'heart-pixel heart-pixel-right';
+    px.className = 'resource-icon-pixel';
     px.style.width = `${pixelSize}px`;
     px.style.height = `${pixelSize}px`;
     px.style.left = `${col * pixelSize}px`;
     px.style.top = `${row * pixelSize}px`;
-    heart.appendChild(px);
+    icone.appendChild(px);
   }
-  return heart;
+  return icone;
 }
 
-export function createHeartsRow(container, count, pixelSize = HEART_PIXEL_SIZE) {
+// Monta a barra de um recurso dentro de `container` (as caixas #livesP0/
+// #shieldsP0… do HUD, ou as do preview de classe) e devolve o objeto que
+// `updateResourceBar` pinta. Os segmentos nascem em `updateResourceBar`, que é
+// quem sabe quantos são.
+export function createResourceBar(container, tipo, pixelSize = CONTADOR_PIXEL) {
   container.innerHTML = '';
-  const hearts = [];
-  for (let i = 0; i < count; i++) {
-    const heart = createHeartEl(pixelSize);
-    container.appendChild(heart);
-    hearts.push(heart);
-  }
-  return hearts;
+  const barra = { tipo, segs: [], max: 0 };
+
+  const bar = document.createElement('div');
+  bar.className = 'resource-bar';
+
+  barra.segsEl = document.createElement('div');
+  barra.segsEl.className = 'resource-segments';
+
+  const contador = document.createElement('div');
+  contador.className = 'resource-count';
+  contador.appendChild(createResourceIcon(tipo, pixelSize));
+  barra.valorEl = document.createElement('span');
+  barra.maxEl = document.createElement('span');
+  barra.maxEl.className = 'resource-max';
+  contador.appendChild(barra.valorEl);
+  contador.appendChild(barra.maxEl);
+
+  bar.appendChild(barra.segsEl);
+  bar.appendChild(contador);
+  container.appendChild(bar);
+  return barra;
 }
 
-export function createShieldEl(pixelSize = SHIELD_PIXEL_SIZE) {
-  const shield = document.createElement('div');
-  shield.className = 'shield';
-  shield.style.width = `${7 * pixelSize}px`;
-  shield.style.height = `${8 * pixelSize}px`;
-  for (const [row, col] of SHIELD_PIXELS) {
-    const px = document.createElement('div');
-    px.className = 'shield-pixel';
-    px.style.width = `${pixelSize}px`;
-    px.style.height = `${pixelSize}px`;
-    px.style.left = `${col * pixelSize}px`;
-    px.style.top = `${row * pixelSize}px`;
-    shield.appendChild(px);
-  }
-  return shield;
+// Dano fracionário (o duelista tira meio coração por tiro) vira "8,5" no
+// contador; valor inteiro não mostra decimal.
+function formatarValor(valor) {
+  return valor % 1 ? valor.toFixed(1).replace('.', ',') : String(valor);
 }
 
-export function createShieldsRow(container, count, pixelSize = SHIELD_PIXEL_SIZE) {
-  container.innerHTML = '';
-  const shields = [];
-  for (let i = 0; i < count; i++) {
-    const shield = createShieldEl(pixelSize);
-    container.appendChild(shield);
-    shields.push(shield);
+// Pinta a barra: `valor` é o atual, `max` o teto de agora e `base` o máximo da
+// classe — o que passa de `base` é excedente de power-up e vai em dourado, para
+// não ler como vida/carga normal.
+export function updateResourceBar(barra, valor, max, base = max) {
+  while (barra.segs.length < max) {
+    const seg = document.createElement('i');
+    seg.className = 'segment';
+    barra.segsEl.appendChild(seg);
+    barra.segs.push(seg);
   }
-  return shields;
+  while (barra.segs.length > max) barra.segs.pop().remove();
+  barra.max = max;
+
+  const inteiros = Math.floor(valor);
+  // Meio segmento em vez de cheio ou vazio, no índice onde o valor quebra.
+  const temMeio = valor - inteiros >= 0.5;
+  for (let i = 0; i < barra.segs.length; i++) {
+    barra.segs[i].classList.toggle('filled', i < inteiros);
+    barra.segs[i].classList.toggle('half', temMeio && i === inteiros);
+    barra.segs[i].classList.toggle('bonus', i >= base);
+  }
+  barra.valorEl.textContent = formatarValor(valor);
+  barra.maxEl.textContent = `/${max}`;
 }
 
 // `maxLives` são as vidas máximas de cada jogador, dependentes da classe
@@ -120,8 +156,10 @@ export function createShieldsRow(container, count, pixelSize = SHIELD_PIXEL_SIZE
 // partida, já na ordem visual [você, oponente] (não a ordem bruta do
 // servidor), já que ambos os lados começam com vida cheia.
 export function initHearts(maxLives = [10, 10]) {
-  heartsEls[0] = createHeartsRow(livesP0El, maxLives[0]);
-  heartsEls[1] = createHeartsRow(livesP1El, maxLives[1]);
+  barrasVida[0] = createResourceBar(livesP0El, 'vida');
+  barrasVida[1] = createResourceBar(livesP1El, 'vida');
+  updateResourceBar(barrasVida[0], maxLives[0], maxLives[0]);
+  updateResourceBar(barrasVida[1], maxLives[1], maxLives[1]);
   prevLives = [maxLives[0], maxLives[1]];
   hitFlashUntil = [0, 0];
   // `state.shieldMaxHits` fica indexado pela posição real do jogador no
@@ -135,8 +173,10 @@ export function initHearts(maxLives = [10, 10]) {
   const meIndex = state.playerIndex ?? 0;
   const oppIndex = meIndex === 0 ? 1 : 0;
   const maxShields = [state.shieldMaxHits[meIndex], state.shieldMaxHits[oppIndex]];
-  shieldsEls[0] = createShieldsRow(shieldsP0El, maxShields[0]);
-  shieldsEls[1] = createShieldsRow(shieldsP1El, maxShields[1]);
+  barrasEscudo[0] = createResourceBar(shieldsP0El, 'escudo');
+  barrasEscudo[1] = createResourceBar(shieldsP1El, 'escudo');
+  updateResourceBar(barrasEscudo[0], maxShields[0], maxShields[0]);
+  updateResourceBar(barrasEscudo[1], maxShields[1], maxShields[1]);
   prevShieldCharges = [maxShields[0], maxShields[1]];
   prevLastShot = [null, null];
 }
@@ -147,8 +187,8 @@ export function initHearts(maxLives = [10, 10]) {
 // nova partida enviar o primeiro estado — no modo online isso pode demorar
 // vários segundos, enquanto o jogador espera na fila.
 export function resetHud() {
-  heartsEls = [[], []];
-  shieldsEls = [[], []];
+  barrasVida = [null, null];
+  barrasEscudo = [null, null];
   prevLives = [0, 0];
   prevShieldCharges = [null, null];
   prevLastShot = [null, null];
@@ -198,16 +238,21 @@ export function fillLocalPlayerHud() {
   nameP0El.textContent = state.user?.name || state.nickname || 'Você';
   updateClassIcon(classIconP0El, classNameP0El, 0, state.classId);
   const cls = getClass(state.classId);
-  heartsEls[0] = createHeartsRow(livesP0El, cls.maxLives);
+  barrasVida[0] = createResourceBar(livesP0El, 'vida');
+  updateResourceBar(barrasVida[0], cls.maxLives, cls.maxLives);
   prevLives[0] = cls.maxLives;
-  shieldsEls[0] = createShieldsRow(shieldsP0El, cls.shieldMaxHits);
+  barrasEscudo[0] = createResourceBar(shieldsP0El, 'escudo');
+  updateResourceBar(barrasEscudo[0], cls.shieldMaxHits, cls.shieldMaxHits);
   prevShieldCharges[0] = cls.shieldMaxHits;
 }
 
-function triggerHeartBlink(heartEl) {
-  heartEl.classList.remove('blink');
-  void heartEl.offsetWidth; // force reflow to restart the animation
-  heartEl.classList.add('blink');
+// Pisca o segmento que acabou de apagar (era o piscar do coração/escudo
+// perdido). `seg` pode não existir quando o teto encolheu entre dois ticks.
+function triggerSegmentBlink(seg) {
+  if (!seg) return;
+  seg.classList.remove('blink');
+  void seg.offsetWidth; // force reflow to restart the animation
+  seg.classList.add('blink');
 }
 
 // Centro horizontal e topo da cabeça de um jogador, em coordenadas de mundo —
@@ -217,36 +262,21 @@ function headPosition(player) {
   return { x: player.x + state.playerSize / 2, topY: player.y };
 }
 
-// Fileiras de corações/escudos por slot visual, para poderem ser refeitas
-// quando um power-up passa do máximo da classe (ver crescerFileira abaixo).
-const livesContainers = [livesP0El, livesP1El];
-const shieldsContainers = [shieldsP0El, shieldsP1El];
-
 function updateHeartsRow(row, lives, rawIndex, player) {
-  let hearts = heartsEls[row];
-  if (!hearts.length) return;
-  // O power-up de vida passa do máximo da classe de propósito: a fileira
-  // cresce em vez de engolir os corações que não caberiam.
-  const necessarios = Math.ceil(lives);
-  if (necessarios > hearts.length) {
-    hearts = createHeartsRow(livesContainers[row], necessarios);
-    heartsEls[row] = hearts;
-  }
+  const barra = barrasVida[row];
+  if (!barra) return;
+  const base = getClass(player?.classId).maxLives;
+  // O power-up de vida passa do máximo da classe de propósito: a barra ganha
+  // divisões (e o excedente vai em dourado) em vez de engolir a vida que não
+  // caberia. O teto nunca cai no meio da partida — gastar a vida extra deixa o
+  // segmento vazio, não some com ele, senão a barra se redividiria a cada hit.
+  const max = Math.max(base, Math.ceil(lives), barra.max);
+  updateResourceBar(barra, lives, max, base);
   const prev = prevLives[row];
   const wholeLives = Math.floor(lives);
-  // Dano fracionário (ex.: duelista tira meio coração por tiro) deixa `lives`
-  // com resto 0.5 — nesse caso o coração no índice `wholeLives` fica "half"
-  // em vez de cheio ou totalmente perdido.
-  const hasHalf = lives - wholeLives >= 0.5;
-  for (let i = 0; i < hearts.length; i++) {
-    const lost = i >= wholeLives + (hasHalf ? 1 : 0);
-    const half = hasHalf && i === wholeLives;
-    hearts[i].classList.toggle('lost', lost);
-    hearts[i].classList.toggle('half', half);
-  }
   if (lives < prev) {
     for (let i = wholeLives; i < Math.ceil(prev); i++) {
-      if (hearts[i]) triggerHeartBlink(hearts[i]);
+      triggerSegmentBlink(barra.segs[i]);
     }
     hitFlashUntil[rawIndex] = Date.now() + HIT_FLASH_DURATION;
     // No hit que zera as vidas quem toca é a explosão (explosions.js) — os dois
@@ -263,24 +293,20 @@ function updateHeartsRow(row, lives, rawIndex, player) {
 }
 
 function updateShieldsRow(row, charges, player) {
-  let shields = shieldsEls[row];
-  if (!shields.length) return;
-  // Mesmo caso dos corações: com o escudo cheio, o power-up de escudo aumenta
-  // o teto de cargas da classe e a fileira precisa acompanhar.
-  const necessarios = Math.max(charges, player?.shieldMaxHits ?? 0);
-  if (necessarios > shields.length) {
-    shields = createShieldsRow(shieldsContainers[row], necessarios);
-    shieldsEls[row] = shields;
-  }
-  for (let i = 0; i < shields.length; i++) {
-    shields[i].classList.toggle('lost', i >= charges);
-  }
+  const barra = barrasEscudo[row];
+  if (!barra) return;
+  const base = getClass(player?.classId).shieldMaxHits;
+  // `player.shieldMaxHits` já vem do snapshot com o power-up de escudo somado,
+  // então é ele que manda no teto; `base` é só onde começa o excedente dourado.
+  const max = Math.max(base, player?.shieldMaxHits ?? base, charges, barra.max);
+  updateResourceBar(barra, charges, max, base);
   // Perdeu carga = bloqueou um tiro. Quando foi a última, o som é o de escudo
   // quebrando em vez do de bloqueio: avisa que não há mais proteção. O ícone
   // flutuante de escudo rachado aparece nos dois casos — perder uma carga já é
   // "perder um escudo", não só zerar todas.
   const prev = prevShieldCharges[row];
   if (prev !== null && charges < prev) {
+    for (let i = charges; i < prev; i++) triggerSegmentBlink(barra.segs[i]);
     if (charges <= 0) playShieldBreakSound();
     else playShieldBlockSound();
     const head = headPosition(player);

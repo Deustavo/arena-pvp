@@ -157,11 +157,39 @@
        canto arredondado nem sombra borrada: sombra aqui é um bloco sólido
        deslocado, no mesmo múltiplo de 4px do "pixel de arte" do canvas.
 
-       Botão é a exceção — ele mantém a sombra suave e o hover interpolado de
-       sempre (ver a regra de `button` abaixo), por isso --sombra-flutuante
-       continua desfocada. */
+       O botão de ação também é pixel art (moldura em escadinha, no fim do
+       arquivo), mas mantém o hover interpolado de sempre — quem continua
+       usando sombra desfocada são os painéis flutuantes e os botões de
+       ícone, por isso --sombra-flutuante segue existindo. */
     --sombra-modal: 8px 8px 0 rgba(0, 0, 0, 0.45);
     --sombra-flutuante: 0 8px 20px rgba(0, 0, 0, 0.35);
+    /* Espessura da moldura dos botões. O degrau do canto continua sendo o
+       "pixel de arte" cheio (4px, PX em public/js/pixel.js) — é ele que dá a
+       escadinha; o contorno é metade disso, senão a moldura pesa mais que o
+       próprio botão nos botões menores (confirmar das modais, overlays). */
+    --espessura-borda-botao: 2px;
+    /* Quanto a moldura escurece o fundo do próprio botão. É um fator de
+       brilho, não uma cor: a moldura tem que ser o tom escuro *daquele*
+       botão, e o vermelho, o cinza e o desabilitado saem todos daqui sem
+       precisar de uma variável por cor. */
+    --escurecimento-borda-botao: 0.5;
+    /* Silhueta do botão: retângulo com os quatro cantos em escadinha de dois
+       degraus de 4px. Usada nas duas camadas da moldura — a de dentro é a
+       mesma escadinha, só nasce recuada pela espessura da borda (ver o
+       `inset` do ::after). */
+    --recorte-botao-pixel: polygon(
+      8px 0, calc(100% - 8px) 0,
+      calc(100% - 8px) 4px, calc(100% - 4px) 4px,
+      calc(100% - 4px) 8px, 100% 8px,
+      100% calc(100% - 8px),
+      calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%,
+      8px 100%,
+      8px calc(100% - 4px), 4px calc(100% - 4px),
+      4px calc(100% - 8px), 0 calc(100% - 8px),
+      0 8px,
+      4px 8px, 4px 4px, 8px 4px
+    );
     /* Foco/seleção: anel sólido de 4px em vez de brilho difuso. */
     --sombra-foco-vermelho: 0 0 0 4px rgba(255, 77, 77, 0.55);
     /* Painel "de pedra" (menu principal e ranking): bisel interno de 4px (luz
@@ -212,11 +240,12 @@
      têm semântica própria de hover (link de texto sublinhado, item de lista
      de classe/ranking, cujo destaque é a borda/fundo da linha inteira).
 
-     Botão é a exceção deliberada ao vocabulário de pixel art do resto da
-     interface (canto reto, sombra dura, estado em degrau): a versão em
-     "bloco de pedra" — bisel de 4px, espessura e sombra sólida em cada um —
-     carregava demais a tela, porque punha peso de arte em cima de todo
-     elemento clicável. Aqui o botão é suporte, não arte. */
+     O *movimento* do hover continua interpolado mesmo nos botões de ação, que
+     têm moldura em pixel art (ver o fim do arquivo): a versão em "bloco de
+     pedra", com o estado inteiro em degrau e sombra sólida em cada elemento
+     clicável, carregava demais a tela. A sombra desfocada daqui não aparece
+     nesses botões — o clip-path da moldura recorta o que é pintado fora da
+     silhueta —, mas segue valendo para os botões de ícone e flutuantes. */
   button:not(:disabled):not(.link-button):not(.class-card):not(.ranking-nome):hover {
     transform: translateY(-2px) scale(1.03);
     filter: brightness(1.08);
@@ -881,21 +910,17 @@
     letter-spacing: 0.05em;
     text-align: center;
   }
+  /* Cores da moldura em pixel art — ver o bloco no fim do arquivo. */
+  #nicknameField .campo-pixel {
+    --cor-fundo-campo: var(--cor-superficie-elevada);
+    --cor-borda-campo: var(--cor-branco);
+  }
+  #nicknameField .campo-pixel:focus-within {
+    --cor-borda-campo: var(--cor-vermelho-destaque);
+  }
   #nicknameInput {
     font-size: 18px;
-    padding: 10px 14px;
-    border-radius: 0;
-    border: 2px solid var(--cor-branco);
-    background: var(--cor-superficie-elevada);
-    color: var(--cor-texto);
-    width: 100%;
-    box-sizing: border-box;
     text-align: center;
-  }
-  #nicknameInput:focus {
-    outline: none;
-    border-color: var(--cor-vermelho-destaque);
-    box-shadow: var(--sombra-foco-vermelho);
   }
   #nicknameError {
     visibility: hidden;
@@ -930,6 +955,11 @@
     margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
+    /* Vão central reservado para o cronômetro. As barras de vida/escudo ocupam
+       a coluna inteira, então sem ele as duas correriam por baixo de
+       #matchTimer, que é absoluto e centralizado. A medida é a do estado mais
+       largo do cronômetro ("DESEMPATE", ~113px) com folga dos dois lados. */
+    gap: 132px;
     width: 100%;
     box-sizing: border-box;
     font-size: 18px;
@@ -952,17 +982,21 @@
     gap: 6px;
     padding-top: 30px;
   }
+  /* Empilhado as colunas viram linhas de largura cheia, então o `flex: 1 1 0`
+     que divide o HUD ao meio no modo lado a lado sairia distribuindo *altura*. */
+  #hud.hud-stacked .hud-row {
+    flex: none;
+    max-width: none;
+  }
   #hud.hud-stacked .hud-row-right {
     align-items: flex-start;
   }
-  /* Empilhado, o ícone da classe fica antes do nome nas duas linhas (a linha do
-     oponente é montada espelhada para o HUD lado a lado). */
+  /* Empilhado, as duas linhas são alinhadas à esquerda, então a do oponente
+     desfaz o espelhamento do HUD lado a lado e volta à ordem do DOM (ícone,
+     nome, classe). */
   #hud.hud-stacked .hud-row-right .hud-name-row {
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-  }
-  #hud.hud-stacked .hud-name-col-right {
-    align-items: flex-start;
+    flex-direction: row;
+    justify-content: flex-start;
   }
   /* Cronômetro centralizado sobre a arena. Posicionado absoluto porque as duas
      colunas do HUD têm larguras diferentes (nome/classe de cada jogador) — no
@@ -1025,31 +1059,39 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
-    /* Teto que dá o que quebrar para a fileira de corações/escudos (ver
-       .hearts): sem um limite de largura ela nunca passaria de uma linha e o
-       excedente do power-up de vida atravessaria a metade do oponente. */
+    /* Metade exata do HUD para cada jogador. Precisa ser uma largura
+       *definida*, e não o tamanho do conteúdo: as barras de vida/escudo e a de
+       cooldown têm largura relativa à coluna, então com a coluna dimensionada
+       pelo conteúdo elas encolheriam até a largura do nome. */
+    flex: 1 1 0;
     max-width: 50%;
     min-width: 0;
   }
   .hud-row-right {
     align-items: flex-end;
   }
+  /* Ícone da classe, nome e classe numa única linha. O DOM das duas linhas do
+     HUD tem a mesma ordem (ícone, nome, classe) e a do oponente é espelhada
+     aqui, para não existirem duas marcações diferentes da mesma informação. */
   .hud-name-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
   }
-  .hud-name-col {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .hud-name-col-right {
-    align-items: flex-end;
+  .hud-row-right .hud-name-row {
+    flex-direction: row-reverse;
   }
   .hud-name {
     font-size: 14px;
     color: var(--cor-texto-suave);
+    /* Numa linha só, um nickname longo empurraria a classe para fora da
+       metade do HUD — então quem encurta é o nome, não a classe. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   #nameP0 {
     color: var(--cor-ouro);
@@ -1060,15 +1102,28 @@
   body.spectating #nameP0 {
     color: var(--cor-texto-suave);
   }
+  /* Na mesma linha do nome, então vem entre parênteses. Eles ficam no CSS e
+     não no texto que `updateClassIcon` (hud.js) escreve, senão o elemento
+     vazio (antes de a partida definir a classe) mostraria um "()" solto. */
   .hud-class-name {
+    flex: none;
     font-size: 11px;
     color: var(--cor-azul-classe);
     opacity: 0.8;
   }
+  .hud-class-name:not(:empty)::before {
+    content: '(';
+  }
+  .hud-class-name:not(:empty)::after {
+    content: ')';
+  }
+  /* Menor do que o quadro de 32px de antes: agora o ícone divide a linha com
+     o nome e a classe, então ele acompanha a altura do texto em vez de ser o
+     elemento mais alto da informação do jogador. */
   .hud-class-icon {
     flex: none;
-    width: 32px;
-    height: 32px;
+    width: 20px;
+    height: 20px;
     border-radius: 0;
     display: flex;
     align-items: center;
@@ -1078,32 +1133,23 @@
     color: var(--cor-azul-classe);
   }
   .hud-class-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  /* Quebra em mais de uma linha porque a fileira cresce: o power-up de vida
-     passa do máximo da classe (tank já começa com 14 corações), e sem o wrap
-     os corações extras invadiam a metade do oponente no HUD. */
-  .hearts {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
+  /* Caixas das duas barras de recurso. Elas são o que diferencia vida de
+     escudo: a barra em si (`.resource-bar`, montada por createResourceBar em
+     hud.js) é a mesma peça nos dois casos, e cor, espessura e tamanho do
+     número saem daqui. O preview de classe da modal de seleção usa as mesmas
+     duas classes, então herda o mesmo visual em miniatura. */
+  .hearts,
   .shields {
     display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
-  /* Na metade direita do HUD tudo é alinhado à direita, inclusive a segunda
-     linha de corações quando ela existe. */
-  .hud-row-right .hearts,
-  .hud-row-right .shields {
-    justify-content: flex-end;
+    width: 100%;
   }
   .cooldown-bar {
     width: 100%;
@@ -1130,44 +1176,145 @@
   .cooldown-fill.ready {
     background: var(--cor-sucesso);
   }
-  .heart {
-    position: relative;
-    width: 21px;
-    height: 18px;
-    color: var(--cor-erro);
+  /* ===== Barras de vida e escudo =====
+     Um segmento por coração/carga: a largura é sempre a da linha do jogador e
+     o que muda é o número de divisões (ver createResourceBar em hud.js). Antes
+     eram fileiras de um ícone por unidade, que cresciam com a classe e com os
+     power-ups até quebrar em outra linha no meio da partida. */
+  .resource-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
   }
-  .heart.lost {
-    color: var(--cor-borda-media);
+  /* No HUD o contador fica do lado *de fora* (embaixo do ícone de classe) e a
+     barra cresce para o meio da arena, como nos placares de luta: os números
+     longe do centro deixam o cronômetro livre, e as duas barras esvaziam se
+     afastando do meio. Por isso a linha direita também inverte os segmentos,
+     senão só o par barra/contador ficaria espelhado, e não o conteúdo. */
+  .hud-row .resource-bar {
+    flex-direction: row-reverse;
   }
-  .heart-pixel {
-    position: absolute;
-    width: 3px;
-    height: 3px;
-    background: currentColor;
+  .hud-row-right .resource-bar {
+    flex-direction: row;
   }
-  .heart.half .heart-pixel-right {
-    color: var(--cor-borda-media);
+  .hud-row-right .resource-segments {
+    flex-direction: row-reverse;
   }
-  .heart.blink {
-    animation: heartBlink 0.4s steps(1, start) 3;
+  .resource-segments {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+    padding: 2px;
+    background: var(--cor-superficie-baixa);
+    border: 1px solid var(--cor-borda);
   }
-  @keyframes heartBlink {
+  .hearts .resource-segments {
+    height: 16px;
+  }
+  /* O escudo é a informação secundária, então a barra dele é mais fina — sem
+     essa diferença as três barras da coluna (vida, escudo, cooldown) viram
+     listras iguais. */
+  .shields .resource-segments {
+    height: 10px;
+  }
+  .segment {
+    flex: 1 1 0;
+    /* Com muita vida os segmentos ficam finos; abaixo de 2px eles somem por
+       arredondamento e a barra parece vazia. */
+    min-width: 2px;
+    background: var(--cor-borda-media);
+  }
+  .hearts .segment.filled {
+    background: var(--cor-erro);
+  }
+  .shields .segment.filled {
+    background: var(--cor-azul-escudo);
+  }
+  /* Meio coração (dano fracionário do duelista): corte seco na metade, sem
+     transição de cor. Não existe meia carga de escudo. */
+  .hearts .segment.half {
+    background: linear-gradient(
+      90deg,
+      var(--cor-erro) 0 50%,
+      var(--cor-borda-media) 50% 100%
+    );
+  }
+  /* Na linha da direita os segmentos estão invertidos (row-reverse), então o
+     corte do meio coração também precisa inverter: a metade cheia é a que fica
+     do lado do contador, para a barra continuar esvaziando na direção do meio
+     da arena. */
+  .hud-row-right .hearts .segment.half {
+    background: linear-gradient(
+      270deg,
+      var(--cor-erro) 0 50%,
+      var(--cor-borda-media) 50% 100%
+    );
+  }
+  /* Excedente de power-up (passou do máximo da classe): dourado, para não ler
+     como vida/carga normal. Vem depois das cores de cada recurso porque
+     sobrescreve as duas. */
+  .segment.bonus.filled {
+    background: var(--cor-ouro);
+  }
+  .hearts .segment.bonus.half {
+    background: linear-gradient(
+      90deg,
+      var(--cor-ouro) 0 50%,
+      var(--cor-borda-media) 50% 100%
+    );
+  }
+  .hud-row-right .hearts .segment.bonus.half {
+    background: linear-gradient(
+      270deg,
+      var(--cor-ouro) 0 50%,
+      var(--cor-borda-media) 50% 100%
+    );
+  }
+  /* Pisca em degraus (era o piscar do coração perdido): a animação marca só os
+     segmentos que apagaram nesse hit. */
+  .segment.blink {
+    animation: segmentBlink 0.4s steps(1, start) 3;
+  }
+  @keyframes segmentBlink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.15; }
   }
-  .shield {
-    position: relative;
-    width: 21px;
-    height: 24px;
+  .resource-count {
+    flex: none;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    /* Número de largura fixa: sem isso a barra muda de tamanho a cada hit,
+       porque o contador encolhe junto com o valor. */
+    font-variant-numeric: tabular-nums;
+  }
+  .hearts .resource-count {
+    font-size: 14px;
+    color: var(--cor-erro);
+  }
+  .shields .resource-count {
+    font-size: 11px;
     color: var(--cor-azul-escudo);
   }
-  .shield.lost {
-    color: var(--cor-borda-media);
+  .resource-max {
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--cor-texto-fraco);
   }
-  .shield-pixel {
+  /* Ícone pixel-art do contador (coração/escudo), montado em DOM por
+     createResourceIcon: um div por pixel, cor herdada do contador. */
+  .resource-icon {
+    position: relative;
+    flex: none;
+    /* O espaço fica só entre o ícone e o número: "14/14" é um valor só, e um
+       gap no contador inteiro abriria um vão antes da barra também. */
+    margin-right: 4px;
+  }
+  .resource-icon-pixel {
     position: absolute;
-    width: 3px;
-    height: 3px;
     background: currentColor;
   }
   canvas {
@@ -1539,20 +1686,22 @@
     width: 100%;
     box-sizing: border-box;
     text-align: left;
-    background: var(--cor-superficie-alta);
-    border: 2px solid var(--cor-borda);
-    border-radius: 8px;
+    /* Cores da moldura em pixel art — ver o bloco no fim do arquivo. */
+    --cor-fundo-campo: var(--cor-superficie-alta);
+    --cor-borda-campo: var(--cor-borda);
     padding: 8px 10px;
     cursor: pointer;
     color: var(--cor-texto);
     font: inherit;
   }
   .class-card:hover {
-    border-color: var(--cor-borda-clara);
+    --cor-borda-campo: var(--cor-borda-clara);
   }
+  /* O cartão selecionado tinha um anel de 1px além da borda vermelha; com a
+     moldura recortada não daria para vê-lo (nada é pintado fora da
+     silhueta), então quem marca a seleção é a cor da borda. */
   .class-card.selected {
-    border-color: var(--cor-vermelho-destaque);
-    box-shadow: 0 0 0 1px var(--cor-vermelho-destaque);
+    --cor-borda-campo: var(--cor-vermelho-destaque);
   }
   /* Cartão bloqueado (classe exige conta): só um cadeado no canto, continua
      clicável — o jogador pode ver as características de qualquer classe. Quem
@@ -1803,13 +1952,30 @@
     display: flex;
     flex-direction: column;
   }
-  .class-preview-hearts {
+  /* `box-sizing` porque a caixa tem padding lateral e a barra dentro dela ocupa
+     100% da largura — sem isso as duas somam e a barra vaza do preview. */
+  .class-preview-hearts,
+  .class-preview-shields {
+    box-sizing: border-box;
+    flex: none;
     padding: 0 10px;
-    flex-wrap: wrap;
   }
   .class-preview-shields {
-    padding: 3px 10px 0;
-    flex-wrap: wrap;
+    padding-top: 3px;
+  }
+  /* Barras em miniatura: a caixa do preview é bem mais estreita que a metade do
+     HUD de partida, então tudo encolhe junto (ver PREVIEW_CONTADOR_PIXEL). */
+  .class-preview-hearts .resource-segments {
+    height: 11px;
+  }
+  .class-preview-shields .resource-segments {
+    height: 7px;
+  }
+  .class-preview-hearts .resource-count {
+    font-size: 11px;
+  }
+  .class-preview-shields .resource-count {
+    font-size: 10px;
   }
   .class-preview-character {
     position: relative;
@@ -2030,22 +2196,20 @@
     justify-content: space-between;
     width: 100%;
     padding: 10px 14px;
-    border-radius: 8px;
-    border: 2px solid var(--cor-branco);
-    background: var(--cor-superficie-elevada);
+    /* Cores da moldura em pixel art — ver o bloco no fim do arquivo. */
+    --cor-fundo-campo: var(--cor-superficie-elevada);
+    --cor-borda-campo: var(--cor-branco);
     color: var(--cor-texto);
     font-size: 14px;
     font-family: inherit;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
   }
   .dropdown-toggle:hover {
-    background: var(--cor-superficie-hover-alta);
+    --cor-fundo-campo: var(--cor-superficie-hover-alta);
   }
   .dropdown-toggle:focus-visible {
     outline: none;
-    border-color: var(--cor-vermelho-destaque);
-    box-shadow: var(--sombra-foco-vermelho);
+    --cor-borda-campo: var(--cor-vermelho-destaque);
   }
   .dropdown-arrow {
     color: var(--cor-texto-fraco);
@@ -2054,9 +2218,8 @@
     transition: transform 0.15s;
   }
   .dropdown.open .dropdown-toggle {
-    border-color: var(--cor-vermelho-destaque);
-    background: var(--cor-superficie-hover-alta);
-    box-shadow: var(--sombra-foco-vermelho);
+    --cor-borda-campo: var(--cor-vermelho-destaque);
+    --cor-fundo-campo: var(--cor-superficie-hover-alta);
   }
   .dropdown.open .dropdown-arrow {
     transform: rotate(180deg);
@@ -2296,39 +2459,25 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
+  /* Cores da moldura em pixel art — ver o bloco no fim do arquivo. */
+  .auth-field .campo-pixel {
+    --cor-fundo-campo: var(--cor-superficie-elevada);
+    --cor-borda-campo: var(--cor-branco);
+  }
+  .auth-field .campo-pixel:focus-within {
+    --cor-borda-campo: var(--cor-vermelho-destaque);
+  }
   .auth-field input {
     font-size: 16px;
-    padding: 10px 14px;
-    border-radius: 0;
-    border: 2px solid var(--cor-branco);
-    background: var(--cor-superficie-elevada);
-    color: var(--cor-texto);
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .auth-field input:focus {
-    outline: none;
-    border-color: var(--cor-vermelho-destaque);
-    box-shadow: var(--sombra-foco-vermelho);
-  }
-  .auth-field input:disabled {
-    opacity: 0.5;
-  }
-  .auth-field input:-webkit-autofill,
-  .auth-field input:-webkit-autofill:hover,
-  .auth-field input:-webkit-autofill:focus {
-    -webkit-text-fill-color: var(--cor-texto);
-    -webkit-box-shadow: 0 0 0 1000px var(--cor-superficie-elevada) inset;
-    box-shadow: 0 0 0 1000px var(--cor-superficie-elevada) inset;
-    caret-color: var(--cor-texto);
-    transition: background-color 9999s ease-in-out 0s;
   }
   .password-field-wrap {
     position: relative;
-    display: flex;
   }
-  .password-field-wrap input {
-    padding-right: 44px;
+  /* Precisa das duas classes: `.campo-pixel input`, no fim do arquivo, tem a
+     mesma especificidade e ganharia por vir depois — o campo de senha ficaria
+     com o texto passando por baixo do olho. */
+  .password-field-wrap.campo-pixel input {
+    padding-right: 40px;
   }
   .password-toggle-btn {
     position: absolute;
@@ -2934,4 +3083,176 @@
   }
   #mobileBlock strong {
     color: var(--cor-branco);
+  }
+
+  /* ===== Botões em pixel art =====
+     Moldura de botão de fliperama: contorno grosso e cantos em escadinha de
+     4px (--recorte-botao-pixel), no mesmo múltiplo do pixel de arte do
+     canvas.
+
+     `clip-path` não sabe recortar buraco, então a moldura é feita em duas
+     camadas em vez de uma borda: as duas usam o fundo do próprio botão
+     (`background: inherit`), e a diferença é que a de baixo (`::before`,
+     silhueta inteira) escurece esse fundo e a de cima (`::after`) o repinta
+     no tom original, recuada pela espessura da borda. Sobra o contorno — um
+     tom mais escuro dele. Assim cada botão continua definindo a própria cor
+     onde já definia (hover e `:disabled` inclusive) e a moldura acompanha,
+     sem precisar de uma cor de borda por botão. Uma `border` normal não
+     serviria: recortada pelo clip-path, ela some justamente na diagonal dos
+     cantos.
+
+     As duas camadas ficam em z-index negativo (acima do fundo do botão,
+     abaixo do texto), e é `isolation: isolate` que faz isso funcionar —
+     sem o contexto de empilhamento próprio elas cairiam atrás do fundo do
+     painel.
+
+     Vale só para os botões de ação. Botão-link, cartão de classe, nome do
+     ranking, dropdown e os botões de ícone (som/música, fechar ✕) ficam como
+     estão: moldura de 4px em cima de um ✕ de 26px vira só ruído.
+
+     Este bloco fica no fim do arquivo de propósito — precisa vir depois das
+     regras que dão `border`/`border-radius` a esses mesmos botões. */
+  #menu button:not(.class-card):not(.link-button):not(.ranking-nome),
+  #gameOverOverlay button,
+  #waitingOverlay button,
+  #btnBotClassConfirm,
+  #btnOnlineClassConfirm,
+  #btnAuthSubmit,
+  #btnResetSubmit {
+    position: relative;
+    isolation: isolate;
+    border: none;
+    border-radius: 0;
+    clip-path: var(--recorte-botao-pixel);
+  }
+  #menu button:not(.class-card):not(.link-button):not(.ranking-nome)::before,
+  #gameOverOverlay button::before,
+  #waitingOverlay button::before,
+  #btnBotClassConfirm::before,
+  #btnOnlineClassConfirm::before,
+  #btnAuthSubmit::before,
+  #btnResetSubmit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: inherit;
+    filter: brightness(var(--escurecimento-borda-botao));
+    clip-path: var(--recorte-botao-pixel);
+  }
+  #menu button:not(.class-card):not(.link-button):not(.ranking-nome)::after,
+  #gameOverOverlay button::after,
+  #waitingOverlay button::after,
+  #btnBotClassConfirm::after,
+  #btnOnlineClassConfirm::after,
+  #btnAuthSubmit::after,
+  #btnResetSubmit::after {
+    content: '';
+    position: absolute;
+    inset: var(--espessura-borda-botao);
+    z-index: -1;
+    background: inherit;
+    clip-path: var(--recorte-botao-pixel);
+  }
+  /* "Menu inicial" era o único botão de ação sem fundo próprio (transparente,
+     com borda de 2px marcando a hierarquia). Com a moldura, fundo
+     transparente deixaria o tom escuro do ::before aparecer no miolo e o
+     botão viraria um bloco escuro — então ele ganha uma superfície, e a
+     diferença para os botões principais passa a ser a cor. */
+  #gameOverOverlay button#btnBackToMenu {
+    background: var(--cor-superficie);
+    border: none;
+  }
+  #gameOverOverlay button#btnBackToMenu:hover {
+    background: var(--cor-superficie-hover);
+  }
+
+  /* ===== Campos, dropdowns e cartões de classe em pixel art =====
+     Mesma silhueta dos botões (--recorte-botao-pixel), mas aqui a borda tem
+     cor própria — branco, cinza ou o vermelho de foco/seleção — em vez de ser
+     um tom do fundo. Cada componente continua decidindo as duas cores nas
+     regras dele, agora por `--cor-borda-campo`/`--cor-fundo-campo`; este bloco
+     só desenha.
+
+     O truque das duas camadas em pseudo-elemento não serve: `<input>` não tem
+     ::before/::after. Então a moldura é feita em `background-image` —
+     a camada de baixo pinta a cor da borda na caixa inteira e as três de cima
+     repintam o miolo, recuado pela espessura. São três porque a escadinha,
+     recortada em retângulos, é exatamente isto: a faixa larga do meio, a
+     faixa alta e o quadrado que liga as duas nos cantos.
+
+     A cor da borda é `background-image` (e não `background-color`) de
+     propósito: o autofill do Chrome sobrescreve `background-color` do campo,
+     e por baixo das camadas de imagem ele fica invisível. É o que permitiu
+     tirar o `box-shadow` gigante que existia só para escondê-lo.
+
+     Efeito colateral aceito: `box-shadow` externo não existe mais nesses
+     componentes — o clip-path recorta tudo o que é pintado fora da silhueta.
+     O anel de foco/seleção virou a própria cor da borda. */
+  .campo-pixel,
+  .dropdown-toggle,
+  .class-card {
+    border: none;
+    border-radius: 0;
+    clip-path: var(--recorte-botao-pixel);
+    background-color: transparent;
+    background-image:
+      linear-gradient(var(--cor-fundo-campo), var(--cor-fundo-campo)),
+      linear-gradient(var(--cor-fundo-campo), var(--cor-fundo-campo)),
+      linear-gradient(var(--cor-fundo-campo), var(--cor-fundo-campo)),
+      linear-gradient(var(--cor-borda-campo), var(--cor-borda-campo));
+    /* Miolo = faixa larga (sem os cantos), faixa alta (sem os cantos) e o
+       quadrado do meio, todos centrados e recuados pela espessura da borda:
+       8px de canto + 2px de borda = 10px de recuo em cada ponta. */
+    background-size:
+      calc(100% - 4px) calc(100% - 20px),
+      calc(100% - 12px) calc(100% - 12px),
+      calc(100% - 20px) calc(100% - 4px),
+      100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  /* Campo de texto: a moldura fica no invólucro, não no `<input>`. Quando o
+     Chrome autopreenche, ele força `background-image: none !important` no
+     campo — regra de folha do navegador, que a cascata do autor não vence —
+     e a moldura inteira sumiria junto, deixando o retângulo claro do
+     autofill no lugar dela.
+
+     O recuo horizontal de 10px é o que mantém o campo dentro da escadinha:
+     8px de canto + 2px de borda. Assim o retângulo do input coincide com a
+     faixa alta do miolo, e o único fundo que o navegador ainda controla —
+     o do próprio campo — não tem como encostar na moldura. O que sobra do
+     autofill é a cor, resolvida logo abaixo com um box-shadow interno, que
+     é recortado pela caixa do input e por isso também não a alcança. */
+  .campo-pixel {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 2px 10px;
+  }
+  .campo-pixel input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 8px 4px;
+    color: var(--cor-texto);
+    font-family: inherit;
+  }
+  /* Autofill do Chrome: o fundo claro é imposto por `!important` e não dá
+     para trocar por `background`. O jeito de cobri-lo é este box-shadow
+     interno, que é pintado por cima do fundo do campo — e o texto, que o
+     navegador também recolore, só cede a `-webkit-text-fill-color`. */
+  .campo-pixel input:-webkit-autofill,
+  .campo-pixel input:-webkit-autofill:hover,
+  .campo-pixel input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--cor-fundo-campo) inset;
+    box-shadow: 0 0 0 1000px var(--cor-fundo-campo) inset;
+    -webkit-text-fill-color: var(--cor-texto);
+    caret-color: var(--cor-texto);
+  }
+  .campo-pixel:has(input:disabled) {
+    opacity: 0.5;
   }

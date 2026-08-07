@@ -329,7 +329,7 @@ export const playPowerupPickupSound = efeito('powerupPickup', 400, () => {
 // É o único som do jogo que vem de **arquivo** (`assets/audio/fireballalert.mp3`):
 // a sirene sintetizada não chegava perto do alerta que este efeito precisa ser.
 // Toca pelo mesmo bus dos efeitos sintetizados, ver `amostra` acima.
-const ERUPCAO_AVISO_GANHO = 0.9;
+const ERUPCAO_AVISO_GANHO = 0.3;
 
 // A janela anti-repetição cobre a sirene inteira (o arquivo tem ~1,4s): as duas
 // erupções da onda nascem no mesmo tick (uma por jogador) e o alarme deve tocar

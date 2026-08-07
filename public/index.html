@@ -93,7 +93,7 @@
       <div id="menuBody">
         <div id="nicknameField" style="display: none;">
           <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
-          <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
+          <span class="campo-pixel"><input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off"></span>
           <div id="nicknameError">Digite um nickname para jogar</div>
         </div>
         <div id="accountBar" class="skeleton-loading">
@@ -253,15 +253,15 @@
       <form id="authForm" novalidate>
         <div class="auth-field" id="authFieldName">
           <label for="authName">Nome do jogador</label>
-          <input type="text" id="authName" maxlength="20" autocomplete="nickname" pattern="[A-Za-z0-9]+" placeholder="Só letras e números, sem espaços">
+          <span class="campo-pixel"><input type="text" id="authName" maxlength="20" autocomplete="nickname" pattern="[A-Za-z0-9]+" placeholder="Só letras e números, sem espaços"></span>
         </div>
         <div class="auth-field" id="authFieldEmail">
           <label for="authEmail">E-mail</label>
-          <input type="email" id="authEmail" autocomplete="email" placeholder="voce@exemplo.com">
+          <span class="campo-pixel"><input type="email" id="authEmail" autocomplete="email" placeholder="voce@exemplo.com"></span>
         </div>
         <div class="auth-field" id="authFieldPassword">
           <label for="authPassword">Senha</label>
-          <div class="password-field-wrap">
+          <div class="password-field-wrap campo-pixel">
             <input type="password" id="authPassword" autocomplete="current-password" placeholder="Mínimo de 8 caracteres">
             <button type="button" class="password-toggle-btn" aria-label="Mostrar senha">👁</button>
           </div>
@@ -357,12 +357,12 @@
       <div id="matchTimer">2:00</div>
       <div id="spectatorBanner"></div>
       <div class="hud-row">
+        <!-- Ícone, nome e classe na mesma linha. A linha do oponente tem a
+             mesma ordem no DOM e é espelhada no CSS (.hud-row-right). -->
         <div class="hud-name-row">
           <div class="hud-class-icon" id="classIconP0"></div>
-          <div class="hud-name-col">
-            <div class="hud-name" id="nameP0">Você</div>
-            <div class="hud-class-name" id="classNameP0"></div>
-          </div>
+          <div class="hud-name" id="nameP0">Você</div>
+          <div class="hud-class-name" id="classNameP0"></div>
         </div>
         <div class="hearts" id="livesP0"></div>
         <div class="shields" id="shieldsP0"></div>
@@ -370,11 +370,9 @@
       </div>
       <div class="hud-row hud-row-right">
         <div class="hud-name-row">
-          <div class="hud-name-col hud-name-col-right">
-            <div class="hud-name" id="nameP1">Oponente</div>
-            <div class="hud-class-name" id="classNameP1"></div>
-          </div>
           <div class="hud-class-icon" id="classIconP1"></div>
+          <div class="hud-name" id="nameP1">Oponente</div>
+          <div class="hud-class-name" id="classNameP1"></div>
         </div>
         <div class="hearts" id="livesP1"></div>
         <div class="shields" id="shieldsP1"></div>
