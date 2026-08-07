@@ -6,16 +6,16 @@ import {
 import { createClassPicker, LOCK_ICON } from './classSelect.js';
 import { createClassPreview } from './classPreview.js';
 import { isLoggedIn } from './auth.js';
-import { DEFAULT_CLASS_ID } from '../../shared/classes.js';
 
+const CLASSE_EXCLUSIVA_CONTA = 'assassino';
 const MENSAGEM_CLASSE_BLOQUEADA = 'Crie uma conta para jogar com essa classe';
 const TEXTO_BOTAO_JOGAR = 'Jogar';
 
-// Convidado (sem conta) só pode jogar online com o atirador — as demais
-// classes ficam com um cadeado no cartão (visual, o cartão continua clicável
-// para ver as características) e bloqueiam o botão "Jogar".
+// Convidado (sem conta) não pode jogar online com o assassino — fica com um
+// cadeado no cartão (visual, o cartão continua clicável para ver as
+// características) e bloqueia o botão "Jogar". As demais classes são livres.
 function classeBloqueada(cls) {
-  return !isLoggedIn() && cls.id !== DEFAULT_CLASS_ID;
+  return !isLoggedIn() && cls.id === CLASSE_EXCLUSIVA_CONTA;
 }
 
 let onConfirm = null;

@@ -11,9 +11,13 @@ import { auth } from './auth.js';
 
 let wss = null;
 
-function classIdFromRequest(req) {
+const CLASSE_EXCLUSIVA_CONTA = 'assassino';
+
+function classIdFromRequest(req, { permitirExclusiva }) {
   const { classId } = parseConnectionParams(req.url);
-  return CLASSES[classId] ? classId : DEFAULT_CLASS_ID;
+  if (!CLASSES[classId]) return DEFAULT_CLASS_ID;
+  if (classId === CLASSE_EXCLUSIVA_CONTA && !permitirExclusiva) return DEFAULT_CLASS_ID;
+  return classId;
 }
 
 function getSessionByToken(token) {
@@ -68,10 +72,10 @@ export function createWsServer(httpServer) {
     if (ws.readyState !== ws.OPEN) return;
 
     ws.userId = userId;
-    // Convidado (sem conta) só pode jogar com o atirador — o cadeado do menu
+    // Convidado (sem conta) não pode jogar com o assassino — o cadeado do menu
     // (public/js/onlineClassSelect.js) é só visual, então o servidor também
-    // precisa recusar qualquer outra classe vinda direto na query string.
-    const classId = userId ? classIdFromRequest(req) : DEFAULT_CLASS_ID;
+    // precisa recusar essa classe vinda direto na query string.
+    const classId = classIdFromRequest(req, { permitirExclusiva: Boolean(userId) });
     handleConnection(ws, nickname, classId);
   });
 
