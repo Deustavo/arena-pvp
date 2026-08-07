@@ -306,6 +306,16 @@ largura — como fileira de um ícone por unidade o HUD crescia até quebrar em
 outra linha no meio da partida (o tank abre com 14 vidas e 5 cargas, e os dois
 power-ups passam do máximo da classe).
 
+- O HUD é feito do **mesmo material dos painéis da tela inicial**
+  (`#menuBody`/`#rankingPanel`/`#spectatorPanel`): fundo `--cor-painel-pedra-veu`,
+  borda `--cor-pedra-borda` e `--sombra-pedra` (bisel de 4px + sombra dura
+  deslocada). As peças pequenas de dentro (cronômetro, aviso de espectador,
+  ícone de classe) usam `--sombra-pedra-pequena`, a mesma pedra com bisel de
+  2px — o de 4px pesaria mais que o próprio elemento. Os trilhos das barras
+  (vida, escudo, cooldown) usam `--sombra-pedra-afundada`, o bisel **invertido**:
+  eles são buraco cavado na pedra, não bloco em relevo. Sombra `inset` é
+  pintada abaixo dos filhos, então o que deixa esse bisel aparecer é o padding
+  de 2px do trilho — sem ele os segmentos/preenchimento cobririam a borda toda.
 - As duas barras são a mesma peça (`createResourceBar`/`updateResourceBar`,
   parametrizadas por `'vida'`/`'escudo'`). Quem diferencia os recursos é a
   **caixa** que os contém — `.hearts` e `.shields` no CSS: cor, espessura da
@@ -476,12 +486,27 @@ fundo que o navegador ainda controla não tem como encostar na moldura. A cor
 do autofill continua sendo coberta pelo `box-shadow` interno de sempre (que é
 recortado pela caixa do input) e o texto por `-webkit-text-fill-color`.
 
+**As modais** (`.modal`, regra única no fim do `style.css`) têm a mesma
+escadinha, com a borda vermelha de sempre acompanhando o recorte. Aqui a
+moldura **não pode** usar `clip-path`: além de recortar, ele torna a modal o
+bloco contentor dos descendentes `position: fixed`, e os dropdowns da modal de
+treino são posicionados em coordenada de viewport (`dropdownPosition.js`) —
+abririam no lugar errado e ainda seriam cortados na borda. Pseudo-elemento
+também não serve: a modal rola por dentro (`overflow-y: auto`) e uma camada
+`inset: 0` cresceria junto com o conteúdo. Sobra o mesmo truque de
+`background-image` dos campos, só que com a escadinha nas duas cores: três
+camadas desenham a silhueta na cor da borda e três repintam o miolo, recuadas
+pela espessura. Nenhuma modal define `background`/`border`/`box-shadow`
+própria — só largura, padding e layout.
+
 Ficaram de fora só os elementos pequenos demais para a moldura não virar
 ruído: botão-link, nome do ranking, item de dropdown e os botões de ícone
 (som/música, fechar ✕).
 
-Em nenhum desses componentes existe mais `box-shadow` **externo** — o
-clip-path recorta o que é pintado fora da silhueta. Anel de foco, anel de
+Em nenhum desses componentes existe mais `box-shadow` **externo** — nos que
+usam clip-path ele recorta o que é pintado fora da silhueta, e nas modais uma
+sombra retangular apareceria como um dente sólido justamente nos cantos
+cortados (por isso `--sombra-modal` não existe mais). Anel de foco, anel de
 seleção do cartão de classe e o brilho vermelho do dropdown aberto viraram a
 própria cor da borda; não tente devolvê-los como sombra.
 

@@ -98,7 +98,7 @@
     --cor-superficie-elevada: #3a3a3a;
     --cor-superficie-hover: #3f3f3f;
     --cor-superficie-hover-alta: #4a4a4a;
-    --cor-modal-fundo: #262322;
+    --cor-modal-fundo: #100f0e;
     --cor-painel-fundo: rgba(38, 35, 34, 0.78);
     /* Painéis "de pedra" (menu principal e ranking): cinza bem escuro e opaco,
        sem textura, pra lerem como um bloco de pedra sólido. */
@@ -157,11 +157,12 @@
        canto arredondado nem sombra borrada: sombra aqui é um bloco sólido
        deslocado, no mesmo múltiplo de 4px do "pixel de arte" do canvas.
 
-       O botão de ação também é pixel art (moldura em escadinha, no fim do
-       arquivo), mas mantém o hover interpolado de sempre — quem continua
-       usando sombra desfocada são os painéis flutuantes e os botões de
-       ícone, por isso --sombra-flutuante segue existindo. */
-    --sombra-modal: 8px 8px 0 rgba(0, 0, 0, 0.45);
+       Botões, campos e modais também são pixel art (moldura em escadinha, no
+       fim do arquivo) e por isso não têm mais sombra externa nenhuma — a
+       silhueta recortada deixaria a sombra aparecendo como um dente sólido
+       nos cantos. Quem continua usando sombra desfocada são os painéis
+       flutuantes e os botões de ícone, por isso --sombra-flutuante segue
+       existindo. */
     --sombra-flutuante: 0 8px 20px rgba(0, 0, 0, 0.35);
     /* Espessura da moldura dos botões. O degrau do canto continua sendo o
        "pixel de arte" cheio (4px, PX em public/js/pixel.js) — é ele que dá a
@@ -197,6 +198,16 @@
     --sombra-pedra: 8px 8px 0 rgba(0, 0, 0, 0.4),
       inset 4px 4px 0 rgba(255, 255, 255, 0.05),
       inset -4px -4px 0 rgba(0, 0, 0, 0.55);
+    /* Mesma pedra em peça pequena (cronômetro, ícone de classe): bisel de 2px e
+       sombra dura de 4px — o de 4px/8px pesaria mais que o próprio elemento. */
+    --sombra-pedra-pequena: 4px 4px 0 rgba(0, 0, 0, 0.4),
+      inset 2px 2px 0 rgba(255, 255, 255, 0.05),
+      inset -2px -2px 0 rgba(0, 0, 0, 0.55);
+    /* Bisel invertido (sombra em cima/à esquerda): o que usa isso é buraco
+       cavado na pedra, não bloco em relevo — trilho das barras de vida,
+       escudo e cooldown. */
+    --sombra-pedra-afundada: inset 2px 2px 0 rgba(0, 0, 0, 0.6),
+      inset -2px -2px 0 rgba(255, 255, 255, 0.04);
   }
   /* O flex centralizado é só do body. O html fica um bloco comum de altura
      100% — é o overflow dele que a viewport usa para rolar, então ele não pode
@@ -963,10 +974,15 @@
     width: 100%;
     box-sizing: border-box;
     font-size: 18px;
-    padding: 6px 10px;
+    /* Folga maior que a antiga (6px 10px) porque o bisel da pedra come 4px de
+       cada lado — com o padding antigo o conteúdo sentava em cima dele. */
+    padding: 10px 14px;
     border-radius: 0;
-    background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
+    /* Mesma pedra dos painéis da tela inicial (#menuBody, #rankingPanel,
+       #spectatorPanel): a barra de status da partida lê como o mesmo material
+       do menu, não como uma caixa cinza qualquer. */
+    background: var(--cor-painel-pedra-veu);
+    border: 1px solid var(--cor-pedra-borda);
     /* #game-wrap (pai) alterna display none/flex a cada partida (menu.js,
        showGame), então essa animação replaya sozinha em toda partida nova. */
     animation: entrada-fade 0.4s ease;
@@ -1006,10 +1022,11 @@
     top: 6px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 2px 12px;
+    padding: 4px 14px;
     border-radius: 0;
-    background: var(--cor-superficie-icone);
-    border: 1px solid var(--cor-borda);
+    background: var(--cor-painel-pedra-veu);
+    border: 1px solid var(--cor-pedra-borda);
+    box-shadow: var(--sombra-pedra-pequena);
     color: var(--cor-texto);
     font-size: 22px;
     font-variant-numeric: tabular-nums;
@@ -1041,8 +1058,9 @@
     transform: translateX(-50%);
     padding: 2px 12px;
     border-radius: 0;
-    background: var(--cor-superficie-icone);
+    background: var(--cor-painel-pedra-veu);
     border: 1px solid var(--cor-ouro-suave);
+    box-shadow: var(--sombra-pedra-pequena);
     color: var(--cor-ouro-suave);
     font-size: 13px;
     white-space: nowrap;
@@ -1128,8 +1146,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--cor-superficie-icone);
-    border: 1px solid var(--cor-borda);
+    background: var(--cor-painel-pedra-veu);
+    border: 1px solid var(--cor-pedra-borda);
+    box-shadow: var(--sombra-pedra-pequena);
     color: var(--cor-azul-classe);
   }
   .hud-class-icon svg {
@@ -1151,12 +1170,18 @@
     display: flex;
     width: 100%;
   }
+  /* Trilho cavado na pedra: o padding é o que deixa o bisel aparecer em volta
+     do preenchimento (sombra `inset` é pintada abaixo dos filhos, então sem a
+     folga a .cooldown-fill cobriria o bisel inteiro). */
   .cooldown-bar {
     width: 100%;
-    height: 6px;
+    height: 10px;
+    box-sizing: border-box;
+    padding: 2px;
     border-radius: 0;
-    background: var(--cor-superficie-icone);
-    border: 1px solid var(--cor-borda);
+    background: var(--cor-superficie-baixa);
+    border: 1px solid var(--cor-pedra-borda);
+    box-shadow: var(--sombra-pedra-afundada);
     overflow: hidden;
   }
   /* A barra enche em blocos, não num preenchimento liso: o gradiente repetido
@@ -1214,7 +1239,10 @@
     min-width: 0;
     padding: 2px;
     background: var(--cor-superficie-baixa);
-    border: 1px solid var(--cor-borda);
+    border: 1px solid var(--cor-pedra-borda);
+    /* Mesmo trilho cavado da barra de cooldown; o padding de 2px é o que deixa
+       o bisel visível em volta dos segmentos. */
+    box-shadow: var(--sombra-pedra-afundada);
   }
   .hearts .resource-segments {
     height: 16px;
@@ -2098,6 +2126,33 @@
   #menuVersion {
     color: var(--cor-vermelho-destaque);
   }
+  /* Bolinha de "tem novidade que você não viu". Fica dentro do botão, não
+     grudada num canto de fora: o botão é recortado por clip-path e um badge
+     fora da silhueta seria cortado. Como "bolinha" aqui é pixel art, o
+     círculo é um quadrado de 10px com os cantos em degrau de 2px — mesma
+     ideia da moldura dos botões, na escala do ponto. Sem `border-radius`, e
+     o pisca-pisca alterna entre duas cores em dois passos — escalar o ponto
+     reamostraria os degraus dos cantos em meio pixel e borraria a bolinha. */
+  #changelogDot {
+    display: none;
+    width: 10px;
+    height: 10px;
+    margin-left: 2px;
+    background: var(--cor-ouro);
+    clip-path: polygon(
+      2px 0, 8px 0, 8px 2px, 10px 2px,
+      10px 8px, 8px 8px, 8px 10px, 2px 10px,
+      2px 8px, 0 8px, 0 2px, 2px 2px);
+    animation: changelog-dot-pulso 1s steps(1, end) infinite;
+  }
+  #btnChangelog.tem-novidade #changelogDot {
+    display: inline-block;
+    vertical-align: 1px;
+  }
+  @keyframes changelog-dot-pulso {
+    0%, 50% { background: var(--cor-ouro); }
+    50.01%, 100% { background: var(--cor-ouro-suave); }
+  }
   /* ----- Regra comum a todas as modais -----
      Cada modal define a própria largura, mas a altura é sempre limitada à
      viewport: numa tela baixa uma modal mais alta que a tela era cortada em
@@ -2123,12 +2178,8 @@
      sem scroll próprio — o conteúdo é curto e os dropdowns são `position: fixed`
      (ver dropdownPosition.js), então nada aqui precisa rolar. */
   #botClassOverlay .modal {
-    background: var(--cor-modal-fundo);
     max-height: none;
     overflow: visible;
-    border: 2px solid var(--cor-vermelho);
-    border-radius: 0;
-    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 420px;
     display: flex;
@@ -2307,10 +2358,6 @@
     animation: overlay-fade 0.15s ease;
   }
   #onlineClassOverlay .modal {
-    background: var(--cor-modal-fundo);
-    border: 2px solid var(--cor-vermelho);
-    border-radius: 0;
-    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 540px;
     max-width: calc(100vw - 32px);
@@ -2422,10 +2469,6 @@
     animation: overlay-fade 0.15s ease;
   }
   #authOverlay .modal {
-    background: var(--cor-modal-fundo);
-    border: 2px solid var(--cor-vermelho);
-    border-radius: 0;
-    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 360px;
     max-width: calc(100vw - 32px);
@@ -2582,10 +2625,6 @@
     animation: overlay-fade 0.15s ease;
   }
   #profileOverlay .modal {
-    background: var(--cor-modal-fundo);
-    border: 2px solid var(--cor-vermelho);
-    border-radius: 0;
-    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 460px;
     max-width: calc(100vw - 32px);
@@ -2763,10 +2802,6 @@
     animation: overlay-fade 0.15s ease;
   }
   #creditsOverlay .modal {
-    background: var(--cor-modal-fundo);
-    border: 2px solid var(--cor-vermelho);
-    border-radius: 0;
-    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 420px;
     max-width: calc(100vw - 32px);
@@ -2889,10 +2924,6 @@
     animation: overlay-fade 0.15s ease;
   }
   #changelogOverlay .modal {
-    background: var(--cor-modal-fundo);
-    border: 2px solid var(--cor-vermelho);
-    border-radius: 0;
-    box-shadow: var(--sombra-modal);
     padding: 20px 24px;
     width: 740px;
     max-width: calc(100vw - 32px);
@@ -3272,4 +3303,51 @@
   }
   .campo-pixel:has(input:disabled) {
     opacity: 0.5;
+  }
+
+  /* ===== Modais em pixel art =====
+     Mesma silhueta dos botões e dos campos: cantos em escadinha de dois
+     degraus de 4px, com a borda vermelha de sempre acompanhando o recorte.
+
+     Aqui a moldura NÃO pode ser `clip-path`: além de recortar, ele torna a
+     modal o bloco contentor dos descendentes `position: fixed` — e os
+     dropdowns da modal de treino são posicionados em coordenada de viewport
+     (dropdownPosition.js), então abririam no lugar errado e ainda seriam
+     cortados na borda da modal. Também não serve pseudo-elemento: a modal
+     rola por dentro (`overflow-y: auto`), e uma camada `inset: 0` cresceria
+     junto com o conteúdo rolado.
+
+     Sobra o mesmo truque de `background-image` dos campos, só que com a
+     escadinha dos dois lados: três camadas desenham a silhueta na cor da
+     borda e três repintam o miolo, recuadas pela espessura. São três porque
+     a escadinha, recortada em retângulos, é isto — a faixa larga, a faixa
+     alta e o quadrado que liga as duas nos cantos.
+
+     Sem clip-path o `box-shadow` externo até funcionaria, mas ele é
+     retangular e apareceria como um dente sólido justamente nos cantos que
+     acabaram de ser cortados — então as modais perdem a sombra deslocada,
+     como já aconteceu com botões, campos e cartões de classe. */
+  .modal {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
+    background-image:
+      /* miolo: recuado por 8px de canto + 2px de borda */
+      linear-gradient(var(--cor-modal-fundo), var(--cor-modal-fundo)),
+      linear-gradient(var(--cor-modal-fundo), var(--cor-modal-fundo)),
+      linear-gradient(var(--cor-modal-fundo), var(--cor-modal-fundo)),
+      /* silhueta na cor da borda: mesma escadinha, sem recuo */
+      linear-gradient(var(--cor-vermelho), var(--cor-vermelho)),
+      linear-gradient(var(--cor-vermelho), var(--cor-vermelho)),
+      linear-gradient(var(--cor-vermelho), var(--cor-vermelho));
+    background-size:
+      calc(100% - 4px) calc(100% - 20px),
+      calc(100% - 12px) calc(100% - 12px),
+      calc(100% - 20px) calc(100% - 4px),
+      100% calc(100% - 16px),
+      calc(100% - 8px) calc(100% - 8px),
+      calc(100% - 16px) 100%;
+    background-position: center;
+    background-repeat: no-repeat;
   }

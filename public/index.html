@@ -115,7 +115,9 @@
         <button id="btnBot">Modo treino</button>
         <button id="btnHowToPlay">Tutorial</button>
         <hr id="menuDivider">
-        <button type="button" id="btnChangelog">Novidades <span id="menuVersion">beta 0.3</span></button>
+        <!-- #changelogDot é a bolinha de "não vi ainda"; quem mostra/esconde é
+             public/js/changelog.js, pela versão em #menuVersion. -->
+        <button type="button" id="btnChangelog">Novidades <span id="menuVersion">beta 0.3</span><span id="changelogDot" aria-hidden="true"></span></button>
         <button type="button" id="btnCredits">Créditos</button>
       </div>
       <div id="rankingPanel">
@@ -218,11 +220,11 @@
           <p>Quatro bolhas nascem no círculo central ao longo da partida e valem para quem chegar primeiro. São quatro tipos: vida (de 1 a 3 corações), escudo (1 carga), cadência (cooldown de tiro pela metade por 10 segundos, com recarga na hora) e velocidade (40% mais rápido por 10 segundos).</p>
           <p>Vida e escudo passam do máximo da classe. Se você já está com tudo cheio, o teto sobe, então dá para terminar a partida com mais coração do que a classe começa. Quem está sob efeito de cadência ou velocidade fica com um brilho na cor do buff, e dá para ver isso no adversário também.</p>
           <p>O tutorial ganhou um passo novo: pegar uma bolha. Uma bolha de velocidade nasce no centro e o boneco de treino continua parado até você pegar.</p>
-          <img class="changelog-topico-imagem" src="assets/changelog/powerups_01.png" alt="Bolha de power-up na arena" loading="lazy">
+          <img class="changelog-topico-imagem" src="assets/changelog/0.2/powerups_01.png" alt="Bolha de power-up na arena" loading="lazy">
 
           <h4>Modo espectador</h4>
           <p>Dá para assistir a qualquer partida online em andamento pelo painel "Partidas ao vivo", na tela inicial, sem entrar na fila e sem conta. A partida assistida tem borda amarela em vez de vermelha e uma faixa "Assistindo" abaixo do cronômetro, para não confundir com uma partida sua. Sai com Esc a qualquer momento.</p>
-          <img class="changelog-topico-imagem" src="assets/changelog/livematch_01.png" alt="Painel de partidas ao vivo com botão para assistir" loading="lazy">
+          <img class="changelog-topico-imagem" src="assets/changelog/0.2/livematch_01.png" alt="Painel de partidas ao vivo com botão para assistir" loading="lazy">
 
           <h4>Celular</h4>
           <p>Celular e tablet agora recebem um aviso para jogar no computador em vez de uma tela quebrada. O jogo é WASD e mouse, não tem controle de toque. Notebook com tela sensível ao toque continua liberado.</p>
@@ -250,12 +252,12 @@
           <h4>Partida online 1x1</h4>
           <p>Fila de matchmaking, partida de 1 minuto e desempate por morte súbita: acabando o tempo com os dois vivos, a arena congela e os dois começam a perder um coração por vez até sobrar um. Zerando no mesmo passo, é empate.</p>
           <p>O jogador sempre se vê do lado esquerdo da tela, independente de onde nasceu na arena.</p>
-          <img class="changelog-topico-imagem" src="assets/changelog/arena_01.png" alt="Duelo entre dois jogadores na arena" loading="lazy">
+          <img class="changelog-topico-imagem" src="assets/changelog/0.1/arena_01.png" alt="Duelo entre dois jogadores na arena" loading="lazy">
 
           <h4>Modo treino e tutorial</h4>
           <p>Partida offline contra bot, com escolha da sua classe, da classe do bot e da dificuldade, do noob ao demoníaco. O bot mira, reage, desvia e ergue escudo de acordo com a dificuldade, e joga de forma diferente conforme a classe dele.</p>
           <p>O tutorial deixou de ser uma tela explicativa e virou uma partida de verdade contra um boneco de treino, com uma faixa no topo pedindo a próxima ação. O relógio não corre enquanto ele está rolando.</p>
-          <img class="changelog-topico-imagem" src="assets/changelog/tutorial_01.png" alt="Faixa do tutorial indicando a próxima ação na partida" loading="lazy">
+          <img class="changelog-topico-imagem" src="assets/changelog/0.1/tutorial_01.png" alt="Faixa do tutorial indicando a próxima ação na partida" loading="lazy">
 
           <h4>Contas, ranking e perfil</h4>
           <p>Conta com e-mail e senha, verificação de e-mail e recuperação de senha. Quem não quiser criar conta continua entrando como convidado, só com um nickname.</p>
