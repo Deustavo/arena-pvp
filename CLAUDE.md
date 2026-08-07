@@ -299,12 +299,24 @@ conecta event listeners de UI aos módulos.
 
 #### Efeitos sonoros (`public/js/audio.js`)
 
-Todo o som do jogo é **sintetizado na hora** com a Web Audio API — não existe
-nenhum arquivo de áudio no projeto, e não deve passar a existir sem uma boa
-razão. `audio.js` é só a camada de síntese: helpers privados (`nota`, `ruido`,
+Os efeitos do jogo são **sintetizados na hora** com a Web Audio API — o padrão
+é não haver arquivo de áudio, e cada exceção precisa de uma boa razão.
+`audio.js` é a camada de síntese: helpers privados (`nota`, `ruido`,
 `sequencia`, `envelope`) e uma função exportada por efeito (`playHitSound`,
 `playExplosionSound`, …). Quem decide *quando* tocar é o módulo que já conhece o
 evento.
+
+Hoje há **uma** exceção: a sirene de aviso da erupção
+(`playEruptionWarningSound`, `assets/audio/fireballalert.mp3`) — a versão
+sintetizada não chegava perto do alerta que o efeito precisa ser. Ela toca pelo
+helper `amostra`, que decodifica o arquivo num `AudioBuffer` e o manda pelo
+**mesmo `master`** dos efeitos sintetizados; não use `<audio>` para efeito,
+senão o volume, o mudo e a liberação de áudio pelo gesto do usuário deixam de
+valer para ele. O arquivo é baixado no load da página e decodificado quando o
+`AudioContext` nasce (não no primeiro toque, que seria tarde: decodificar é
+assíncrono e a primeira ocorrência sairia muda). Música é outra coisa —
+`music.js` são faixas mp3 num `<audio>` com bus e controle próprios, fora do
+`master` dos efeitos.
 
 - **Um único `AudioContext`** para todo o jogo, criado no primeiro efeito e
   nunca fechado. Um contexto por som (como era antes) estoura o limite do
@@ -590,8 +602,8 @@ espectador).
 - As duas pistas sonoras da erupção saem do **diff do snapshot** em
   `arenaVisuals.js` (`diffErupcoes`) — mesmo padrão de diff entre frames que o
   HUD usa para tiro/dano/bloqueio e que `powerups.js` usa para spawn/coleta:
-  id novo em `fase: 'aviso'` toca o alarme (`playEruptionWarningSound`, dois
-  bipes agudos avisando que a lava vai cair ali), e a transição `aviso` →
+  id novo em `fase: 'aviso'` toca a sirene (`playEruptionWarningSound`, o
+  único efeito que vem de arquivo), e a transição `aviso` →
   `explosao` toca o estrondo (`playEruptionSound`) e joga as partículas
   laranja de `spawnExplosion` no ponto da erupção, dimensionadas pelo `raio`
   dela. `ERUPCAO_AVISO_MS` precisa caber reação humana **mais** a caminhada

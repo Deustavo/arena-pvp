@@ -47,6 +47,7 @@ function ctx() {
     master = audioCtx.createGain();
     master.gain.value = mutadoEfeitos ? 0 : VOLUME_MASTER * (volumeEfeitos / 100);
     master.connect(audioCtx.destination);
+    decodificarAmostras();
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx.state === 'running' ? audioCtx : null;
@@ -159,6 +160,68 @@ function sequencia(notas, base = {}) {
   }
 }
 
+// --- Amostras (arquivos de áudio) ------------------------------------------
+//
+// Quase tudo aqui é sintetizado (ver o topo do arquivo); amostra é a exceção,
+// para o som que a síntese não entrega bem. Toca pelo mesmo `master` dos
+// efeitos sintetizados — não por um `<audio>` — para pegar de graça o volume,
+// o mudo e o gesto-do-usuário que já valem para todo o resto.
+const AMOSTRA_SRC = {
+  fireballAlert: 'assets/audio/fireballalert.mp3',
+};
+
+// id -> Promise<ArrayBuffer> do arquivo cru, e id -> AudioBuffer decodificado.
+// São dois passos porque baixar não depende de AudioContext (dá para começar
+// no load da página) mas decodificar depende.
+const amostrasBrutas = new Map();
+const amostras = new Map();
+const amostrasDecodificando = new Set();
+
+// Baixa no load da página, como characterSprites.js/arenaVisuals.js fazem com
+// as imagens: sem isso a primeira erupção da partida tocaria em silêncio
+// enquanto o arquivo ainda estivesse na rede.
+if (typeof fetch === 'function') {
+  for (const [id, src] of Object.entries(AMOSTRA_SRC)) {
+    amostrasBrutas.set(id, fetch(src).then((r) => r.arrayBuffer()).catch(() => null));
+  }
+}
+
+// Chamado quando o contexto nasce (dentro de ctx()), não no primeiro toque:
+// decodificar é assíncrono, então esperar o evento acontecer deixaria a
+// primeira ocorrência sem som.
+function decodificarAmostras() {
+  for (const id of amostrasBrutas.keys()) {
+    if (amostras.has(id) || amostrasDecodificando.has(id)) continue;
+    amostrasDecodificando.add(id);
+    amostrasBrutas.get(id)
+      // slice(0) porque decodeAudioData consome (detach) o ArrayBuffer: sem a
+      // cópia, uma segunda tentativa receberia um buffer vazio.
+      .then((dados) => (dados ? audioCtx.decodeAudioData(dados.slice(0)) : null))
+      .then((buffer) => { if (buffer) amostras.set(id, buffer); })
+      .catch(() => { /* arquivo ausente ou formato não suportado: fica sem som */ })
+      .finally(() => amostrasDecodificando.delete(id));
+  }
+}
+
+function amostra(id, ganho = 1) {
+  const c = ctx();
+  if (!c) return;
+  const buffer = amostras.get(id);
+  if (!buffer) {
+    // Ainda não decodificou (contexto acabou de nascer): descarta, mesma
+    // política do contexto suspenso — som atrasado é pior que som nenhum.
+    decodificarAmostras();
+    return;
+  }
+  const src = c.createBufferSource();
+  src.buffer = buffer;
+  const g = c.createGain();
+  g.gain.value = ganho;
+  src.connect(g);
+  g.connect(master);
+  src.start();
+}
+
 // Dois eventos de jogo podem cair no mesmo tick (os dois jogadores perdendo um
 // coração no desempate, os 3 projéteis do mago batendo no escudo). Tocar o
 // mesmo efeito sobreposto satura o áudio, então cada efeito ignora repetições
@@ -259,30 +322,21 @@ export const playPowerupPickupSound = efeito('powerupPickup', 400, () => {
 // --- Arena -------------------------------------------------------------
 
 // Erupção de lava vai cair aqui (arena de fogo): toca no instante em que o
-// círculo de aviso aparece, ERUPCAO_AVISO_MS antes da explosão. É um alarme de
-// dois bipes agudos — deliberadamente diferente de tudo o mais do combate,
-// porque é a única pista sonora de que dá para sair andando antes de levar
-// dano. A janela anti-repetição cobre a sirene inteira: as duas erupções da
-// onda nascem no mesmo tick (uma por jogador) e o alarme deve tocar uma vez só.
+// círculo de aviso aparece, ERUPCAO_AVISO_MS antes da explosão. É a única pista
+// sonora de que dá para sair andando antes de levar dano, então precisa soar
+// como sirene de alerta — não como um bipe de menu nem como combate.
 //
-// É uma **sirene de alerta**: dois toques, cada um subindo e descendo de tom
-// (o "uh-oh" de sirene, que `nota` não faz sozinha — um sweep por nota, então
-// cada toque são duas notas encostadas). Sawtooth com bandpass para o timbre
-// estridente de alarme, não de música.
-const SIRENE_TOQUE_MS = 0.19; // duração de cada metade (subida ou descida)
-const SIRENE_GRAVE = 520;
-const SIRENE_AGUDO = 990;
+// É o único som do jogo que vem de **arquivo** (`assets/audio/fireballalert.mp3`):
+// a sirene sintetizada não chegava perto do alerta que este efeito precisa ser.
+// Toca pelo mesmo bus dos efeitos sintetizados, ver `amostra` acima.
+const ERUPCAO_AVISO_GANHO = 0.9;
 
-export const playEruptionWarningSound = efeito('eruptionWarning', 1000, () => {
-  const base = {
-    type: 'sawtooth', dur: SIRENE_TOQUE_MS, gain: 0.16, attack: 0.03,
-    filter: 'bandpass', filterFreq: 1100, Q: 1.2,
-  };
-  for (let toque = 0; toque < 2; toque++) {
-    const at = toque * SIRENE_TOQUE_MS * 2.4; // 2 metades + um respiro entre os toques
-    nota({ ...base, at, freq: SIRENE_GRAVE, to: SIRENE_AGUDO });
-    nota({ ...base, at: at + SIRENE_TOQUE_MS, freq: SIRENE_AGUDO, to: SIRENE_GRAVE });
-  }
+// A janela anti-repetição cobre a sirene inteira (o arquivo tem ~1,4s): as duas
+// erupções da onda nascem no mesmo tick (uma por jogador) e o alarme deve tocar
+// uma vez só. Não engole alarme legítimo porque as ondas ficam ~9-10s uma da
+// outra (ver ERUPCAO_JANELAS_MS em shared/arenaEvents.js).
+export const playEruptionWarningSound = efeito('eruptionWarning', 1400, () => {
+  amostra('fireballAlert', ERUPCAO_AVISO_GANHO);
 });
 
 // Erupção de lava explodindo (arena de fogo, ver shared/arenaEvents.js). Mais
