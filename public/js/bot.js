@@ -19,6 +19,7 @@ import {
   criarPowerups, criarPowerupTutorial, tickPowerups, buffsRestantes, velocidadeAtual,
   cooldownDeTiro,
 } from '../../shared/powerups.js';
+import { sortearArena, criarErupcoes, tickErupcoes } from '../../shared/arenaEvents.js';
 import { updateGameScale } from './gameScale.js';
 import {
   shouldStartMatchTutorial, startMatchTutorial, isMatchTutorialActive,
@@ -81,7 +82,13 @@ export function startBot() {
     powerups: criarPowerups(),
   };
 
-  state.latestState = { players: snapshotPlayers(state.bot.players), projectiles: [], powerups: [] };
+  // Arena escolhida no modal do modo treino (`state.botArenaTipo`), ou
+  // sorteada localmente quando a escolha é "aleatória" (`null`) — o modo
+  // treino não tem servidor para decidir por ele, ver shared/arenaEvents.js.
+  state.arenaTipo = state.botArenaTipo || sortearArena();
+  state.bot.erupcoes = criarErupcoes();
+
+  state.latestState = { players: snapshotPlayers(state.bot.players), projectiles: [], powerups: [], erupcoes: [] };
   state.viewFlipped = computeInitialViewFlip(state.bot.players, state.playerIndex);
   state.shieldMaxHits = state.bot.players.map((p) => p.shieldMaxHits);
   initHearts(state.bot.players.map((p) => p.lives));
@@ -225,8 +232,10 @@ function resultadoDoVencedor(winnerIndex) {
 function congelarPartida(bot) {
   bot.projectiles = [];
   // Mesma regra do servidor: no desempate ninguém anda, uma bolha na arena
-  // ficaria lá impossível de pegar.
+  // ficaria lá impossível de pegar (e uma erupção em aviso não terminaria de
+  // explodir).
   bot.powerups.ativos = [];
+  bot.erupcoes.ativas = [];
   for (const p of bot.players) {
     p.input = { up: false, down: false, left: false, right: false };
     p.shielding = false;
@@ -238,6 +247,7 @@ function publicarEstadoBot(bot) {
     players: snapshotPlayers(bot.players),
     projectiles: bot.projectiles.map((p) => ({ x: p.x, y: p.y, ownerIndex: p.ownerIndex, size: p.size })),
     powerups: bot.powerups.ativos,
+    erupcoes: bot.erupcoes.ativas,
   };
   updateHud();
 }
@@ -284,17 +294,32 @@ function botTick() {
   }
 
   const restanteMs = tempoRestanteMs(bot.cronometro, agora);
-  stepPlayers(bot.players, ARENA, agora);
+  stepPlayers(bot.players, ARENA, agora, state.arenaTipo);
   // Depois de mover: quem entrou na bolha neste tick já leva o power-up.
   const eventosPowerup = tickPowerups(bot.powerups, bot.players, restanteMs, agora);
   // Coleta é a única ação do tutorial que não sai do input: quem detecta é o
   // dono do loop, olhando o evento da simulação.
   if (eventosPowerup.coletados.some((c) => c.playerIndex === 0)) notifyMatchTutorial('powerup');
-  bot.projectiles = stepProjectiles(bot.projectiles, bot.players, ARENA, (winnerIndex) => {
-    if (bonecoInvulneravel && winnerIndex === 0) return;
-    recordGameOver(resultadoDoVencedor(winnerIndex));
+
+  // Erupções (arena de fogo) podem matar um ou os dois jogadores no mesmo
+  // tick — sem projétil e sem callback, então o fim de partida é checado
+  // aqui, olhando quem ainda está vivo depois do dano. Mesma regra do boneco
+  // de treino: enquanto ele é invulnerável, uma "morte" dele não conta (as
+  // vidas são restauradas mais abaixo).
+  tickErupcoes(state.arenaTipo, bot.erupcoes, bot.players, restanteMs, agora);
+  const [p0, p1] = bot.players;
+  if (!bonecoInvulneravel && (!p0.alive || !p1.alive)) {
+    recordGameOver(resultadoDoVencedor(!p0.alive && !p1.alive ? null : (p0.alive ? 0 : 1)));
     stopBot();
-  });
+  }
+
+  if (!state.gameOver) {
+    bot.projectiles = stepProjectiles(bot.projectiles, bot.players, ARENA, (winnerIndex) => {
+      if (bonecoInvulneravel && winnerIndex === 0) return;
+      recordGameOver(resultadoDoVencedor(winnerIndex));
+      stopBot();
+    });
+  }
 
   // Escudo infinito do boneco de treino: as cargas gastas neste tick são
   // devolvidas antes de publicar o estado — assim o jogador nunca fura a

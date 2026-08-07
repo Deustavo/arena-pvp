@@ -128,6 +128,10 @@ export const botDifficultyDropdownEl = document.getElementById('botDifficultyDro
 export const botDifficultyToggleEl = document.getElementById('botDifficultyToggle');
 export const botDifficultyValueEl = document.getElementById('botDifficultyValue');
 export const botDifficultyListEl = document.getElementById('botDifficultyList');
+export const botArenaDropdownEl = document.getElementById('botArenaDropdown');
+export const botArenaToggleEl = document.getElementById('botArenaToggle');
+export const botArenaValueEl = document.getElementById('botArenaValue');
+export const botArenaListEl = document.getElementById('botArenaList');
 export const btnBotClassClose = document.getElementById('btnBotClassClose');
 export const btnBotClassConfirm = document.getElementById('btnBotClassConfirm');
 

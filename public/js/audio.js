@@ -256,6 +256,23 @@ export const playPowerupPickupSound = efeito('powerupPickup', 400, () => {
   );
 });
 
+// --- Arena -------------------------------------------------------------
+
+// Erupção de lava explodindo (arena de fogo, ver shared/arenaEvents.js). Mais
+// grave e mais longa que playExplosionSound, para não soar como "alguém
+// morreu" quando é só o chão.
+export const playEruptionSound = efeito('eruption', 150, () => {
+  ruido({ dur: 0.5, filter: 'lowpass', from: 900, to: 40, gain: 0.35 });
+  nota({ type: 'sawtooth', freq: 55, to: 20, dur: 0.45, gain: 0.22 });
+});
+
+// Início de um tremor de terra (arena de terra). Ruído grave e contínuo,
+// sem o estouro agudo da explosão — o terremoto é só a câmera tremendo, não
+// dano, então o som precisa avisar sem soar como perigo.
+export const playTerremotoSound = efeito('terremoto', 2000, () => {
+  ruido({ dur: 0.9, filter: 'lowpass', from: 200, to: 60, gain: 0.22, attack: 0.1 });
+});
+
 // --- Fim de partida --------------------------------------------------------
 
 // Um jogador zerou as vidas. Casa com as partículas de explosions.js.

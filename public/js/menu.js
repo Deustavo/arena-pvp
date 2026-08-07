@@ -13,6 +13,7 @@ import { resetHud, fillLocalPlayerHud } from './hud.js';
 import { resetMatchTimer } from './matchTimer.js';
 import { resetNearMiss } from './nearMiss.js';
 import { resetPowerupVisuals } from './powerups.js';
+import { resetArenaVisuals } from './arenaVisuals.js';
 import { openBotClassSelect } from './botClassSelect.js';
 import { updateGameScale } from './gameScale.js';
 import { stopMatchTutorial, shouldStartMatchTutorial, resetMatchTutorialFlag } from './tutorial/matchTutorial.js';
@@ -56,6 +57,7 @@ function prepareNewMatch() {
   resetMatchTimer();
   resetNearMiss();
   resetPowerupVisuals();
+  resetArenaVisuals();
   resetEscHint();
   stopMatchTutorial();
   resetMatchTutorialFlag();

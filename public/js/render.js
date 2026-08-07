@@ -6,6 +6,9 @@ import { updateAndDrawExplosions } from './explosions.js';
 import { updateAndDrawFloatingIcons } from './floatingIcons.js';
 import { checkNearMiss } from './nearMiss.js';
 import { drawPowerupZone, updateAndDrawPowerups, drawPowerupPickups } from './powerups.js';
+import {
+  drawArenaBackground as drawArenaTerrain, terremotoShakeOffset, updateAndDrawVento, updateAndDrawErupcoes,
+} from './arenaVisuals.js';
 import { showGameOverOverlay } from './gameOver.js';
 import { getClass } from '../../shared/classes.js';
 import {
@@ -66,11 +69,6 @@ const ARENA_BORDER_COLOR = '#8b0000';
 // "isso não é a sua partida" que o banner "Assistindo" já dá em texto.
 const ARENA_BORDER_COLOR_SPECTATOR = '#facc15';
 const ARENA_BORDER_WIDTH = 4;
-
-function drawArenaBackground() {
-  ctx.fillStyle = ARENA_BG_COLOR;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
 
 // Desenhada por último e sempre, mesmo no fim de partida (que pinta o canvas
 // inteiro por cima). O inset de metade da espessura mantém o traço todo dentro
@@ -306,7 +304,14 @@ function drawProjectiles(renderState) {
 
 export function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawArenaBackground();
+
+  // Tremor de terremoto (arena de terra): desloca a cena inteira por um
+  // frame, incluindo fundo e borda — é a câmera que treme, não o mundo.
+  ctx.save();
+  const shake = terremotoShakeOffset(Date.now());
+  if (shake) ctx.translate(shake.x, shake.y);
+
+  drawArenaTerrain(ARENA_BG_COLOR);
 
   if (state.mode) {
     const now = Date.now();
@@ -331,10 +336,12 @@ export function render() {
       }
       // Zona de spawn primeiro: é fundo, fica por baixo de jogadores e tiros.
       drawPowerupZone();
+      updateAndDrawVento(now);
       updateAndDrawPowerups(now);
       drawPlayers(renderState, now);
       drawPowerupPickups(now);
       drawProjectiles(renderState);
+      updateAndDrawErupcoes(now);
       updateAndDrawExplosions(now);
       updateAndDrawFloatingIcons(now);
       ctx.restore();
@@ -344,6 +351,7 @@ export function render() {
   }
 
   drawArenaBorder();
+  ctx.restore();
 
   requestAnimationFrame(render);
 }

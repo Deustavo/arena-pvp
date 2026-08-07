@@ -6,8 +6,18 @@
 import { clamp, rectsIntersect, circleHitsProjectile, movementDelta } from './physics.js';
 import { PLAYER_SIZE, PROJECTILE_SIZE, SHIELD_RADIUS } from './constants.js';
 import { velocidadeAtual } from './powerups.js';
+import { ventoDirecao, VENTO_FORCA, GELO_ATRITO } from './arenaEvents.js';
 
-export function stepPlayers(players, arena, agora = Date.now()) {
+// `arenaTipo` vem do sorteio da partida (ver shared/arenaEvents.js) — cada
+// arena interfere de um jeito diferente no movimento: areia empurra os dois
+// jogadores nas rajadas de vento e gelo troca a parada instantânea por
+// deslize (terra e fogo não mexem no movimento, só em velocidade/dano fora
+// daqui). Os três consumidores da simulação (servidor, bot e o próprio
+// teste) pegam o efeito de graça.
+export function stepPlayers(players, arena, agora = Date.now(), arenaTipo = null) {
+  const gelo = arenaTipo === 'gelo';
+  const vento = ventoDirecao(arenaTipo, agora) * VENTO_FORCA;
+
   for (const p of players) {
     if (!p.alive) continue;
     // Escudo esgotado não pode mais ser usado.
@@ -16,8 +26,18 @@ export function stepPlayers(players, arena, agora = Date.now()) {
     // Velocidade da classe, 40% maior enquanto o power-up de velocidade
     // estiver ativo (ver shared/powerups.js).
     const speed = velocidadeAtual(p, agora);
-    p.x = clamp(p.x + dx * speed, 0, arena.w - PLAYER_SIZE);
-    p.y = clamp(p.y + dy * speed, 0, arena.h - PLAYER_SIZE);
+
+    if (gelo) {
+      // Cada tick só se aproxima da velocidade "alvo" do input, mantendo
+      // parte do embalo do tick anterior — é o que dá a sensação de deslize.
+      p.vx = p.vx * GELO_ATRITO + dx * speed * (1 - GELO_ATRITO);
+      p.vy = p.vy * GELO_ATRITO + dy * speed * (1 - GELO_ATRITO);
+      p.x = clamp(p.x + p.vx + vento, 0, arena.w - PLAYER_SIZE);
+      p.y = clamp(p.y + p.vy, 0, arena.h - PLAYER_SIZE);
+    } else {
+      p.x = clamp(p.x + dx * speed + vento, 0, arena.w - PLAYER_SIZE);
+      p.y = clamp(p.y + dy * speed, 0, arena.h - PLAYER_SIZE);
+    }
   }
 }
 

@@ -1962,12 +1962,20 @@
     flex-direction: column;
     gap: 8px;
   }
-  #botDifficultyCol {
+  #botOptionsRow {
+    display: flex;
+    gap: 14px;
+  }
+  #botDifficultyCol,
+  #botArenaCol {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
-  #botDifficultyCol h3 {
+  #botDifficultyCol h3,
+  #botArenaCol h3 {
     margin: 0;
     font-size: 13px;
     color: var(--cor-texto-fraco);
@@ -2816,7 +2824,8 @@
       width: 100%;
       box-sizing: border-box;
     }
-    #botClassColumns {
+    #botClassColumns,
+    #botOptionsRow {
       flex-direction: column;
     }
   }

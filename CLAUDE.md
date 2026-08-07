@@ -510,6 +510,77 @@ e bot), e o desenho/som em `public/js/powerups.js`.
   silhueta (`glow` em `drawCharacterFrame`), não um tint: colorir os pixels do
   sprite exigiria um canvas fora da tela por classe/quadro.
 
+### Eventos de arena
+
+Toda partida sorteia uma das quatro arenas (`public/assets/arenas/arena_1.png`
+a `arena_4.png` — terra, areia, gelo e fogo, nessa ordem) e cada uma interfere
+de um jeito diferente na partida. Regra de jogo, então vive em
+`shared/arenaEvents.js` — fonte única para servidor, modo treino e o desenho
+no cliente (`public/js/arenaVisuals.js`).
+
+- **Terra**: terremotos periódicos, **só visual/sonoro** — a câmera treme
+  (`terremotoShakeOffset` em `arenaVisuals.js`, aplicado como um `translate`
+  em volta do desenho inteiro em `render.js`) e toca um rumor grave
+  (`playTerremotoSound`), mas não mexe em posição, velocidade ou dano de
+  ninguém. É o único dos quatro eventos que não passa por `stepPlayers`. Cada
+  tremor dura `TERREMOTO_DURACAO_MS` (4,5s) e não bate com força constante:
+  `terremotoIntensidade` varia a intensidade-base entre ocorrências (do leve
+  ao devastador, pelo índice do ciclo) e `terremotoProgresso` dá um envelope
+  em sino dentro da própria duração (sobe, sustenta perto do pico, cai) em vez
+  de ligar/desligar de repente.
+- **Areia**: rajadas de vento periódicas empurram **os dois jogadores** para o
+  mesmo lado — não é vantagem de ninguém, então a direção não precisa ser
+  sorteada por partida: vem do índice do ciclo (`ventoDirecao`), alternando a
+  cada rajada. `public/js/arenaVisuals.js` desenha riscos de areia atravessando
+  a tela na direção do vento.
+- **Gelo**: piso escorregadio a partida inteira. Em vez do movimento parar
+  assim que solta a tecla (como nas outras arenas), `stepPlayers` passa a
+  acumular velocidade "de embalo" (`p.vx`/`p.vy`, ver `shared/entities.js`) que
+  só se aproxima da velocidade do input a cada tick, em vez de igualá-la —
+  isso é o que dá a sensação de deslize.
+- **Fogo**: erupções **miradas nos jogadores**, não em posição aleatória.
+  Cada onda cai com as **duas ao mesmo tempo**, uma em cima de cada jogador —
+  `tickErupcoes` captura a posição de cada um no instante em que a onda
+  surge (`criarErupcoes` só sorteia o horário das ondas, mesmo padrão de
+  `criarPowerups`); depois disso o alvo fica fixo, então dá pra escapar
+  andando para longe antes de explodir. Cada erupção avisa por
+  `ERUPCAO_AVISO_MS` (círculo pulsando) antes de explodir, causando dano e
+  empurrando para longe do centro quem ainda estiver dentro na hora. É a
+  arena mais agressiva de propósito: `ERUPCAO_JANELAS_MS` tem seis janelas
+  (o dobro das outras agendas de arena), uma onda nova a cada ~9-10s de
+  partida.
+
+Terremoto, vento e gelo são **puramente determinísticos**: dependem só do
+relógio (`agora`, o mesmo `Date.now()` que já passa para `stepPlayers`), sem
+parte aleatória — servidor, bot e o desenho no cliente concordam sem precisar
+de nada novo no protocolo, e o cliente pode tremer a câmera/desenhar o vento
+sem esperar snapshot nenhum. Só o fogo tem posição sorteada por partida, por
+isso é o único dos quatro com agenda/estado sincronizados via snapshot
+(`erupcoes`, mesmo lugar de `powerups` na mensagem `state` e no `init` do
+espectador).
+
+- `stepPlayers` (`shared/simulation.js`) recebe `arenaTipo` como quarto
+  parâmetro e aplica o empurrão do vento e o deslize do gelo — os três
+  consumidores da simulação (servidor, bot e a própria bateria de testes)
+  pegam o efeito de graça, sem duplicar lógica. Terra e fogo não entram aqui:
+  terremoto é só render.js, e o dano/knockback do fogo é aplicado por
+  `tickErupcoes`, não por `stepPlayers`.
+- Erupções não têm projétil nem `onPlayerDown`: como podem matar um ou os
+  dois jogadores no mesmo tick, quem chama `tickErupcoes` (`Match.js`,
+  `bot.js`) confere quem ainda está vivo logo depois e decide o fim de
+  partida ali mesmo (vitória, ou empate se os dois morrerem juntos — mesma
+  regra do desempate por tempo).
+- No desempate, `congelarPartida` também descarta as erupções ativas nos dois
+  donos de loop, pelo mesmo motivo dos power-ups: a partida está congelada,
+  ninguém andaria até lá nem veria o resto da explosão.
+- O som da explosão (`playEruptionSound`, `public/js/audio.js`) é disparado
+  pelo cliente ao ver, no snapshot, a transição de fase de uma erupção
+  (`aviso` → `explosao`) — mesmo padrão de diff entre frames que o HUD usa
+  para tiro/dano/bloqueio e que `powerups.js` usa para spawn/coleta. O
+  terremoto dispara `playTerremotoSound` na borda de subida de
+  `terremotoProgresso(now)` (calculado localmente, sem precisar de snapshot). O
+  vento ainda não tem som próprio (só o visual).
+
 ### Modo espectador (assistir partidas em andamento)
 
 Qualquer partida online 1x1 em andamento pode ser assistida em modo leitura,

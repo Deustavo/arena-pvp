@@ -1,0 +1,153 @@
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  ARENA_TIPOS, sortearArena, terremotoAtivo, terremotoProgresso, terremotoIntensidade,
+  ventoDirecao, VENTO_FORCA, criarErupcoes, tickErupcoes, ERUPCAO_RAIO,
+} from '../shared/arenaEvents.js';
+import { createPlayerState } from '../shared/entities.js';
+import { stepPlayers } from '../shared/simulation.js';
+import { ARENA, PLAYER_SIZE, PLAYER_SPEED } from '../shared/constants.js';
+
+describe('sortearArena', () => {
+  test('sempre devolve um dos quatro tipos', () => {
+    for (const valor of [0, 0.25, 0.49, 0.5, 0.99]) {
+      assert.ok(ARENA_TIPOS.includes(sortearArena(() => valor)));
+    }
+  });
+});
+
+describe('terremoto (terra)', () => {
+  test('fica ativo e inativo em ciclos', () => {
+    assert.equal(terremotoAtivo(0), true);
+    assert.equal(terremotoAtivo(4499), true);
+    assert.equal(terremotoAtivo(4500), false);
+    assert.equal(terremotoAtivo(17999), false);
+    assert.equal(terremotoAtivo(18000), true); // próximo ciclo
+  });
+
+  test('progresso sobe de 0 a quase 1 dentro do tremor, e é null fora dele', () => {
+    assert.equal(terremotoProgresso(0), 0);
+    assert.equal(terremotoProgresso(2250), 0.5);
+    assert.ok(terremotoProgresso(4499) < 1);
+    assert.equal(terremotoProgresso(4500), null);
+    assert.equal(terremotoProgresso(10000), null);
+    assert.equal(terremotoProgresso(18000), 0); // próximo ciclo
+  });
+
+  test('a intensidade varia entre ocorrências, não é sempre a mesma', () => {
+    const intensidades = new Set([0, 1, 2, 3].map((ciclo) => terremotoIntensidade(ciclo * 18000)));
+    assert.ok(intensidades.size > 1, 'ciclos diferentes deveriam ter intensidades diferentes');
+  });
+
+  test('é só visual: não muda o movimento em stepPlayers', () => {
+    const p = createPlayerState(0);
+    p.input.right = true;
+    const startX = p.x;
+    stepPlayers([p], ARENA, 0, 'terra');
+    assert.equal(p.x, startX + PLAYER_SPEED);
+  });
+});
+
+describe('vento (areia)', () => {
+  test('só sopra na arena de areia, alternando direção a cada ciclo', () => {
+    assert.equal(ventoDirecao('areia', 0), 1);
+    assert.equal(ventoDirecao('areia', 3499), 1);
+    assert.equal(ventoDirecao('areia', 3500), 0); // fora da janela ativa do ciclo
+    assert.equal(ventoDirecao('areia', 10000), -1); // segundo ciclo, direção invertida
+    assert.equal(ventoDirecao('terra', 0), 0);
+  });
+
+  test('stepPlayers empurra os dois jogadores na direção do vento', () => {
+    const p = createPlayerState(0);
+    const startX = p.x;
+    stepPlayers([p], ARENA, 0, 'areia');
+    assert.equal(p.x, startX + VENTO_FORCA);
+  });
+});
+
+describe('gelo', () => {
+  test('o movimento desliza em vez de parar instantaneamente', () => {
+    const p = createPlayerState(0);
+    p.input.right = true;
+    stepPlayers([p], ARENA, 0, 'gelo');
+    const xComInput = p.x;
+
+    // Solta a tecla: numa arena normal o jogador pararia no lugar.
+    p.input.right = false;
+    stepPlayers([p], ARENA, 0, 'gelo');
+    assert.ok(p.x > xComInput, 'deveria continuar deslizando por embalo');
+  });
+});
+
+describe('erupções (fogo)', () => {
+  test('não faz nada fora da arena de fogo', () => {
+    const estado = criarErupcoes(() => 0.5);
+    const players = [createPlayerState(0), createPlayerState(1)];
+    tickErupcoes('terra', estado, players, 45000, 0);
+    assert.equal(estado.ativas.length, 0);
+  });
+
+  test('cada onda mira os dois jogadores ao mesmo tempo, na posição atual deles', () => {
+    const estado = criarErupcoes(() => 0.5); // horário determinístico
+    const players = [createPlayerState(0), createPlayerState(1)];
+    const item = estado.agenda[0];
+
+    // Ainda não chegou o tempo de surgir.
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs + 1, 0);
+    assert.equal(estado.ativas.length, 0);
+
+    // As duas surgem juntas em fase de aviso, uma mirada em cada jogador.
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 0);
+    assert.equal(estado.ativas.length, 2);
+    assert.ok(estado.ativas.every((e) => e.fase === 'aviso'));
+    assert.equal(estado.ativas[0].x, players[0].x + PLAYER_SIZE / 2);
+    assert.equal(estado.ativas[0].y, players[0].y + PLAYER_SIZE / 2);
+    assert.equal(estado.ativas[1].x, players[1].x + PLAYER_SIZE / 2);
+    assert.equal(estado.ativas[1].y, players[1].y + PLAYER_SIZE / 2);
+  });
+
+  test('avisa, depois explode e causa dano/knockback em quem ainda está no alvo', () => {
+    const estado = criarErupcoes(() => 0.5);
+    const players = [createPlayerState(0), createPlayerState(1)];
+    const item = estado.agenda[0];
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 0);
+
+    const alvo = players[0];
+    const vidasAntes = alvo.lives;
+    const xAntesExplosao = alvo.x;
+
+    // Antes do fim do aviso: continua em aviso, sem dano (o alvo não se mexeu).
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 1000);
+    assert.ok(estado.ativas.every((e) => e.fase === 'aviso'));
+    assert.equal(alvo.lives, vidasAntes);
+
+    // Passa do tempo de aviso: as duas explodem, causando dano/knockback em
+    // quem ficou dentro.
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 2000);
+    assert.equal(estado.ativas.length, 2);
+    assert.ok(estado.ativas.every((e) => e.fase === 'explosao'));
+    assert.equal(alvo.lives, vidasAntes - 1);
+    assert.notEqual(alvo.x, xAntesExplosao);
+
+    // Um tick depois, as explosões somem da lista.
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 2001);
+    assert.equal(estado.ativas.length, 0);
+  });
+
+  test('jogador que sai do alvo antes da explosão não toma dano', () => {
+    const estado = criarErupcoes(() => 0.5);
+    const players = [createPlayerState(0), createPlayerState(1)];
+    const item = estado.agenda[0];
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 0);
+
+    // O alvo foi marcado na posição de spawn; fugir antes da explosão evita
+    // o dano, já que a mira não persegue quem se mexe depois.
+    const fugitivo = players[0];
+    const vidasAntes = fugitivo.lives;
+    fugitivo.x = estado.ativas[0].x + ERUPCAO_RAIO * 5;
+    fugitivo.y = estado.ativas[0].y;
+
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 2000);
+    assert.equal(fugitivo.lives, vidasAntes);
+  });
+});
