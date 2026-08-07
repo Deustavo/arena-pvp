@@ -46,7 +46,6 @@ export function createHttpServer() {
         res.end();
         return;
       }
-      logXffDiagnostico(req);
       authHandler(req, res);
       return;
     }
@@ -175,33 +174,6 @@ async function serveRanking(req, res) {
     console.error('[ranking] falha ao consultar:', erro.message);
     res.writeHead(500, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Não foi possível carregar o ranking' }));
-  }
-}
-
-// Diagnóstico temporário do warning "Rate limiting could not determine a
-// client IP" do Better Auth (ver CLAUDE.md). O `trustedProxies` já
-// configurado em auth.js só falha em resolver o IP quando o header
-// `x-forwarded-for` chega ausente ou com mais de um endereço sem nenhum bater
-// com a faixa confiável — são exatamente esses dois casos que logamos aqui.
-// A primeira rodada mostrou o header vindo `null` sempre, o que contraria a
-// documentação do Cloud Run (ele diz que sempre injeta X-Forwarded-For) —
-// então agora coletamos mais pistas: IP da conexão TCP crua, o header
-// `Forwarded` (RFC 7239, que o Cloud Run manda em paralelo ao
-// X-Forwarded-For) e o `user-agent`, pra descobrir se é tráfego de verdade ou
-// bot/scanner batendo direto na URL do Cloud Run. `authorization`/`cookie`
-// nunca entram no log — vazariam token de sessão. Remover depois que o
-// warning for corrigido de vez.
-export function logXffDiagnostico(req) {
-  const xff = req.headers['x-forwarded-for'];
-  const multiplasIps = typeof xff === 'string' && xff.split(',').length > 1;
-  if (!xff || multiplasIps) {
-    console.warn('[auth][debug-xff]', req.method, req.url, {
-      xff: xff ?? null,
-      remoteAddress: req.socket?.remoteAddress ?? null,
-      forwarded: req.headers.forwarded ?? null,
-      via: req.headers.via ?? null,
-      userAgent: req.headers['user-agent'] ?? null,
-    });
   }
 }
 

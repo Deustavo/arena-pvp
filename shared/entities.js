@@ -18,6 +18,10 @@ export function createPlayerState(index, classId = DEFAULT_CLASS_ID) {
     alive: true,
     shielding: false,
     shieldHits: 0,
+    // Velocidade "de embalo" usada só na arena de gelo (deslize) — ver
+    // shared/arenaEvents.js. Nas outras arenas fica sempre em 0, sem efeito.
+    vx: 0,
+    vy: 0,
     // Direção que o personagem olha (1 = direita, -1 = esquerda), em espaço
     // de mundo. Segue a mira do jogador (mouse) ou, no caso do bot, a
     // posição do adversário — ver shared/botStrategy.js#computeBotFacing.

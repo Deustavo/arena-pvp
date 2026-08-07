@@ -13,6 +13,7 @@ import {
 import {
   MATCH_DURATION_MS, criarCronometro, tickCronometro, emDesempate, tempoRestanteMs,
 } from '../../shared/matchTimer.js';
+import { sortearArena, criarErupcoes, tickErupcoes } from '../../shared/arenaEvents.js';
 import { createBotState, tickBot } from './botAI.js';
 import { saveMatchResult } from './matchHistory.js';
 
@@ -77,6 +78,11 @@ export function createMatch(wsA, wsB, { onEnd, bot = false, botDifficulty = 'int
     // restante em que aparecem), sorteada aqui porque o servidor é a única
     // fonte de verdade — ver shared/powerups.js.
     powerups: criarPowerups(),
+    // Arena sorteada para a partida e, se for a de fogo, a agenda das
+    // erupções (posição e horário) — ver shared/arenaEvents.js. Nas outras
+    // arenas `erupcoes.ativas` fica sempre vazio.
+    arenaTipo: sortearArena(),
+    erupcoes: criarErupcoes(),
     onEnd,
     bot,
     botState: bot ? createBotState(botDifficulty) : null,
@@ -93,6 +99,7 @@ export function createMatch(wsA, wsB, { onEnd, bot = false, botDifficulty = 'int
       matchId: match.id,
       playerIndex: i,
       arena: ARENA,
+      arenaTipo: match.arenaTipo,
       playerSize: PLAYER_SIZE,
       projectileSize: PROJECTILE_SIZE,
       colors: COLORS,
@@ -129,9 +136,21 @@ function tick(match) {
   }
 
   if (match.bot) tickBot(match);
-  stepPlayers(match.players, ARENA, agora);
+  const restanteMs = tempoRestanteMs(match.cronometro, agora);
+  stepPlayers(match.players, ARENA, agora, match.arenaTipo, restanteMs);
   // Depois de mover: quem entrou na bolha neste tick já leva o power-up.
-  tickPowerups(match.powerups, match.players, tempoRestanteMs(match.cronometro, agora), agora);
+  tickPowerups(match.powerups, match.players, restanteMs, agora);
+  // Erupções (arena de fogo) podem matar um ou os dois jogadores no mesmo
+  // tick — sem projétil e sem `onPlayerDown`, então o fim de partida é
+  // decidido aqui, olhando quem ainda está vivo depois do dano.
+  tickErupcoes(match.arenaTipo, match.erupcoes, match.players, restanteMs, agora);
+  const [p0, p1] = match.players;
+  if (!p0.alive || !p1.alive) {
+    broadcastState(match);
+    endMatch(match, !p0.alive && !p1.alive ? null : (p0.alive ? 0 : 1));
+    return;
+  }
+
   match.projectiles = stepProjectiles(match.projectiles, match.players, ARENA, (winnerIndex) => {
     endMatch(match, winnerIndex);
   });
@@ -145,8 +164,10 @@ function tick(match) {
 function congelarPartida(match) {
   match.projectiles = [];
   // No desempate ninguém mais anda: uma bolha na arena só ficaria lá parada,
-  // impossível de pegar.
+  // impossível de pegar. Mesma ideia para uma erupção em aviso: sem
+  // stepPlayers rodando, nem faria sentido ela terminar de explodir.
   match.powerups.ativos = [];
+  match.erupcoes.ativas = [];
   for (const p of match.players) {
     p.input = { up: false, down: false, left: false, right: false };
     p.shielding = false;
@@ -160,6 +181,7 @@ function broadcastState(match) {
     players: match.players.map((p) => playerSnapshot(p, agora)),
     projectiles: match.projectiles.map((proj) => ({ x: proj.x, y: proj.y, ownerIndex: proj.ownerIndex, size: proj.size })),
     powerups: match.powerups.ativos,
+    erupcoes: match.erupcoes.ativas,
     remainingMs: tempoRestanteMs(match.cronometro, agora),
     desempate: emDesempate(match.cronometro),
   };
@@ -184,14 +206,16 @@ export function attachSpectator(match, ws) {
     matchId: match.id,
     playerIndex: null,
     arena: ARENA,
+    arenaTipo: match.arenaTipo,
     playerSize: PLAYER_SIZE,
     projectileSize: PROJECTILE_SIZE,
     colors: COLORS,
     shieldRadius: SHIELD_RADIUS,
     matchDurationMs: MATCH_DURATION_MS,
     players: match.players.map((p) => playerSnapshot(p)),
-    // A partida pode já ter bolhas na arena quando o espectador chega.
+    // A partida pode já ter bolhas/erupções na arena quando o espectador chega.
     powerups: match.powerups.ativos,
+    erupcoes: match.erupcoes.ativas,
   });
   return true;
 }

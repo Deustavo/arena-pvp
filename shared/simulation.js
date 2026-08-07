@@ -6,8 +6,21 @@
 import { clamp, rectsIntersect, circleHitsProjectile, movementDelta } from './physics.js';
 import { PLAYER_SIZE, PROJECTILE_SIZE, SHIELD_RADIUS } from './constants.js';
 import { velocidadeAtual } from './powerups.js';
+import { ventoDirecao, ventoForca, geloAtrito } from './arenaEvents.js';
 
-export function stepPlayers(players, arena, agora = Date.now()) {
+// `arenaTipo` vem do sorteio da partida (ver shared/arenaEvents.js) — cada
+// arena interfere de um jeito diferente no movimento: areia empurra os dois
+// jogadores nas rajadas de vento e gelo troca a parada instantânea por
+// deslize (terra e fogo não mexem no movimento, só em velocidade/dano fora
+// daqui). Os três consumidores da simulação (servidor, bot e o próprio
+// teste) pegam o efeito de graça. `restanteMs` (tempo restante de partida)
+// intensifica vento e gelo nos últimos segundos — ver faseFinalFator em
+// shared/arenaEvents.js.
+export function stepPlayers(players, arena, agora = Date.now(), arenaTipo = null, restanteMs = Infinity) {
+  const gelo = arenaTipo === 'gelo';
+  const atrito = geloAtrito(restanteMs);
+  const vento = ventoDirecao(arenaTipo, agora, restanteMs) * ventoForca(restanteMs);
+
   for (const p of players) {
     if (!p.alive) continue;
     // Escudo esgotado não pode mais ser usado.
@@ -16,8 +29,18 @@ export function stepPlayers(players, arena, agora = Date.now()) {
     // Velocidade da classe, 40% maior enquanto o power-up de velocidade
     // estiver ativo (ver shared/powerups.js).
     const speed = velocidadeAtual(p, agora);
-    p.x = clamp(p.x + dx * speed, 0, arena.w - PLAYER_SIZE);
-    p.y = clamp(p.y + dy * speed, 0, arena.h - PLAYER_SIZE);
+
+    if (gelo) {
+      // Cada tick só se aproxima da velocidade "alvo" do input, mantendo
+      // parte do embalo do tick anterior — é o que dá a sensação de deslize.
+      p.vx = p.vx * atrito + dx * speed * (1 - atrito);
+      p.vy = p.vy * atrito + dy * speed * (1 - atrito);
+      p.x = clamp(p.x + p.vx + vento, 0, arena.w - PLAYER_SIZE);
+      p.y = clamp(p.y + p.vy, 0, arena.h - PLAYER_SIZE);
+    } else {
+      p.x = clamp(p.x + dx * speed + vento, 0, arena.w - PLAYER_SIZE);
+      p.y = clamp(p.y + dy * speed, 0, arena.h - PLAYER_SIZE);
+    }
   }
 }
 
@@ -26,6 +49,13 @@ export function stepPlayers(players, arena, agora = Date.now()) {
 // última vida — quem chama decide o que isso significa (fim de partida
 // online, fim de partida local contra o bot, etc.).
 export function stepProjectiles(projectiles, players, arena, onPlayerDown) {
+  // Projéteis de um mesmo disparo em leque (ex.: o cone de 3 tiros do mago)
+  // chegam ao alvo no mesmo tick. Sem esse controle, cada um deles gastava uma
+  // carga de escudo separada e um único disparo furava o escudo inteiro de
+  // classes frágeis (assassino, duelista) de uma vez só — o escudo bloqueia o
+  // leque todo como um único evento de defesa, gastando no máximo 1 carga por
+  // tick, igual a levar um tiro só.
+  const escudoGastoNesteTick = new Set();
   return projectiles.filter((proj) => {
     proj.x += proj.vx;
     proj.y += proj.vy;
@@ -47,8 +77,11 @@ export function stepProjectiles(projectiles, players, arena, onPlayerDown) {
 
     if (target.alive && target.shielding && target.shieldHits < target.shieldMaxHits &&
       circleHitsProjectile(target, proj, PLAYER_SIZE, SHIELD_RADIUS, size)) {
-      target.shieldHits += 1;
-      if (target.shieldHits >= target.shieldMaxHits) target.shielding = false;
+      if (!escudoGastoNesteTick.has(target)) {
+        target.shieldHits += 1;
+        if (target.shieldHits >= target.shieldMaxHits) target.shielding = false;
+        escudoGastoNesteTick.add(target);
+      }
       return false;
     }
 

@@ -6,7 +6,12 @@
 // `body:not(.game-active)` em style.css). Assim o efeito desliga sozinho
 // quando a partida começa e volta ao normal ao voltar pro menu.
 
-const PIXEL = 3; // tamanho do "pixel" do efeito — sem isso o rastro do mouse fica liso demais e perde a cara de pixel art
+import { alphaEmDegraus } from './pixel.js';
+
+// Este canvas é do tamanho da tela (não os 800x600 do jogo escalados por
+// CSS), então tem grade própria: PIXEL = 3 em pixels de tela é o que
+// equivale, na prática, ao PX = 4 do canvas da arena.
+const PIXEL = 3;
 const SPAWN_PER_FRAME = 2;
 const PARTICLE_LIFE_MS = 450;
 const FIRE_COLORS = ['#fff3b0', '#ffd23f', '#ff8c1a', '#e8491d', '#7a1f0d'];
@@ -76,11 +81,14 @@ function drawParticles(now) {
     p.y += p.vy;
     const t = (now - p.startTime) / p.life;
     const colorIndex = Math.min(FIRE_COLORS.length - 1, Math.floor(t * FIRE_COLORS.length));
-    const size = Math.max(PIXEL, p.size * (1 - t * 0.5));
+    // A chama encolhe em blocos inteiros e some em degraus: com um tamanho
+    // fracionário o quadrado cai entre dois pixels de tela e o rastro, que é
+    // justamente o efeito mais pixelado do menu, volta a ficar liso.
+    const size = Math.max(PIXEL, snap(p.size * (1 - t * 0.5)));
 
-    ctx.globalAlpha = Math.max(0, 1 - t);
+    ctx.globalAlpha = alphaEmDegraus(1 - t);
     ctx.fillStyle = FIRE_COLORS[colorIndex];
-    ctx.fillRect(snap(p.x) - size / 2, snap(p.y) - size / 2, size, size);
+    ctx.fillRect(snap(p.x - size / 2), snap(p.y - size / 2), size, size);
   }
   ctx.globalAlpha = 1;
 }

@@ -5,37 +5,25 @@
 import { ctx } from './dom.js';
 import { state } from './state.js';
 import { HEART_PIXELS, SHIELD_PIXELS } from './hud.js';
+import { PX, snap, pxGrade, pxTexto, pxLarguraTexto, alphaEmDegraus } from './pixel.js';
 
-const ICON_PIXEL_SIZE = 3;
+const ICON_PIXEL_SIZE = PX;
 const ANIM_DURATION_MS = 900;
 const RISE_DISTANCE = 30;
-const TEXT_ICON_GAP = 4; // espaço entre o "-N" e o coração
+const TEXT_ICON_GAP = PX; // espaço entre o "-N" e o coração
 // Mesmas cores do HUD real: coração cheio é vermelho (--cor-erro em
 // style.css), escudo é azul (--cor-azul-escudo) — o ícone flutuante usa as
 // mesmas cores para ficar reconhecível de relance.
 const HEART_COLOR = '#e63946';
 const SHIELD_COLOR = '#4aa8ff';
 const CRACK_COLOR = '#0a2e4d';
-const LOSS_FONT = 'bold 22px "Chakra Petch", sans-serif';
-
-function drawPixelGrid(pixels, originX, originY, color) {
-  ctx.fillStyle = color;
-  for (const [row, col] of pixels) {
-    ctx.fillRect(originX + col * ICON_PIXEL_SIZE, originY + row * ICON_PIXEL_SIZE, ICON_PIXEL_SIZE, ICON_PIXEL_SIZE);
-  }
-}
 
 // Rachadura em ziguezague sobre o ícone, indicando que o escudo quebrou.
-function drawCrack(originX, originY, width, height) {
-  ctx.strokeStyle = CRACK_COLOR;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(originX + width * 0.35, originY);
-  ctx.lineTo(originX + width * 0.55, originY + height * 0.4);
-  ctx.lineTo(originX + width * 0.4, originY + height * 0.55);
-  ctx.lineTo(originX + width * 0.6, originY + height);
-  ctx.stroke();
-}
+// Como o ícone é uma grade 7x8, a rachadura também é: uma coluna de blocos
+// que desce serpenteando, na mesma grade dele.
+const CRACK_PIXELS = [
+  [0, 3], [1, 3], [2, 4], [3, 3], [4, 3], [5, 2], [6, 3], [7, 3],
+];
 
 function spawn(type, x, topY, count) {
   state.floatingIcons.push({
@@ -64,10 +52,10 @@ function drawIcon(icon, now) {
   const pixels = isHeart ? HEART_PIXELS : SHIELD_PIXELS;
   const width = 7 * ICON_PIXEL_SIZE;
   const height = (isHeart ? 6 : 8) * ICON_PIXEL_SIZE;
-  const originY = riseY - height;
+  const originY = snap(riseY - height);
 
   ctx.save();
-  ctx.globalAlpha = Math.max(0, alpha);
+  ctx.globalAlpha = alphaEmDegraus(alpha);
   // drawIcon roda dentro do ctx.scale(-1, 1) de espelhamento de visão
   // (render.js) quando state.viewFlipped — sem isso o texto "-N" e o coração
   // saem espelhados/ilegíveis pro jogador que nasceu do lado direito. Cancela
@@ -82,18 +70,16 @@ function drawIcon(icon, now) {
 
   if (isHeart) {
     const label = `-${icon.count}`;
-    ctx.font = LOSS_FONT;
-    ctx.fillStyle = HEART_COLOR;
-    ctx.textBaseline = 'middle';
-    const labelWidth = ctx.measureText(label).width;
+    const labelWidth = pxLarguraTexto(label);
     const totalWidth = labelWidth + TEXT_ICON_GAP + width;
-    const originX = icon.x - totalWidth / 2;
-    ctx.fillText(label, originX, originY + height / 2);
-    drawPixelGrid(pixels, originX + labelWidth + TEXT_ICON_GAP, originY, HEART_COLOR);
+    const originX = snap(icon.x - totalWidth / 2);
+    // O texto tem 5 blocos de altura; centraliza contra a altura do ícone.
+    pxTexto(ctx, label, originX, snap(originY + (height - 5 * PX) / 2), HEART_COLOR);
+    pxGrade(ctx, pixels, originX + labelWidth + TEXT_ICON_GAP, originY, HEART_COLOR, ICON_PIXEL_SIZE);
   } else {
-    const originX = icon.x - width / 2;
-    drawPixelGrid(pixels, originX, originY, SHIELD_COLOR);
-    drawCrack(originX, originY, width, height);
+    const originX = snap(icon.x - width / 2);
+    pxGrade(ctx, pixels, originX, originY, SHIELD_COLOR, ICON_PIXEL_SIZE);
+    pxGrade(ctx, CRACK_PIXELS, originX, originY, CRACK_COLOR, ICON_PIXEL_SIZE);
   }
 
   ctx.restore();

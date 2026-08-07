@@ -241,7 +241,7 @@ conecta event listeners de UI aos módulos.
   `profileStats.js`, que é puro e testado (`test/profileStats.test.js`), sem
   DOM nem rede.
 - `overlays.js`, `gameOver.js`, `hud.js` — overlays de espera/contagem regressiva/fim
-  de jogo e HUD (vidas, cooldown, escudo).
+  de jogo e HUD (vidas, cooldown, escudo — ver "HUD de vida e escudo" abaixo).
 - `mobileBlock.js` — celular/tablet não tem como jogar (o jogo é WASD + mouse e
   não existe controle de toque), então em aparelho touch-only `main.js` mostra
   só o aviso `#mobileBlock` ("jogue no computador") e **não inicializa mais
@@ -297,14 +297,75 @@ conecta event listeners de UI aos módulos.
     inicia uma partida de bot, reabrindo o tutorial mesmo que já tenha sido
     visto antes.
 
+#### HUD de vida e escudo (`public/js/hud.js`)
+
+Vida e escudo são **barras segmentadas**, não fileiras de ícones: um segmento
+por coração/carga, com um contador (ícone pixel-art + `valor/teto`) do lado. O
+que muda com a classe e com os power-ups é o **número de divisões**, nunca a
+largura — como fileira de um ícone por unidade o HUD crescia até quebrar em
+outra linha no meio da partida (o tank abre com 14 vidas e 5 cargas, e os dois
+power-ups passam do máximo da classe).
+
+- O HUD é feito do **mesmo material dos painéis da tela inicial**
+  (`#menuBody`/`#rankingPanel`/`#spectatorPanel`): fundo `--cor-painel-pedra-veu`,
+  borda `--cor-pedra-borda` e `--sombra-pedra` (bisel de 4px + sombra dura
+  deslocada). As peças pequenas de dentro (cronômetro, aviso de espectador,
+  ícone de classe) usam `--sombra-pedra-pequena`, a mesma pedra com bisel de
+  2px — o de 4px pesaria mais que o próprio elemento. Os trilhos das barras
+  (vida, escudo, cooldown) usam `--sombra-pedra-afundada`, o bisel **invertido**:
+  eles são buraco cavado na pedra, não bloco em relevo. Sombra `inset` é
+  pintada abaixo dos filhos, então o que deixa esse bisel aparecer é o padding
+  de 2px do trilho — sem ele os segmentos/preenchimento cobririam a borda toda.
+- As duas barras são a mesma peça (`createResourceBar`/`updateResourceBar`,
+  parametrizadas por `'vida'`/`'escudo'`). Quem diferencia os recursos é a
+  **caixa** que os contém — `.hearts` e `.shields` no CSS: cor, espessura da
+  barra e tamanho do número saem de lá, não de uma classe por tipo no JS. A
+  barra de escudo é mais fina de propósito: sem essa diferença, vida, escudo e
+  cooldown viram três listras iguais na mesma coluna.
+- `updateResourceBar(barra, valor, max, base)` recebe `base` = máximo da
+  **classe** e `max` = teto de agora; o que passa de `base` é excedente de
+  power-up e vai em **dourado**, para não ler como vida/carga normal. O teto
+  nunca cai no meio da partida (`Math.max(..., barra.max)`): gastar a vida
+  extra deixa o segmento vazio em vez de redividir a barra a cada hit.
+- Meio coração (dano fracionário do duelista) é um segmento com corte seco em
+  50% e um `8,5` no contador. Não existe meia carga de escudo.
+- O piscar do dano continua existindo, agora nos **segmentos** que apagaram
+  naquele hit (`triggerSegmentBlink`) — os sons e os ícones flutuantes não
+  mudaram, porque continuam saindo da comparação de snapshots.
+- No HUD o contador fica do lado **de fora** e as barras crescem para o meio da
+  arena, como num placar de luta: os números longe do centro deixam o
+  cronômetro livre, e a linha da direita inverte também os segmentos, para as
+  duas barras esvaziarem se afastando do meio.
+- Cada coluna do HUD é **metade exata** da largura (`flex: 1 1 0`), e não o
+  tamanho do seu conteúdo — barras de largura relativa dentro de uma coluna
+  dimensionada pelo conteúdo encolheriam até a largura do nome. Por isso `#hud`
+  reserva um vão central do tamanho do estado mais largo do cronômetro
+  (`DESEMPATE`): sem ele as duas barras correriam por baixo de `#matchTimer`,
+  que é absoluto e centralizado.
+- O preview de classe da modal de seleção (`classPreview.js`) reusa as mesmas
+  barras em miniatura, sempre cheias (valor = teto = máximo da classe), dentro
+  de caixas com as mesmas classes `.hearts`/`.shields`.
+
 #### Efeitos sonoros (`public/js/audio.js`)
 
-Todo o som do jogo é **sintetizado na hora** com a Web Audio API — não existe
-nenhum arquivo de áudio no projeto, e não deve passar a existir sem uma boa
-razão. `audio.js` é só a camada de síntese: helpers privados (`nota`, `ruido`,
+Os efeitos do jogo são **sintetizados na hora** com a Web Audio API — o padrão
+é não haver arquivo de áudio, e cada exceção precisa de uma boa razão.
+`audio.js` é a camada de síntese: helpers privados (`nota`, `ruido`,
 `sequencia`, `envelope`) e uma função exportada por efeito (`playHitSound`,
 `playExplosionSound`, …). Quem decide *quando* tocar é o módulo que já conhece o
 evento.
+
+Hoje há **uma** exceção: a sirene de aviso da erupção
+(`playEruptionWarningSound`, `assets/audio/fireballalert.mp3`) — a versão
+sintetizada não chegava perto do alerta que o efeito precisa ser. Ela toca pelo
+helper `amostra`, que decodifica o arquivo num `AudioBuffer` e o manda pelo
+**mesmo `master`** dos efeitos sintetizados; não use `<audio>` para efeito,
+senão o volume, o mudo e a liberação de áudio pelo gesto do usuário deixam de
+valer para ele. O arquivo é baixado no load da página e decodificado quando o
+`AudioContext` nasce (não no primeiro toque, que seria tarde: decodificar é
+assíncrono e a primeira ocorrência sairia muda). Música é outra coisa —
+`music.js` são faixas mp3 num `<audio>` com bus e controle próprios, fora do
+`master` dos efeitos.
 
 - **Um único `AudioContext`** para todo o jogo, criado no primeiro efeito e
   nunca fechado. Um contexto por som (como era antes) estoura o limite do
@@ -350,6 +411,120 @@ coletado, também por comparação de snapshots) e `uiSounds.js` (hover/clique, 
 Ainda não têm som os efeitos de ambiente. Falta também expor **volume/mudo**
 na interface — o `GainNode` master já está no lugar, só não há controle nem
 preferência salva.
+
+#### Pixel art (`public/js/pixel.js`)
+
+Toda a arte do jogo é pixel art, e não só os assets: os personagens
+(spritesheets) e as arenas já eram, e **tudo o que é desenhado por código**
+— canvas e CSS — segue a mesma estética. Na prática isso significa três
+proibições, que valem para qualquer desenho novo:
+
+- **No canvas, nada de forma vetorial.** Sem `arc`, `stroke`, `ellipse`,
+  `setLineDash` ou `ctx.font`. Só `fillRect` alinhado a uma grade, pelas
+  primitivas de `public/js/pixel.js`: `PX` (o "pixel de arte", 4 unidades de
+  canvas), `snap`, `pxCirculo`, `pxAnel`, `pxGrade`,
+  `pxTexto`/`pxTextoCentro` (fonte bitmap 3x5, para os números desenhados na
+  arena) e `alphaEmDegraus`. O módulo é puro (recebe o contexto por
+  parâmetro) e é testado em `test/pixel.test.js`.
+- **Nada de posição fracionária.** Posição, raio, espessura, tremida de
+  câmera e deslocamento de dano passam por `snap` (ou ao menos
+  `Math.round`, no caso dos sprites, que têm resolução própria). Meio pixel
+  de deslocamento reamostra o desenho e o borra. Por isso o canvas tem
+  `image-rendering: pixelated` no CSS e `imageSmoothingEnabled = false` em
+  `dom.js`: `gameScale.js` reduz os 800x600 por um fator quase nunca
+  inteiro, e sem isso a arena inteira sai interpolada.
+- **Nada de transição contínua.** O que desaparece perde etapas visíveis
+  (`alphaEmDegraus`), e pulsação/balanço alternam entre posições e tamanhos
+  inteiros em vez de seguir uma senoide. A exceção é o aviso de erupção da
+  arena de fogo, que é uma área grande e usa opacidade de verdade (dois
+  níveis alternando) — dithering em xadrez ali virava ruído sobre o chão
+  texturizado.
+
+O conteúdo da bolha de power-up usa uma grade fina de `PX / 2`: a bolha tem
+40px de diâmetro (`POWERUP_RADIUS` é o raio de coleta, não dá para desenhá-la
+maior do que ela é) e um ícone de 7 células em blocos de 4px a preencheria
+inteira. É a mesma escala dos corações do HUD.
+
+No CSS, painéis e modais seguem o mesmo vocabulário: canto reto e sombra
+sólida deslocada (`8px 8px 0`) em vez de desfoque, skeleton de loading em
+passos (`steps()`) e barra de cooldown enchendo em blocos.
+
+Os **botões de ação** (menu, overlays de fim de jogo/espera, confirmar das
+modais de classe, enviar dos formulários de conta) têm moldura de fliperama:
+contorno de 2px (`--espessura-borda-botao`) e cantos em escadinha de dois
+degraus de 4px — o degrau é o pixel de arte cheio, o contorno é metade dele,
+senão a moldura pesa mais que o próprio botão nos botões pequenos. O contorno
+**não é preto**: é a própria cor do botão num tom mais escuro. Como
+`clip-path` não recorta buraco, a moldura são duas camadas, as duas com
+`background: inherit` — `::before` cobre a silhueta inteira e escurece
+(`--escurecimento-borda-botao`), `::after` repinta o miolo no tom original,
+recuado pela espessura da borda. Assim cada botão continua definindo a própria cor (inclusive
+hover e `:disabled`) onde já definia e a moldura acompanha, sem uma cor de
+borda por botão. Uma `border` não serviria:
+recortada pelo clip-path, ela some na diagonal dos cantos. O hover desses
+botões continua sendo o movimento interpolado de sempre (`transform`/`filter`)
+— só a sombra desfocada sumiu, porque o clip-path recorta o que é pintado fora
+da silhueta.
+
+**Campos de texto, dropdowns e cartões de classe** usam a mesma silhueta, mas
+a borda deles tem cor própria (branco, cinza, ou o vermelho de foco/seleção),
+não um tom do fundo. Cada componente segue decidindo as duas cores nas regras
+dele, agora por `--cor-borda-campo`/`--cor-fundo-campo`. O desenho não pode
+usar pseudo-elemento (`<input>` não tem ::before/::after), então são quatro
+camadas de `background-image`: a de baixo pinta a cor da borda na caixa
+inteira e as três de cima repintam o miolo — três porque a escadinha,
+recortada em retângulos, é a faixa larga, a faixa alta e o quadrado que liga
+as duas nos cantos.
+
+Nos campos de texto a moldura fica num **invólucro** (`.campo-pixel`), nunca
+no próprio `<input>`, e isso não é estilo: ao autopreencher, o Chrome força
+`background-image: none !important` no campo — regra de folha do navegador,
+que a cascata do autor não vence — e levaria a moldura inteira junto. O recuo
+horizontal de 10px do invólucro (8px de canto + 2px de borda) é o que mantém
+o retângulo do input coincidindo com a faixa alta do miolo: assim o único
+fundo que o navegador ainda controla não tem como encostar na moldura. A cor
+do autofill continua sendo coberta pelo `box-shadow` interno de sempre (que é
+recortado pela caixa do input) e o texto por `-webkit-text-fill-color`.
+
+**As modais** (`.modal`, regra única no fim do `style.css`) têm a mesma
+escadinha, com a borda vermelha de sempre acompanhando o recorte. Aqui a
+moldura **não pode** usar `clip-path`: além de recortar, ele torna a modal o
+bloco contentor dos descendentes `position: fixed`, e os dropdowns da modal de
+treino são posicionados em coordenada de viewport (`dropdownPosition.js`) —
+abririam no lugar errado e ainda seriam cortados na borda. Pseudo-elemento
+também não serve: a modal rola por dentro (`overflow-y: auto`) e uma camada
+`inset: 0` cresceria junto com o conteúdo. Sobra o mesmo truque de
+`background-image` dos campos, só que com a escadinha nas duas cores: três
+camadas desenham a silhueta na cor da borda e três repintam o miolo, recuadas
+pela espessura. Nenhuma modal define `background`/`border`/`box-shadow`
+própria — só largura, padding e layout.
+
+Ficaram de fora só os elementos pequenos demais para a moldura não virar
+ruído: botão-link, nome do ranking, item de dropdown e os botões de ícone
+(som/música, fechar ✕).
+
+Em nenhum desses componentes existe mais `box-shadow` **externo** — nos que
+usam clip-path ele recorta o que é pintado fora da silhueta, e nas modais uma
+sombra retangular apareceria como um dente sólido justamente nos cantos
+cortados (por isso `--sombra-modal` não existe mais). Anel de foco, anel de
+seleção do cartão de classe e o brilho vermelho do dropdown aberto viraram a
+própria cor da borda; não tente devolvê-los como sombra.
+
+**Três exceções deliberadas**, que já foram tentadas em pixel art e
+revertidas por deixarem a interface carregada — não "conserte" nenhuma
+delas:
+
+- **Ícones das seis classes** (`shared/classes.js`) continuam sendo SVG de
+  traço fino (`fill: none; stroke: currentColor; stroke-width: 2`). A versão
+  em grade 16x16 preenchida ficava pesada e menos legível no tamanho em que
+  os ícones aparecem (16–20px no HUD e nos cartões).
+- **Prévia de mira** (`drawShotPreview` em `render.js`) continua sendo traço
+  fino tracejado (`setLineDash`, `lineWidth: 1.5`, alpha contínuo). A versão em
+  blocos espaçados sumia contra o chão texturizado da arena: a mira é uma linha
+  de leitura para acertar o tiro, não arte.
+- **Círculo da zona de power-up** (`drawPowerupZone` em `powerups.js`) continua
+  sendo um `arc` de 1px. Em blocos pontilhados a marcação do chão passava a
+  competir com o desenho da arena em vez de só delimitar a região.
 
 #### Paleta de cores (`public/css/style.css`)
 
@@ -464,7 +639,7 @@ tick pelos dois donos de loop: `Match.js` (online) e `bot.js` (modo treino).
 
 ### Power-ups na arena
 
-Três bolhas de power-up aparecem por partida, disputadas pelos dois jogadores.
+Quatro bolhas de power-up aparecem por partida, disputadas pelos dois jogadores.
 As regras vivem em `shared/powerups.js` (fonte única para servidor, modo treino
 e bot), e o desenho/som em `public/js/powerups.js`.
 
@@ -473,10 +648,10 @@ e bot), e o desenho/som em `public/js/powerups.js`.
   (+40%, 10s).
 - Vida e escudo passam do máximo da classe de propósito: preenchem o que
   falta e aumentam o teto se já estiver cheio. O HUD acompanha —
-  `updateHeartsRow`/`updateShieldsRow` (`hud.js`) refazem a fileira quando
-  precisam de mais ícones do que a classe tem.
-- O agendamento é em **tempo restante** (primeira bolha entre 0:55 e 0:45, a
-  segunda entre 0:35 e 0:25, a terceira entre 0:15 e 0:05), não em instante
+  `updateHeartsRow`/`updateShieldsRow` (`hud.js`) dividem a barra do recurso em
+  mais segmentos e pintam o excedente em dourado (ver "HUD de vida e escudo").
+- O agendamento é em **tempo restante** (0:52–0:44, 0:40–0:32, 0:28–0:20 e
+  0:16–0:08 — quatro janelas de 8s espaçadas por 4s), não em instante
   absoluto. É isso que faz o
   tutorial interativo funcionar de graça: enquanto o relógio não corre
   (`adiarFim`), o tempo restante fica parado no máximo e nenhuma bolha aparece.
@@ -509,6 +684,113 @@ e bot), e o desenho/som em `public/js/powerups.js`.
   velocidade; com os dois ativos, alterna). É um brilho colorido em volta da
   silhueta (`glow` em `drawCharacterFrame`), não um tint: colorir os pixels do
   sprite exigiria um canvas fora da tela por classe/quadro.
+
+### Eventos de arena
+
+Toda partida sorteia uma das quatro arenas (`public/assets/arenas/arena_1.png`
+a `arena_4.png` — terra, areia, gelo e fogo, nessa ordem) e cada uma interfere
+de um jeito diferente na partida. Regra de jogo, então vive em
+`shared/arenaEvents.js` — fonte única para servidor, modo treino e o desenho
+no cliente (`public/js/arenaVisuals.js`).
+
+- **Terra**: terremotos periódicos, **só visual/sonoro** — a câmera treme
+  (`terremotoShakeOffset` em `arenaVisuals.js`, aplicado como um `translate`
+  em volta do desenho inteiro em `render.js`) e toca um rumor grave
+  (`playTerremotoSound`), mas não mexe em posição, velocidade ou dano de
+  ninguém. É o único dos quatro eventos que não passa por `stepPlayers`. Cada
+  tremor dura `TERREMOTO_DURACAO_MS` (4,5s) e não bate com força constante:
+  `terremotoIntensidade` varia a intensidade-base entre ocorrências (do leve
+  ao devastador, pelo índice do ciclo) e `terremotoProgresso` dá um envelope
+  em sino dentro da própria duração (sobe, sustenta perto do pico, cai) em vez
+  de ligar/desligar de repente. Nos últimos `ARENA_FASE_FINAL_MS` (0:15) o
+  tremor deixa de ser periódico e **não para mais** (`faseFinalContinua`) — o
+  progresso passa a oscilar numa faixa que nunca chega às pontas do envelope.
+  Por causa disso o som é disparado na borda de subida de um **índice** de
+  tremor (`terremotoPulsoAntes` em `arenaVisuals.js`) e não de um booleano de
+  "está ativo": um booleano tocaria o rumor uma vez só e a câmera sacudiria em
+  silêncio pelos 14s da fase final.
+- **Areia**: rajadas de vento periódicas empurram **os dois jogadores** para o
+  mesmo lado — não é vantagem de ninguém, então a direção não precisa ser
+  sorteada por partida: vem do índice do ciclo (`ventoDirecao`), alternando a
+  cada rajada. Nos últimos `ARENA_FASE_FINAL_MS` (0:15) a pausa entre rajadas
+  deixa de existir e o vento **não para mais** (`faseFinalContinua`, igual ao
+  terremoto): só troca de lado na virada do ciclo.
+  `public/js/arenaVisuals.js` desenha riscos de areia atravessando a tela na
+  direção do vento.
+- **Gelo**: piso escorregadio a partida inteira. Em vez do movimento parar
+  assim que solta a tecla (como nas outras arenas), `stepPlayers` passa a
+  acumular velocidade "de embalo" (`p.vx`/`p.vy`, ver `shared/entities.js`) que
+  só se aproxima da velocidade do input a cada tick, em vez de igualá-la —
+  isso é o que dá a sensação de deslize.
+- **Fogo**: erupções **miradas nos jogadores**, não em posição aleatória.
+  Cada onda cai com as **duas ao mesmo tempo**, uma em cima de cada jogador —
+  `tickErupcoes` captura a posição de cada um no instante em que a onda
+  surge (`criarErupcoes` só sorteia o horário das ondas, mesmo padrão de
+  `criarPowerups`); depois disso o alvo fica fixo, então dá pra escapar
+  andando para longe antes de explodir. Cada erupção avisa por
+  `ERUPCAO_AVISO_MS` (círculo pulsando) antes de explodir, causando dano e
+  empurrando para longe do centro quem ainda estiver dentro na hora. É a
+  arena mais agressiva de propósito: `ERUPCAO_JANELAS_MS` tem seis janelas
+  (o dobro das outras agendas de arena), uma onda nova a cada ~9-10s de
+  partida.
+
+Terremoto e vento param de vez com `ARENA_EVENTO_FIM_MS` (1s) de tempo
+restante: o último segundo — e todo o desempate depois dele — fica limpo, para
+o momento que decide a partida não ser disputado com a tela sacudindo nem com
+os dois jogadores sendo empurrados.
+
+Terremoto, vento e gelo são **puramente determinísticos**: dependem só do
+relógio (`agora`, o mesmo `Date.now()` que já passa para `stepPlayers`), sem
+parte aleatória — servidor, bot e o desenho no cliente concordam sem precisar
+de nada novo no protocolo, e o cliente pode tremer a câmera/desenhar o vento
+sem esperar snapshot nenhum. Só o fogo tem posição sorteada por partida, por
+isso é o único dos quatro com agenda/estado sincronizados via snapshot
+(`erupcoes`, mesmo lugar de `powerups` na mensagem `state` e no `init` do
+espectador).
+
+- `stepPlayers` (`shared/simulation.js`) recebe `arenaTipo` como quarto
+  parâmetro e aplica o empurrão do vento e o deslize do gelo — os três
+  consumidores da simulação (servidor, bot e a própria bateria de testes)
+  pegam o efeito de graça, sem duplicar lógica. Terra e fogo não entram aqui:
+  terremoto é só render.js, e o dano/knockback do fogo é aplicado por
+  `tickErupcoes`, não por `stepPlayers`.
+- Erupções não têm projétil nem `onPlayerDown`: como podem matar um ou os
+  dois jogadores no mesmo tick, quem chama `tickErupcoes` (`Match.js`,
+  `bot.js`) confere quem ainda está vivo logo depois e decide o fim de
+  partida ali mesmo (vitória, ou empate se os dois morrerem juntos — mesma
+  regra do desempate por tempo).
+- No desempate, `congelarPartida` também descarta as erupções ativas nos dois
+  donos de loop, pelo mesmo motivo dos power-ups: a partida está congelada,
+  ninguém andaria até lá nem veria o resto da explosão.
+- As duas pistas sonoras da erupção saem do **diff do snapshot** em
+  `arenaVisuals.js` (`diffErupcoes`) — mesmo padrão de diff entre frames que o
+  HUD usa para tiro/dano/bloqueio e que `powerups.js` usa para spawn/coleta:
+  id novo em `fase: 'aviso'` toca a sirene (`playEruptionWarningSound`, o
+  único efeito que vem de arquivo), e a transição `aviso` →
+  `explosao` toca o estrondo (`playEruptionSound`) e joga as partículas
+  laranja de `spawnExplosion` no ponto da erupção, dimensionadas pelo `raio`
+  dela. A erupção fica em `fase: 'explosao'` por `ERUPCAO_EXPLOSAO_MS`, e
+  não por um tick só: como o tick (60hz) e o `requestAnimationFrame` não são
+  sincronizados, uma explosão de um tick às vezes caía entre dois frames e o
+  cliente nunca a via — a erupção sumia do aviso direto para o nada, sem
+  estrondo nem partículas. O dano continua sendo aplicado uma única vez, no
+  tick da virada de fase, e o cliente dispara som/partículas na **primeira**
+  vez que vê aquele id explodindo (não só na transição `aviso` →
+  `explosao`, que um espectador recém-chegado não teria como ver).
+  `ERUPCAO_AVISO_MS` precisa caber reação humana **mais** a caminhada
+  até fora do raio (a erupção nasce em cima do jogador, então sair de dentro
+  custa `ERUPCAO_RAIO` px de deslocamento) — encurtar isso deixa a arena de
+  fogo impossível de desviar. O
+  terremoto dispara `playTerremotoSound` na borda de subida de
+  `terremotoProgresso(now)` (calculado localmente, sem precisar de snapshot). O
+  vento ainda não tem som próprio (só o visual).
+- Enquanto o tutorial interativo roda (`isMatchTutorialActive()`), os mapas
+  não têm efeito nenhum: `bot.js` passa `arenaTipo: null` para `stepPlayers` e
+  `tickErupcoes` (desliga vento/gelo/fogo) e `arenaVisuals.js` zera o tremor
+  de câmera e as partículas de vento — quem está aprendendo os controles não
+  deveria lidar com isso ainda. `state.arenaTipo` continua valendo pro fundo
+  da arena (só a física/eventos são desligados), e como o tutorial só roda no
+  modo bot, o servidor nunca precisa dessa checagem.
 
 ### Modo espectador (assistir partidas em andamento)
 
@@ -593,7 +875,8 @@ precisa continuar visível enquanto a lista de versões cresce.
 
 O texto é escrito para jogador, não para desenvolvedor: descreve o que mudou na
 partida, não o commit. Versões atuais: `beta 0.1` (sprites dos personagens e o
-jogo como estava até então) e `beta 0.2` (power-ups na arena).
+jogo como estava até então), `beta 0.2` (power-ups na arena) e `beta 0.3`
+(quatro arenas com eventos, HUD em barras e rebalanceamento das classes).
 
 ### Convenção de nomes e comentários
 

@@ -1,22 +1,23 @@
 // Preview animado da classe selecionada na modal de seleção de classe do
 // modo online: mostra o personagem (o mesmo sprite desenhado em partida por
 // render.js, aqui animado por CSS — ver classSprite.js) atirando para a
-// direita contra um boneco de treino, com os mesmos corações e escudos em
-// miniatura do HUD (hud.js) para a classe atual.
+// direita contra um boneco de treino, com as mesmas barras de vida e escudo
+// do HUD (hud.js) em miniatura, já cheias, para a classe atual.
 //
 // Os disparos reproduzem o comportamento real da classe em partida: cadência
 // (shotCooldownMs), quantidade e leque de projéteis (projectileCount /
 // coneSpreadDeg), tamanho relativo (projectileSize) e alcance (range) — só a
 // velocidade visual de travessia da caixa é a mesma para todas as classes,
 // porque PROJECTILE_SPEED é igual para todas em shared/constants.js.
-import { createHeartsRow, createShieldsRow } from './hud.js';
+import { createResourceBar, updateResourceBar } from './hud.js';
 import { applyClassSprite } from './classSprite.js';
 import { getSpriteOffsetY, SPRITE_DISPLAY_SIZE } from './characterSprites.js';
 import { getClass } from '../../shared/classes.js';
 import { ARENA, PROJECTILE_SPEED, TICK_MS } from '../../shared/constants.js';
 
-const PREVIEW_HEART_PIXEL = 1.6;
-const PREVIEW_SHIELD_PIXEL = 1.6;
+// Pixel do ícone do contador das barras: menor que no HUD, porque a caixa do
+// preview é bem mais estreita que a metade do HUD de partida.
+const PREVIEW_CONTADOR_PIXEL = 1.6;
 
 const OWN_SHOT_COLOR = '#facc15';
 const PROJECTILE_SIZE_SCALE = 1.27;
@@ -47,13 +48,17 @@ export function createClassPreview(containerEl) {
   containerEl.innerHTML = '';
   containerEl.classList.add('class-preview');
 
+  // As classes `.hearts`/`.shields` são o que dá cor e espessura às barras (ver
+  // style.css) — as mesmas caixas do HUD de partida.
   const hearts = document.createElement('div');
   hearts.className = 'class-preview-hearts hearts';
   containerEl.appendChild(hearts);
+  const barraVida = createResourceBar(hearts, 'vida', PREVIEW_CONTADOR_PIXEL);
 
   const shields = document.createElement('div');
   shields.className = 'class-preview-shields shields';
   containerEl.appendChild(shields);
+  const barraEscudo = createResourceBar(shields, 'escudo', PREVIEW_CONTADOR_PIXEL);
 
   const character = document.createElement('div');
   character.className = 'class-preview-character';
@@ -200,8 +205,9 @@ export function createClassPreview(containerEl) {
 
   function setClass(classId) {
     const cls = getClass(classId);
-    createHeartsRow(hearts, cls.maxLives, PREVIEW_HEART_PIXEL);
-    createShieldsRow(shields, cls.shieldMaxHits, PREVIEW_SHIELD_PIXEL);
+    // O preview mostra a classe intacta: valor = teto = máximo da classe.
+    updateResourceBar(barraVida, cls.maxLives, cls.maxLives);
+    updateResourceBar(barraEscudo, cls.shieldMaxHits, cls.shieldMaxHits);
     currentClassId = cls.id;
     alignFighterToShot(cls.id);
     // Sem arte própria, o personagem continua sendo o quadrado colorido.

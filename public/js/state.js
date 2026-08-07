@@ -27,10 +27,17 @@ export const state = {
   classId: DEFAULT_CLASS_ID, // classe escolhida no menu para a próxima partida
   botClassId: null, // classe do bot escolhida no modal do modo treino
   botDifficulty: DEFAULT_BOT_DIFFICULTY, // dificuldade do bot escolhida no modal do modo treino
+  // Arena escolhida no modal do modo treino. `null` = aleatória (mesmo
+  // sorteio do modo online, ver sortearArena em shared/arenaEvents.js).
+  botArenaTipo: null,
 
   // Parâmetros da partida — os valores online vêm do servidor (mensagem
   // `init`) e podem, em tese, divergir das constantes locais.
   arena: ARENA,
+  // Arena sorteada para a partida ('terra' | 'areia' | 'gelo' | 'fogo') — ver
+  // shared/arenaEvents.js. No modo online vem do servidor; no modo bot é
+  // sorteada localmente (startBot em bot.js).
+  arenaTipo: null,
   playerSize: PLAYER_SIZE,
   projectileSize: PROJECTILE_SIZE,
   colors: COLORS,
@@ -39,7 +46,7 @@ export const state = {
 
   // `powerups` são as bolhas de power-up hoje na arena (ver shared/powerups.js):
   // no modo online vêm no snapshot do servidor, no modo treino do loop local.
-  latestState: { players: [], projectiles: [], powerups: [] },
+  latestState: { players: [], projectiles: [], powerups: [], erupcoes: [] },
   gameOver: false,
   matchStarted: false,
   countdownTimer: null,
@@ -129,6 +136,7 @@ export function resetMatchState() {
   state.playerIndex = null;
   state.matchId = null;
   state.arena = ARENA;
+  state.arenaTipo = null;
   state.playerSize = PLAYER_SIZE;
   state.projectileSize = PROJECTILE_SIZE;
   state.colors = COLORS;

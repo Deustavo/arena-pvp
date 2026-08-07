@@ -40,7 +40,36 @@ function montarGaleriaDeSprites() {
   }
 }
 
+// Bolinha de notificação no botão "Novidades": some no primeiro clique e
+// volta quando sai uma versão nova. Guardamos a versão vista (e não um
+// booleano) justamente por isso — o número exibido em #menuVersion é a fonte,
+// então publicar uma versão nova já reacende a bolinha, sem chave nova.
+const NOVIDADES_VISTAS_KEY = 'jogoDoAno.novidadesVistas';
+
+function versaoAtual() {
+  return btnChangelog.querySelector('#menuVersion')?.textContent.trim() || '';
+}
+
+function versaoVista() {
+  try {
+    return localStorage.getItem(NOVIDADES_VISTAS_KEY);
+  } catch {
+    // localStorage indisponível: sem memória, a bolinha some só nesta visita.
+    return null;
+  }
+}
+
+function marcarNovidadesVistas() {
+  btnChangelog.classList.remove('tem-novidade');
+  try {
+    localStorage.setItem(NOVIDADES_VISTAS_KEY, versaoAtual());
+  } catch {
+    // idem: nada a fazer, a bolinha volta no próximo carregamento.
+  }
+}
+
 function abrir() {
+  marcarNovidadesVistas();
   changelogOverlayEl.classList.add('visible');
   // Uma versão nova entra no topo: reabrir a modal deve mostrar o começo da
   // lista, não a rolagem de onde ela parou da última vez.
@@ -56,6 +85,7 @@ function fechar() {
 
 export function initChangelog() {
   montarGaleriaDeSprites();
+  if (versaoVista() !== versaoAtual()) btnChangelog.classList.add('tem-novidade');
   btnChangelog.addEventListener('click', abrir);
   btnChangelogClose.addEventListener('click', fechar);
   changelogOverlayEl.addEventListener('mousedown', (e) => {

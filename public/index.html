@@ -93,7 +93,7 @@
       <div id="menuBody">
         <div id="nicknameField" style="display: none;">
           <label id="nicknameLabel" for="nicknameInput">Jogar como convidado</label>
-          <input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off">
+          <span class="campo-pixel"><input type="text" id="nicknameInput" placeholder="Seu nickname" maxlength="20" autocomplete="off"></span>
           <div id="nicknameError">Digite um nickname para jogar</div>
         </div>
         <div id="accountBar" class="skeleton-loading">
@@ -115,7 +115,9 @@
         <button id="btnBot">Modo treino</button>
         <button id="btnHowToPlay">Tutorial</button>
         <hr id="menuDivider">
-        <button type="button" id="btnChangelog">Novidades <span id="menuVersion">beta 0.2</span></button>
+        <!-- #changelogDot é a bolinha de "não vi ainda"; quem mostra/esconde é
+             public/js/changelog.js, pela versão em #menuVersion. -->
+        <button type="button" id="btnChangelog">Novidades <span id="menuVersion">beta 0.3</span><span id="changelogDot" aria-hidden="true"></span></button>
         <button type="button" id="btnCredits">Créditos</button>
       </div>
       <div id="rankingPanel">
@@ -163,6 +165,9 @@
           <h3 class="profile-subtitulo">Assets</h3>
           <p>Sprites de personagens: <strong>Tiny RPG Character Asset Pack 02</strong>, por Zerie.</p>
           <a href="https://zerie.itch.io/tiny-rpg-character-asset-pack-02" target="_blank" rel="noopener noreferrer">zerie.itch.io/tiny-rpg-character-asset-pack-02</a>
+          <hr class="creditos-divisor">
+          <p>Arenas: <strong>10 Dungeon Arena Asset</strong>, por Captain Skolot.</p>
+          <a href="https://captainskolot.itch.io/10-dungeon-arena-asset-pixelart-pixel-art-sprite-top-down-battle-field-pack-r" target="_blank" rel="noopener noreferrer">captainskolot.itch.io/10-dungeon-arena-asset</a>
         </div>
       </div>
     </div>
@@ -180,20 +185,46 @@
       <div id="changelogBody">
         <section class="changelog-versao">
           <div class="changelog-versao-cabecalho">
-            <h3>beta 0.2</h3>
+            <h3>beta 0.3</h3>
             <span class="changelog-tag">versão atual</span>
+            <span class="changelog-data">7 de agosto de 2026</span>
+          </div>
+
+          <h4>Quatro arenas, cada uma com seu evento</h4>
+          <p>A arena da partida agora é sorteada entre quatro mapas, e cada um interfere no duelo de um jeito diferente. <strong>Terra</strong>: terremotos periódicos sacodem a tela — não machucam ninguém, só atrapalham a mira, e vêm em intensidades diferentes, do tremor leve ao devastador. <strong>Areia</strong>: rajadas de vento empurram os dois jogadores para o mesmo lado, alternando de direção a cada rajada. <strong>Gelo</strong>: o piso é escorregadio a partida inteira, soltar a tecla não para o personagem na hora. <strong>Fogo</strong>: erupções caem miradas em cima dos dois jogadores ao mesmo tempo, avisando antes de explodir — dá para escapar andando para longe. É a arena mais agressiva das quatro, com uma onda nova a cada 9 segundos.</p>
+          <img class="changelog-topico-imagem" src="assets/changelog/0.3/new_arenas_01.png" alt="As quatro arenas novas: terra, gelo, fogo e areia" loading="lazy">
+          <p>Nos últimos 15 segundos os eventos ficam mais intensos: terremoto e vento deixam de ter pausa e não param mais. Mas tudo isso some no último segundo de partida e durante o desempate — o momento que decide a partida é limpo.</p>
+          <p>Durante o tutorial os mapas não têm efeito nenhum: quem está aprendendo os controles não precisa lidar com terremoto e erupção ainda.</p>
+
+          <h4>HUD novo</h4>
+          <p>Vida e escudo deixaram de ser fileiras de ícones e viraram barras segmentadas, com um contador do lado. O que muda com a classe e com os power-ups é o número de divisões da barra, não o tamanho dela — antes o HUD do tank com power-up de vida crescia até quebrar em outra linha no meio da partida. O que passa do máximo da sua classe aparece em dourado.</p>
+          <img class="changelog-topico-imagem" src="assets/changelog/0.3/hud_01.png" alt="HUD com vida e escudo em barras segmentadas e o cronômetro no centro" loading="lazy">
+
+          <h4>Equilíbrio das seis classes</h4>
+          <p>O mago estava vencendo 80% das partidas por causa de um bug: o leque de três projéteis dele gastava uma carga de escudo por projétil no mesmo instante, furando o escudo inteiro do tank ou do duelista com um disparo só. Agora um disparo gasta no máximo uma carga.</p>
+          <p>Com isso corrigido, dano, cadência e vida das seis classes foram reajustados. O atirador e o duelista atiram mais rápido, o sniper ficou mais forte de perto, o mago perdeu dano e cadência, e o assassino ficou um pouco menos letal. A diferença de aproveitamento entre a melhor e a pior classe caiu de 46 para cerca de 8 pontos.</p>
+          <p>A hitbox dos personagens também cresceu para acompanhar o tamanho dos sprites — antes dava para acertar visualmente e o tiro passar.</p>
+
+          <h4>Mais um power-up e classes liberadas</h4>
+          <p>Agora são quatro bolhas de power-up por partida, em vez de três.</p>
+          <p>Jogar online sem conta antes só liberava o atirador. Agora todas as classes estão livres para convidado, menos o assassino.</p>
+        </section>
+
+        <section class="changelog-versao">
+          <div class="changelog-versao-cabecalho">
+            <h3>beta 0.2</h3>
             <span class="changelog-data">6 de agosto de 2026</span>
           </div>
 
           <h4>Power-ups na arena</h4>
-          <p>Três bolhas nascem no círculo central ao longo da partida e valem para quem chegar primeiro. São quatro tipos: vida (de 1 a 3 corações), escudo (1 carga), cadência (cooldown de tiro pela metade por 10 segundos, com recarga na hora) e velocidade (40% mais rápido por 10 segundos).</p>
+          <p>Quatro bolhas nascem no círculo central ao longo da partida e valem para quem chegar primeiro. São quatro tipos: vida (de 1 a 3 corações), escudo (1 carga), cadência (cooldown de tiro pela metade por 10 segundos, com recarga na hora) e velocidade (40% mais rápido por 10 segundos).</p>
           <p>Vida e escudo passam do máximo da classe. Se você já está com tudo cheio, o teto sobe, então dá para terminar a partida com mais coração do que a classe começa. Quem está sob efeito de cadência ou velocidade fica com um brilho na cor do buff, e dá para ver isso no adversário também.</p>
           <p>O tutorial ganhou um passo novo: pegar uma bolha. Uma bolha de velocidade nasce no centro e o boneco de treino continua parado até você pegar.</p>
-          <img class="changelog-topico-imagem" src="assets/changelog/powerups_01.png" alt="Bolha de power-up na arena" loading="lazy">
+          <img class="changelog-topico-imagem" src="assets/changelog/0.2/powerups_01.png" alt="Bolha de power-up na arena" loading="lazy">
 
           <h4>Modo espectador</h4>
           <p>Dá para assistir a qualquer partida online em andamento pelo painel "Partidas ao vivo", na tela inicial, sem entrar na fila e sem conta. A partida assistida tem borda amarela em vez de vermelha e uma faixa "Assistindo" abaixo do cronômetro, para não confundir com uma partida sua. Sai com Esc a qualquer momento.</p>
-          <img class="changelog-topico-imagem" src="assets/changelog/livematch_01.png" alt="Painel de partidas ao vivo com botão para assistir" loading="lazy">
+          <img class="changelog-topico-imagem" src="assets/changelog/0.2/livematch_01.png" alt="Painel de partidas ao vivo com botão para assistir" loading="lazy">
 
           <h4>Celular</h4>
           <p>Celular e tablet agora recebem um aviso para jogar no computador em vez de uma tela quebrada. O jogo é WASD e mouse, não tem controle de toque. Notebook com tela sensível ao toque continua liberado.</p>
@@ -221,12 +252,12 @@
           <h4>Partida online 1x1</h4>
           <p>Fila de matchmaking, partida de 1 minuto e desempate por morte súbita: acabando o tempo com os dois vivos, a arena congela e os dois começam a perder um coração por vez até sobrar um. Zerando no mesmo passo, é empate.</p>
           <p>O jogador sempre se vê do lado esquerdo da tela, independente de onde nasceu na arena.</p>
-          <img class="changelog-topico-imagem" src="assets/changelog/arena_01.png" alt="Duelo entre dois jogadores na arena" loading="lazy">
+          <img class="changelog-topico-imagem" src="assets/changelog/0.1/arena_01.png" alt="Duelo entre dois jogadores na arena" loading="lazy">
 
           <h4>Modo treino e tutorial</h4>
           <p>Partida offline contra bot, com escolha da sua classe, da classe do bot e da dificuldade, do noob ao demoníaco. O bot mira, reage, desvia e ergue escudo de acordo com a dificuldade, e joga de forma diferente conforme a classe dele.</p>
           <p>O tutorial deixou de ser uma tela explicativa e virou uma partida de verdade contra um boneco de treino, com uma faixa no topo pedindo a próxima ação. O relógio não corre enquanto ele está rolando.</p>
-          <img class="changelog-topico-imagem" src="assets/changelog/tutorial_01.png" alt="Faixa do tutorial indicando a próxima ação na partida" loading="lazy">
+          <img class="changelog-topico-imagem" src="assets/changelog/0.1/tutorial_01.png" alt="Faixa do tutorial indicando a próxima ação na partida" loading="lazy">
 
           <h4>Contas, ranking e perfil</h4>
           <p>Conta com e-mail e senha, verificação de e-mail e recuperação de senha. Quem não quiser criar conta continua entrando como convidado, só com um nickname.</p>
@@ -250,15 +281,15 @@
       <form id="authForm" novalidate>
         <div class="auth-field" id="authFieldName">
           <label for="authName">Nome do jogador</label>
-          <input type="text" id="authName" maxlength="20" autocomplete="nickname" pattern="[A-Za-z0-9]+" placeholder="Só letras e números, sem espaços">
+          <span class="campo-pixel"><input type="text" id="authName" maxlength="20" autocomplete="nickname" pattern="[A-Za-z0-9]+" placeholder="Só letras e números, sem espaços"></span>
         </div>
         <div class="auth-field" id="authFieldEmail">
           <label for="authEmail">E-mail</label>
-          <input type="email" id="authEmail" autocomplete="email" placeholder="voce@exemplo.com">
+          <span class="campo-pixel"><input type="email" id="authEmail" autocomplete="email" placeholder="voce@exemplo.com"></span>
         </div>
         <div class="auth-field" id="authFieldPassword">
           <label for="authPassword">Senha</label>
-          <div class="password-field-wrap">
+          <div class="password-field-wrap campo-pixel">
             <input type="password" id="authPassword" autocomplete="current-password" placeholder="Mínimo de 8 caracteres">
             <button type="button" class="password-toggle-btn" aria-label="Mostrar senha">👁</button>
           </div>
@@ -319,16 +350,30 @@
           <div id="botClassList" class="class-mini-list"></div>
         </div>
       </div>
-      <div id="botDifficultyCol">
-        <h3>Dificuldade do inimigo</h3>
-        <div id="botDifficultyDropdown" class="dropdown">
-          <button type="button" id="botDifficultyToggle" class="dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
-            <span id="botDifficultyValue"></span>
-            <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
-              <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <ul id="botDifficultyList" class="dropdown-menu" role="listbox" tabindex="-1"></ul>
+      <div id="botOptionsRow">
+        <div id="botDifficultyCol">
+          <h3>Dificuldade do inimigo</h3>
+          <div id="botDifficultyDropdown" class="dropdown">
+            <button type="button" id="botDifficultyToggle" class="dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
+              <span id="botDifficultyValue"></span>
+              <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <ul id="botDifficultyList" class="dropdown-menu" role="listbox" tabindex="-1"></ul>
+          </div>
+        </div>
+        <div id="botArenaCol">
+          <h3>Arena</h3>
+          <div id="botArenaDropdown" class="dropdown">
+            <button type="button" id="botArenaToggle" class="dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
+              <span id="botArenaValue"></span>
+              <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <ul id="botArenaList" class="dropdown-menu" role="listbox" tabindex="-1"></ul>
+          </div>
         </div>
       </div>
       <button id="btnBotClassConfirm">Jogar</button>
@@ -340,12 +385,12 @@
       <div id="matchTimer">2:00</div>
       <div id="spectatorBanner"></div>
       <div class="hud-row">
+        <!-- Ícone, nome e classe na mesma linha. A linha do oponente tem a
+             mesma ordem no DOM e é espelhada no CSS (.hud-row-right). -->
         <div class="hud-name-row">
           <div class="hud-class-icon" id="classIconP0"></div>
-          <div class="hud-name-col">
-            <div class="hud-name" id="nameP0">Você</div>
-            <div class="hud-class-name" id="classNameP0"></div>
-          </div>
+          <div class="hud-name" id="nameP0">Você</div>
+          <div class="hud-class-name" id="classNameP0"></div>
         </div>
         <div class="hearts" id="livesP0"></div>
         <div class="shields" id="shieldsP0"></div>
@@ -353,11 +398,9 @@
       </div>
       <div class="hud-row hud-row-right">
         <div class="hud-name-row">
-          <div class="hud-name-col hud-name-col-right">
-            <div class="hud-name" id="nameP1">Oponente</div>
-            <div class="hud-class-name" id="classNameP1"></div>
-          </div>
           <div class="hud-class-icon" id="classIconP1"></div>
+          <div class="hud-name" id="nameP1">Oponente</div>
+          <div class="hud-class-name" id="classNameP1"></div>
         </div>
         <div class="hearts" id="livesP1"></div>
         <div class="shields" id="shieldsP1"></div>
