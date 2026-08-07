@@ -744,7 +744,15 @@ espectador).
   único efeito que vem de arquivo), e a transição `aviso` →
   `explosao` toca o estrondo (`playEruptionSound`) e joga as partículas
   laranja de `spawnExplosion` no ponto da erupção, dimensionadas pelo `raio`
-  dela. `ERUPCAO_AVISO_MS` precisa caber reação humana **mais** a caminhada
+  dela. A erupção fica em `fase: 'explosao'` por `ERUPCAO_EXPLOSAO_MS`, e
+  não por um tick só: como o tick (60hz) e o `requestAnimationFrame` não são
+  sincronizados, uma explosão de um tick às vezes caía entre dois frames e o
+  cliente nunca a via — a erupção sumia do aviso direto para o nada, sem
+  estrondo nem partículas. O dano continua sendo aplicado uma única vez, no
+  tick da virada de fase, e o cliente dispara som/partículas na **primeira**
+  vez que vê aquele id explodindo (não só na transição `aviso` →
+  `explosao`, que um espectador recém-chegado não teria como ver).
+  `ERUPCAO_AVISO_MS` precisa caber reação humana **mais** a caminhada
   até fora do raio (a erupção nasce em cima do jogador, então sair de dentro
   custa `ERUPCAO_RAIO` px de deslocamento) — encurtar isso deixa a arena de
   fogo impossível de desviar. O

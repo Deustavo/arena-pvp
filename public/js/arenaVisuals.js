@@ -13,12 +13,12 @@ import { ctx, canvas } from './dom.js';
 import { state } from './state.js';
 import {
   terremotoProgresso, terremotoIntensidade, TERREMOTO_DURACAO_MS, ventoDirecao,
-  ERUPCAO_RAIO, ERUPCAO_AVISO_MS, faseFinalFator,
+  ERUPCAO_RAIO, ERUPCAO_AVISO_MS, ERUPCAO_EXPLOSAO_MS, faseFinalFator,
 } from '../../shared/arenaEvents.js';
 import { playEruptionSound, playEruptionWarningSound, playTerremotoSound } from './audio.js';
 import { spawnExplosion } from './explosions.js';
 import { isMatchTutorialActive } from './tutorial/matchTutorial.js';
-import { PX, snap, pxCirculo, pxAnel } from './pixel.js';
+import { PX, snap, pxCirculo, pxAnel, alphaEmDegraus } from './pixel.js';
 
 const hasDom = typeof Image !== 'undefined';
 
@@ -194,14 +194,20 @@ let fasesAnteriores = new Map();
 // cair (e acelerar a piscada no fim). O `explodeEm` do snapshot não serve:
 // ele está no relógio do servidor, que não é o do cliente.
 let avisosVistosEm = new Map();
+// Mesma ideia para a explosão: o instante (no relógio do cliente) em que ela
+// foi vista pela primeira vez, para o flash apagar em degraus ao longo de
+// ERUPCAO_EXPLOSAO_MS em vez de ficar aceso com força constante.
+let explosoesVistasEm = new Map();
 
 function diffErupcoes(lista) {
   for (const e of lista) {
     const antes = fasesAnteriores.get(e.id);
-    if (antes === undefined && e.fase === 'aviso') {
-      avisosVistosEm.set(e.id, Date.now());
-      playEruptionWarningSound();
-    } else if (antes === 'aviso' && e.fase === 'explosao') {
+    if (e.fase === 'explosao' && !explosoesVistasEm.has(e.id)) {
+      // Vale para a transição 'aviso' -> 'explosao' e também para a erupção
+      // que já aparece explodindo (espectador que entrou agora, ou um frame
+      // longo o bastante para pular a fase de aviso inteira) — o que importa é
+      // ser a primeira vez que este id é visto explodindo.
+      explosoesVistasEm.set(e.id, Date.now());
       playEruptionSound();
       // Partículas no mesmo lugar/instante do flash, dimensionadas pelo raio
       // desta erupção (que já vem intensificado na fase final).
@@ -211,11 +217,17 @@ function diffErupcoes(lista) {
         count: 40,
         spread: raio / ERUPCAO_RAIO * 1.6,
       });
+    } else if (antes === undefined && e.fase === 'aviso') {
+      avisosVistosEm.set(e.id, Date.now());
+      playEruptionWarningSound();
     }
   }
   fasesAnteriores = new Map(lista.map((e) => [e.id, e.fase]));
   for (const id of avisosVistosEm.keys()) {
     if (!fasesAnteriores.has(id)) avisosVistosEm.delete(id);
+  }
+  for (const id of explosoesVistasEm.keys()) {
+    if (!fasesAnteriores.has(id)) explosoesVistasEm.delete(id);
   }
 }
 
@@ -230,11 +242,17 @@ export function updateAndDrawErupcoes(now) {
     const raio = e.raio ?? ERUPCAO_RAIO;
     ctx.save();
     if (e.fase === 'explosao') {
-      // A lava caiu: três anéis concêntricos do miolo claro à borda em brasa.
-      // Dura um tick só — o resto do efeito são as partículas de spawnExplosion.
+      // A lava caiu: três anéis concêntricos do miolo claro à borda em brasa,
+      // apagando em degraus ao longo de ERUPCAO_EXPLOSAO_MS (o resto do efeito
+      // são as partículas de spawnExplosion). O tempo é contado daqui, não do
+      // snapshot: `terminaEm` está no relógio do servidor.
+      const vistaEm = explosoesVistasEm.get(e.id) ?? now;
+      const restante = 1 - (now - vistaEm) / ERUPCAO_EXPLOSAO_MS;
+      ctx.globalAlpha = alphaEmDegraus(restante);
       pxCirculo(ctx, e.x, e.y, raio * 0.9, ERUPCAO_EXPLOSAO_COLOR);
       pxAnel(ctx, e.x, e.y, raio * 1.15, PX * 3, ERUPCAO_EXPLOSAO_MEIO);
       pxAnel(ctx, e.x, e.y, raio * 1.35, PX * 2, ERUPCAO_EXPLOSAO_BORDA);
+      ctx.globalAlpha = 1;
     } else {
       const vistoEm = avisosVistosEm.get(e.id) ?? now;
       const decorrido = (now - vistoEm) / ERUPCAO_AVISO_MS;
@@ -281,5 +299,6 @@ export function resetArenaVisuals() {
   ultimoSpawnVento = 0;
   fasesAnteriores = new Map();
   avisosVistosEm = new Map();
+  explosoesVistasEm = new Map();
   terremotoPulsoAntes = null;
 }

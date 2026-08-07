@@ -129,7 +129,7 @@ function drawShield(cx, cy, charges, maxHits, now) {
   const step = (Math.PI * 2) / maxHits;
   for (let i = 0; i < charges; i++) {
     const start = -Math.PI / 2 + i * step + gap / 2;
-    pxAnel(ctx, cx, cy, r, PX * 2, SHIELD_COLOR, start, start + step - gap);
+    pxAnel(ctx, cx, cy, r, PX, SHIELD_COLOR, start, start + step - gap);
   }
   ctx.restore();
 }

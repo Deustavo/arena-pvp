@@ -1161,20 +1161,25 @@
   }
   /* A barra enche em blocos, não num preenchimento liso: o gradiente repetido
      desenha um bloco de 6px e um vão de 2px, então o que cresce são as
-     divisões — a mesma leitura "em degraus" da arte do canvas. */
+     divisões — a mesma leitura "em degraus" da arte do canvas. Precisa ser
+     `repeating-`: um `linear-gradient` comum estica a última parada até o fim,
+     e a barra inteira ficava pintada com a cor do vão (a mesma do trilho), ou
+     seja, enchia sem aparecer. */
   .cooldown-fill {
     height: 100%;
     width: 0%;
-    background-color: var(--cor-azul-classe);
-    background-image: linear-gradient(
+    /* Vermelho enquanto recarrega, verde quando o tiro está disponível. */
+    background-color: var(--cor-erro);
+    background-image: repeating-linear-gradient(
       90deg,
       transparent 0 6px,
       var(--cor-superficie-icone) 6px 8px
     );
     transition: background-color 0.15s;
   }
+  /* Só a cor muda: `background` no atalho apagaria os blocos do gradiente. */
   .cooldown-fill.ready {
-    background: var(--cor-sucesso);
+    background-color: var(--cor-sucesso);
   }
   /* ===== Barras de vida e escudo =====
      Um segmento por coração/carga: a largura é sempre a da linha do jogador e
@@ -1290,6 +1295,18 @@
     /* Número de largura fixa: sem isso a barra muda de tamanho a cada hit,
        porque o contador encolhe junto com o valor. */
     font-variant-numeric: tabular-nums;
+  }
+  /* Parte inteira do valor: largura mínima em dígitos (definida pelo JS a
+     partir do teto) e alinhada à direita, para o "/max" ficar sempre no mesmo
+     ponto por mais que o valor perca dígitos. */
+  .resource-int {
+    display: inline-block;
+    text-align: right;
+  }
+  /* O ",5" do meio coração continua ocupando lugar quando o valor é inteiro —
+     `visibility`, não `display`, senão a barra andaria a cada meio hit. */
+  .resource-frac.oculta {
+    visibility: hidden;
   }
   .hearts .resource-count {
     font-size: 14px;

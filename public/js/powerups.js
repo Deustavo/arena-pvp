@@ -14,7 +14,8 @@ import { HEART_PIXELS, SHIELD_PIXELS } from './hud.js';
 import { playPowerupSpawnSound, playPowerupPickupSound } from './audio.js';
 import { POWERUP_RADIUS, POWERUP_ZONE } from '../../shared/powerups.js';
 import {
-  PX, snap, pxCirculo, pxAnel, pxGrade, pxTextoCentro, alphaEmDegraus,
+  PX, snap, pxCirculo, pxAnel, pxGrade, pxTexto, pxTextoCentro, pxLarguraTexto,
+  alphaEmDegraus,
 } from './pixel.js';
 
 // Cinza um pouco mais escuro que o fundo da arena (ARENA_BG_COLOR em
@@ -58,10 +59,15 @@ const PICKUP_RISE_PX = 34;
 // halo e o anel continuam na grade de PX.
 const ICON_PX = PX / 2;
 
-// Selo com a quantidade, na borda da bolha: um quadrado com moldura escura,
-// porque em pixel art um círculo pequeno com contorno não sobra pixel para
-// ler o número dentro. Em células de ICON_PX, como o resto do conteúdo.
-const BADGE_BLOCOS = 5;
+// Selo com a quantidade: uma caixa com moldura escura pendurada na borda de
+// baixo/direita da bolha. Diferente do resto do conteúdo, o número é desenhado
+// na grade cheia de PX (o dobro do ícone) — na grade fina o dígito ficava com
+// 6x10px de canvas e, depois do gameScale reduzir o canvas inteiro, era
+// ilegível. Por isso o selo fica quase todo para fora da bolha: no tamanho
+// legível ele não cabe dentro dela sem cobrir o coração.
+const BADGE_OFFSET = POWERUP_RADIUS * 0.9;
+const BADGE_PADDING = ICON_PX;
+const BADGE_BORDA = ICON_PX;
 const BADGE_TEXT_COLOR = '#141414';
 const BADGE_STROKE = '#141414';
 
@@ -148,15 +154,24 @@ function drawIcone(tipo, cor) {
 // bolha não diz se vale um coração ou três. Vai num selo na borda, e não ao
 // lado do ícone, porque o coração já ocupa quase toda a largura útil da bolha.
 function drawBadgeQuantidade(quantidade, cor) {
-  const bx = snap(POWERUP_RADIUS * 0.7);
-  const by = snap(POWERUP_RADIUS * 0.7);
-  const lado = BADGE_BLOCOS * ICON_PX;
+  const txt = `${quantidade}`;
+  const largura = pxLarguraTexto(txt);
+  const altura = PX * 5; // a fonte bitmap tem 5 linhas
+  // Canto superior esquerdo do dígito já na grade: é dele que sai a caixa, e
+  // não o contrário — centralizar a caixa e depois snapar o texto deixaria o
+  // número desalinhado dentro dela.
+  const tx = snap(BADGE_OFFSET - largura / 2);
+  const ty = snap(BADGE_OFFSET - altura / 2);
+  const recuo = BADGE_PADDING + BADGE_BORDA;
 
   ctx.fillStyle = BADGE_STROKE;
-  ctx.fillRect(bx - lado / 2 - ICON_PX, by - lado / 2 - ICON_PX, lado + ICON_PX * 2, lado + ICON_PX * 2);
+  ctx.fillRect(tx - recuo, ty - recuo, largura + recuo * 2, altura + recuo * 2);
   ctx.fillStyle = cor;
-  ctx.fillRect(bx - lado / 2, by - lado / 2, lado, lado);
-  pxTextoCentro(ctx, `${quantidade}`, bx, by, BADGE_TEXT_COLOR, ICON_PX / PX);
+  ctx.fillRect(
+    tx - BADGE_PADDING, ty - BADGE_PADDING,
+    largura + BADGE_PADDING * 2, altura + BADGE_PADDING * 2,
+  );
+  pxTexto(ctx, txt, tx, ty, BADGE_TEXT_COLOR);
 }
 
 // A bolha e o ícone dentro dela são desenhados sem espelhamento de visão: o
@@ -194,8 +209,8 @@ function drawBolha(pu, now) {
     // Halo na cor do tipo: é o que dá para identificar o power-up de longe,
     // antes de o ícone ficar legível. Em pixel art ele não é um alpha que
     // desvanece, e sim dois anéis de intensidade diferente.
-    pxAnel(ctx, 0, 0, r * 1.5, PX * 2, hexComAlpha(cor, 0.22));
-    pxAnel(ctx, 0, 0, r * 1.25, PX * 2, hexComAlpha(cor, 0.4));
+    pxAnel(ctx, 0, 0, r * 1.5, PX, hexComAlpha(cor, 0.22));
+    pxAnel(ctx, 0, 0, r * 1.25, PX, hexComAlpha(cor, 0.4));
 
     pxCirculo(ctx, 0, 0, r, BUBBLE_FILL);
     pxAnel(ctx, 0, 0, r, PX, BUBBLE_STROKE);
@@ -234,9 +249,7 @@ function drawColeta(coleta, now) {
     ctx.globalAlpha = alphaEmDegraus(1 - t);
     ctx.translate(snap(coleta.x), snap(cy));
 
-    // O anel abre e afina em blocos inteiros.
-    const espessura = t < 0.5 ? PX * 2 : PX;
-    pxAnel(ctx, 0, 0, POWERUP_RADIUS * (1 + t * 1.6), espessura, cor);
+    pxAnel(ctx, 0, 0, POWERUP_RADIUS * (1 + t * 1.6), PX, cor);
 
     if (coleta.tipo === 'vida' || coleta.tipo === 'escudo') {
       pxTextoCentro(ctx, `+${coleta.quantidade}`, 0, -POWERUP_RADIUS - PX * 3, cor);

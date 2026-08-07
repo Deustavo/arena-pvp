@@ -108,10 +108,24 @@ export function createResourceBar(container, tipo, pixelSize = CONTADOR_PIXEL) {
   const contador = document.createElement('div');
   contador.className = 'resource-count';
   contador.appendChild(createResourceIcon(tipo, pixelSize));
+  // O valor é dois elementos, e não um texto só, porque a largura do contador
+  // não pode mudar com o valor: a barra fica ao lado e andaria a cada hit. A
+  // parte inteira é alinhada à direita numa largura fixa (dígitos do teto) e a
+  // decimal ("meio coração") existe sempre, só fica invisível quando o valor é
+  // inteiro — reservar por texto (tabular-nums) não bastaria, porque a vírgula
+  // não tem a largura de um dígito.
   barra.valorEl = document.createElement('span');
+  barra.valorEl.className = 'resource-int';
+  // Só vida tem valor fracionário; não existe meia carga de escudo.
+  if (tipo === 'vida') {
+    barra.fracEl = document.createElement('span');
+    barra.fracEl.className = 'resource-frac';
+    barra.fracEl.textContent = ',5';
+  }
   barra.maxEl = document.createElement('span');
   barra.maxEl.className = 'resource-max';
   contador.appendChild(barra.valorEl);
+  if (barra.fracEl) contador.appendChild(barra.fracEl);
   contador.appendChild(barra.maxEl);
 
   bar.appendChild(barra.segsEl);
@@ -121,9 +135,12 @@ export function createResourceBar(container, tipo, pixelSize = CONTADOR_PIXEL) {
 }
 
 // Dano fracionário (o duelista tira meio coração por tiro) vira "8,5" no
-// contador; valor inteiro não mostra decimal.
-function formatarValor(valor) {
-  return valor % 1 ? valor.toFixed(1).replace('.', ',') : String(valor);
+// contador; valor inteiro não mostra decimal. A parte decimal só some da vista
+// (`hidden`), nunca do fluxo: sumindo, o contador encolheria e a barra andaria.
+function escreverValor(barra, valor) {
+  const inteiro = Math.floor(valor);
+  barra.valorEl.textContent = String(inteiro);
+  if (barra.fracEl) barra.fracEl.classList.toggle('oculta', valor === inteiro);
 }
 
 // Pinta a barra: `valor` é o atual, `max` o teto de agora e `base` o máximo da
@@ -147,8 +164,11 @@ export function updateResourceBar(barra, valor, max, base = max) {
     barra.segs[i].classList.toggle('half', temMeio && i === inteiros);
     barra.segs[i].classList.toggle('bonus', i >= base);
   }
-  barra.valorEl.textContent = formatarValor(valor);
+  escreverValor(barra, valor);
   barra.maxEl.textContent = `/${max}`;
+  // Largura reservada para o maior valor possível (o teto): sem ela, cair de
+  // 10 para 9 corações encolheria o contador e empurraria a barra.
+  barra.valorEl.style.minWidth = `${String(max).length}ch`;
 }
 
 // `maxLives` são as vidas máximas de cada jogador, dependentes da classe

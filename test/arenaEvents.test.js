@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   ARENA_TIPOS, sortearArena, terremotoAtivo, terremotoProgresso, terremotoIntensidade,
   ventoDirecao, VENTO_FORCA, criarErupcoes, tickErupcoes, ERUPCAO_RAIO, ERUPCAO_KNOCKBACK,
-  ERUPCAO_AVISO_MS,
+  ERUPCAO_AVISO_MS, ERUPCAO_EXPLOSAO_MS,
   ARENA_FASE_FINAL_MS, ARENA_EVENTO_FIM_MS, faseFinalFator,
 } from '../shared/arenaEvents.js';
 import { createPlayerState } from '../shared/entities.js';
@@ -210,8 +210,14 @@ describe('erupções (fogo)', () => {
     assert.equal(alvo.lives, vidasAntes - 1);
     assert.notEqual(alvo.x, xAntesExplosao);
 
-    // Um tick depois, as explosões somem da lista.
-    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, ERUPCAO_AVISO_MS + 1);
+    // A explosão fica no snapshot por ERUPCAO_EXPLOSAO_MS (é o que garante que
+    // nenhum frame do cliente perca a transição), sem repetir o dano.
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, ERUPCAO_AVISO_MS + ERUPCAO_EXPLOSAO_MS - 1);
+    assert.equal(estado.ativas.length, 2);
+    assert.equal(alvo.lives, vidasAntes - 1);
+
+    // Passada a janela, somem da lista.
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, ERUPCAO_AVISO_MS + ERUPCAO_EXPLOSAO_MS);
     assert.equal(estado.ativas.length, 0);
   });
 

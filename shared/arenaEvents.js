@@ -174,6 +174,17 @@ export const ERUPCAO_RAIO = 110;
 export const ERUPCAO_AVISO_MS = 2300;
 export const ERUPCAO_DANO = 1;
 export const ERUPCAO_KNOCKBACK = 22;
+// Quanto tempo a erupção fica em `fase: 'explosao'` depois de estourar. Não é
+// só estética: quem toca o som e joga as partículas é o cliente, olhando a
+// transição 'aviso' -> 'explosao' entre dois snapshots (ver diffErupcoes em
+// public/js/arenaVisuals.js). Durando um tick só, bastava o frame de desenho
+// cair entre dois snapshots — o que acontece de vez em quando, porque o tick
+// (60hz) e o requestAnimationFrame não são sincronizados — para a explosão
+// nunca ser vista: a erupção sumia direto do aviso para o nada, sem estrondo
+// nem partículas. Com uma janela de vários ticks, nenhum frame perde a
+// transição. O dano continua sendo aplicado uma única vez, no tick em que a
+// fase muda.
+export const ERUPCAO_EXPLOSAO_MS = 200;
 
 // Janelas de onda em tempo restante de partida (mesma convenção de
 // JANELAS_SPAWN_MS em shared/powerups.js). Seis janelas (contra as quatro dos
@@ -204,7 +215,7 @@ export function criarErupcoes(rng = Math.random) {
 // fogo. Cada erupção fica em `ativas` com `fase: 'aviso'` até o tempo de
 // explodir; nesse tick ela aplica dano/knockback, muda para `fase: 'explosao'`
 // (pro cliente flashar/tocar som ao ver a transição no snapshot) e é
-// removida no tick seguinte.
+// removida depois de ERUPCAO_EXPLOSAO_MS.
 export function tickErupcoes(arenaTipo, estado, players, restanteMs, agora) {
   if (arenaTipo !== 'fogo' || !estado) return;
 
@@ -237,9 +248,12 @@ export function tickErupcoes(arenaTipo, estado, players, restanteMs, agora) {
   if (!estado.ativas.length) return;
 
   estado.ativas = estado.ativas.filter((e) => {
-    if (e.fase === 'explosao') return false;
+    // Já estourou: fica na lista (e no snapshot) até o fim da janela de
+    // explosão, sem causar dano de novo.
+    if (e.fase === 'explosao') return agora < e.terminaEm;
     if (agora < e.explodeEm) return true;
     e.fase = 'explosao';
+    e.terminaEm = agora + ERUPCAO_EXPLOSAO_MS;
     for (const p of players) {
       if (!p.alive || !circleHitsRect(e.x, e.y, e.raio, p.x, p.y, PLAYER_SIZE, PLAYER_SIZE)) continue;
       const cx = p.x + PLAYER_SIZE / 2;
