@@ -12,7 +12,8 @@
 import { ctx, canvas } from './dom.js';
 import { state } from './state.js';
 import {
-  terremotoProgresso, terremotoIntensidade, ventoDirecao, ERUPCAO_RAIO, faseFinalFator,
+  terremotoProgresso, terremotoIntensidade, TERREMOTO_DURACAO_MS, ventoDirecao,
+  ERUPCAO_RAIO, faseFinalFator,
 } from '../../shared/arenaEvents.js';
 import { playEruptionSound, playTerremotoSound } from './audio.js';
 import { isMatchTutorialActive } from './tutorial/matchTutorial.js';
@@ -61,11 +62,16 @@ export function drawArenaBackground(corPadrao) {
 
 // --- Terremoto (terra) --------------------------------------------------
 
-// Se o terremoto estava ativo no frame anterior, para disparar o som só na
-// borda de subida (início do tremor) — mesma ideia de fasesAnteriores logo
-// abaixo, mas sem precisar de snapshot: os dois lados chegam à mesma resposta
-// de terremotoProgresso(now) porque é pura função do relógio.
-let terremotoAtivoAntes = false;
+// Índice do tremor ouvido no frame anterior, para disparar o som só na borda de
+// subida (início de cada tremor) — mesma ideia de fasesAnteriores logo abaixo,
+// mas sem precisar de snapshot: os dois lados chegam à mesma resposta de
+// terremotoProgresso(now) porque é pura função do relógio.
+//
+// É um índice e não um booleano por causa da fase final, em que o tremor não
+// para mais: um booleano tocaria o rumor uma única vez e depois a câmera
+// sacudiria em silêncio por 14s. TERREMOTO_DURACAO_MS divide o ciclo, então o
+// índice também fica constante durante cada tremor do trecho periódico.
+let terremotoPulsoAntes = null;
 
 // Deslocamento de câmera para este frame, ou null fora do tremor. Puramente
 // visual: nunca mexe na posição real de ninguém, só em onde a cena é
@@ -74,14 +80,18 @@ let terremotoAtivoAntes = false;
 // A força não é constante: cada ocorrência tem uma intensidade-base diferente
 // (terremotoIntensidade, do leve ao devastador) e, dentro da própria duração,
 // um envelope em sino (sobe, sustenta perto do pico, cai) em vez de ligar e
-// desligar de repente.
+// desligar de repente. Nos últimos segundos o tremor não para mais (e no
+// último segundo cessa de vez) — quem decide isso é terremotoProgresso, a
+// partir de state.remainingMs.
 export function terremotoShakeOffset(now) {
   if (isMatchTutorialActive()) return null;
-  const progresso = state.arenaTipo === 'terra' ? terremotoProgresso(now) : null;
-  const ativo = progresso !== null;
-  if (ativo && !terremotoAtivoAntes) playTerremotoSound();
-  terremotoAtivoAntes = ativo;
-  if (!ativo) return null;
+  const progresso = state.arenaTipo === 'terra'
+    ? terremotoProgresso(now, state.remainingMs)
+    : null;
+  const pulso = progresso === null ? null : Math.floor(now / TERREMOTO_DURACAO_MS);
+  if (pulso !== null && pulso !== terremotoPulsoAntes) playTerremotoSound();
+  terremotoPulsoAntes = pulso;
+  if (progresso === null) return null;
 
   const envelope = Math.sin(progresso * Math.PI); // 0 -> 1 no meio -> 0
   // state.remainingMs deixa o tremor mais forte nos últimos segundos de
@@ -105,7 +115,9 @@ let ultimoSpawnVento = 0;
 // de que o vento está empurrando os dois jogadores agora (a física em si não
 // aparece separada do movimento normal).
 export function updateAndDrawVento(now) {
-  const direcao = isMatchTutorialActive() ? 0 : ventoDirecao(state.arenaTipo, now);
+  const direcao = isMatchTutorialActive()
+    ? 0
+    : ventoDirecao(state.arenaTipo, now, state.remainingMs);
   // Nos últimos segundos de partida a rajada empurra mais forte (ver
   // faseFinalFator) — as partículas nascem mais rápido e mais depressa para
   // a rajada parecer tão mais intensa quanto a física por trás dela.
@@ -192,5 +204,5 @@ export function resetArenaVisuals() {
   particulasVento = [];
   ultimoSpawnVento = 0;
   fasesAnteriores = new Map();
-  terremotoAtivoAntes = false;
+  terremotoPulsoAntes = null;
 }

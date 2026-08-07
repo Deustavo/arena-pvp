@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   ARENA_TIPOS, sortearArena, terremotoAtivo, terremotoProgresso, terremotoIntensidade,
   ventoDirecao, VENTO_FORCA, criarErupcoes, tickErupcoes, ERUPCAO_RAIO, ERUPCAO_KNOCKBACK,
-  ARENA_FASE_FINAL_MS, faseFinalFator,
+  ARENA_FASE_FINAL_MS, ARENA_EVENTO_FIM_MS, faseFinalFator,
 } from '../shared/arenaEvents.js';
 import { createPlayerState } from '../shared/entities.js';
 import { stepPlayers } from '../shared/simulation.js';
@@ -41,6 +41,25 @@ describe('terremoto (terra)', () => {
     assert.equal(terremotoProgresso(4500), null);
     assert.equal(terremotoProgresso(10000), null);
     assert.equal(terremotoProgresso(18000), 0); // próximo ciclo
+  });
+
+  test('não para mais nos últimos ARENA_FASE_FINAL_MS de partida', () => {
+    // Na fase final o tremor é contínuo: nenhum instante do ciclo (inclusive os
+    // que ficariam de fora no trecho periódico) devolve null.
+    for (let agora = 0; agora < 18000; agora += 250) {
+      assert.notEqual(
+        terremotoProgresso(agora, ARENA_FASE_FINAL_MS),
+        null,
+        `deveria estar tremendo em ${agora}ms`,
+      );
+    }
+  });
+
+  test('para de vez no último segundo, e não volta no desempate', () => {
+    assert.notEqual(terremotoProgresso(0, ARENA_EVENTO_FIM_MS + 1), null);
+    assert.equal(terremotoProgresso(0, ARENA_EVENTO_FIM_MS), null);
+    assert.equal(terremotoProgresso(2250, 500), null);
+    assert.equal(terremotoAtivo(0, 0), false);
   });
 
   test('a intensidade varia entre ocorrências, não é sempre a mesma', () => {
@@ -84,6 +103,24 @@ describe('vento (areia)', () => {
     const startX = p.x;
     stepPlayers([p], ARENA, 0, 'areia', ARENA_FASE_FINAL_MS);
     assert.ok(p.x - startX > VENTO_FORCA);
+  });
+
+  test('não para mais nos últimos ARENA_FASE_FINAL_MS de partida', () => {
+    // Na fase final não existe mais pausa entre rajadas: nenhum instante do
+    // ciclo (inclusive os que ficariam parados no trecho periódico) devolve 0.
+    for (let agora = 0; agora < 20000; agora += 250) {
+      assert.notEqual(
+        ventoDirecao('areia', agora, ARENA_FASE_FINAL_MS),
+        0,
+        `deveria estar ventando em ${agora}ms`,
+      );
+    }
+  });
+
+  test('para de vez no último segundo, e não volta no desempate', () => {
+    assert.notEqual(ventoDirecao('areia', 0, ARENA_EVENTO_FIM_MS + 1), 0);
+    assert.equal(ventoDirecao('areia', 0, ARENA_EVENTO_FIM_MS), 0);
+    assert.equal(ventoDirecao('areia', 0, 0), 0);
   });
 });
 

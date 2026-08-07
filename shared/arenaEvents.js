@@ -43,6 +43,16 @@ export function faseFinalFator(restanteMs = Infinity) {
   return restanteMs <= ARENA_FASE_FINAL_MS ? ARENA_FASE_FINAL_FATOR : 1;
 }
 
+// Os eventos que ficam contínuos na fase final (terremoto e vento) param de vez
+// com este tempo restante: o último segundo — e todo o desempate depois dele —
+// fica limpo, para o momento que decide a partida não ser disputado com a tela
+// sacudindo nem com os dois jogadores sendo empurrados.
+export const ARENA_EVENTO_FIM_MS = 1000;
+
+export function faseFinalContinua(restanteMs = Infinity) {
+  return restanteMs <= ARENA_FASE_FINAL_MS && restanteMs > ARENA_EVENTO_FIM_MS;
+}
+
 // ---------------------------------------------------------------------------
 // Terra: terremotos periódicos. Puramente visual/sonoro (câmera tremendo, ver
 // public/js/arenaVisuals.js) — não mexe em posição, velocidade ou dano, então
@@ -50,7 +60,7 @@ export function faseFinalFator(restanteMs = Infinity) {
 // ---------------------------------------------------------------------------
 
 const TERREMOTO_CICLO_MS = 18000;
-const TERREMOTO_DURACAO_MS = 4500;
+export const TERREMOTO_DURACAO_MS = 4500;
 
 // Intensidade de pico (força do tremor de câmera, em px — ver
 // terremotoShakeOffset em public/js/arenaVisuals.js) do mais fraco ao mais
@@ -58,17 +68,30 @@ const TERREMOTO_DURACAO_MS = 4500;
 // igual.
 const TERREMOTO_INTENSIDADES = [5, 9, 13, 18];
 
+// Nos últimos ARENA_FASE_FINAL_MS o tremor deixa de ser periódico e passa a ser
+// **contínuo**: o ciclo de espera não existe mais e o progresso só oscila numa
+// faixa que nunca chega às pontas do envelope (onde ele valeria 0), então a
+// câmera nunca para de tremer — até ARENA_EVENTO_FIM_MS, quando para de vez.
+const TERREMOTO_CONTINUO_MIN = 0.25;
+const TERREMOTO_CONTINUO_MAX = 0.75;
+
 // Ativo por TERREMOTO_DURACAO_MS a cada TERREMOTO_CICLO_MS, só em função do
-// relógio.
-export function terremotoAtivo(agora) {
-  return (agora % TERREMOTO_CICLO_MS) < TERREMOTO_DURACAO_MS;
+// relógio — e sem interrupção na fase final, ver terremotoProgresso.
+export function terremotoAtivo(agora, restanteMs = Infinity) {
+  return terremotoProgresso(agora, restanteMs) !== null;
 }
 
 // Progresso (0 a 1) dentro do tremor em andamento, ou null fora dele. Usado
 // para variar a intensidade ao longo da própria duração — sobe, sustenta
 // perto do pico e cai no final — em vez de um tremor ligado/desligado com
 // força constante.
-export function terremotoProgresso(agora) {
+export function terremotoProgresso(agora, restanteMs = Infinity) {
+  if (restanteMs <= ARENA_EVENTO_FIM_MS) return null;
+  if (faseFinalContinua(restanteMs)) {
+    const fase = (agora % TERREMOTO_DURACAO_MS) / TERREMOTO_DURACAO_MS;
+    const pulso = (1 - Math.cos(fase * 2 * Math.PI)) / 2; // 0 -> 1 -> 0, sem quebra entre ciclos
+    return TERREMOTO_CONTINUO_MIN + pulso * (TERREMOTO_CONTINUO_MAX - TERREMOTO_CONTINUO_MIN);
+  }
   const fase = agora % TERREMOTO_CICLO_MS;
   return fase < TERREMOTO_DURACAO_MS ? fase / TERREMOTO_DURACAO_MS : null;
 }
@@ -88,6 +111,10 @@ export function terremotoIntensidade(agora, restanteMs = Infinity) {
 // mesmo lado (esquerda/direita alternando a cada ciclo) enquanto duram. Não
 // é vantagem de ninguém — os dois levam o mesmo empurrão — então não precisa
 // de sorteio por partida: a direção vem do índice do ciclo.
+//
+// Nos últimos ARENA_FASE_FINAL_MS o vento **não para mais**: a pausa entre
+// rajadas deixa de existir e o empurrão só troca de lado na virada do ciclo,
+// até parar de vez em ARENA_EVENTO_FIM_MS (mesma regra do terremoto).
 // ---------------------------------------------------------------------------
 
 const VENTO_CICLO_MS = 10000;
@@ -95,12 +122,13 @@ const VENTO_DURACAO_MS = 3500;
 export const VENTO_FORCA = 1.6; // px por tick empurrados na direção do vento
 
 // 0 (parado), 1 (direita) ou -1 (esquerda).
-export function ventoDirecao(arenaTipo, agora) {
+export function ventoDirecao(arenaTipo, agora, restanteMs = Infinity) {
   if (arenaTipo !== 'areia') return 0;
-  const faseCiclo = agora % VENTO_CICLO_MS;
-  if (faseCiclo >= VENTO_DURACAO_MS) return 0;
+  if (restanteMs <= ARENA_EVENTO_FIM_MS) return 0;
   const ciclo = Math.floor(agora / VENTO_CICLO_MS);
-  return ciclo % 2 === 0 ? 1 : -1;
+  const direcao = ciclo % 2 === 0 ? 1 : -1;
+  if (faseFinalContinua(restanteMs)) return direcao;
+  return (agora % VENTO_CICLO_MS) < VENTO_DURACAO_MS ? direcao : 0;
 }
 
 // Força efetiva do vento (px/tick), mais forte nos últimos ARENA_FASE_FINAL_MS

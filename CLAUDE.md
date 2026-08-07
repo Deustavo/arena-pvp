@@ -527,12 +527,21 @@ no cliente (`public/js/arenaVisuals.js`).
   `terremotoIntensidade` varia a intensidade-base entre ocorrências (do leve
   ao devastador, pelo índice do ciclo) e `terremotoProgresso` dá um envelope
   em sino dentro da própria duração (sobe, sustenta perto do pico, cai) em vez
-  de ligar/desligar de repente.
+  de ligar/desligar de repente. Nos últimos `ARENA_FASE_FINAL_MS` (0:15) o
+  tremor deixa de ser periódico e **não para mais** (`faseFinalContinua`) — o
+  progresso passa a oscilar numa faixa que nunca chega às pontas do envelope.
+  Por causa disso o som é disparado na borda de subida de um **índice** de
+  tremor (`terremotoPulsoAntes` em `arenaVisuals.js`) e não de um booleano de
+  "está ativo": um booleano tocaria o rumor uma vez só e a câmera sacudiria em
+  silêncio pelos 14s da fase final.
 - **Areia**: rajadas de vento periódicas empurram **os dois jogadores** para o
   mesmo lado — não é vantagem de ninguém, então a direção não precisa ser
   sorteada por partida: vem do índice do ciclo (`ventoDirecao`), alternando a
-  cada rajada. `public/js/arenaVisuals.js` desenha riscos de areia atravessando
-  a tela na direção do vento.
+  cada rajada. Nos últimos `ARENA_FASE_FINAL_MS` (0:15) a pausa entre rajadas
+  deixa de existir e o vento **não para mais** (`faseFinalContinua`, igual ao
+  terremoto): só troca de lado na virada do ciclo.
+  `public/js/arenaVisuals.js` desenha riscos de areia atravessando a tela na
+  direção do vento.
 - **Gelo**: piso escorregadio a partida inteira. Em vez do movimento parar
   assim que solta a tecla (como nas outras arenas), `stepPlayers` passa a
   acumular velocidade "de embalo" (`p.vx`/`p.vy`, ver `shared/entities.js`) que
@@ -549,6 +558,11 @@ no cliente (`public/js/arenaVisuals.js`).
   arena mais agressiva de propósito: `ERUPCAO_JANELAS_MS` tem seis janelas
   (o dobro das outras agendas de arena), uma onda nova a cada ~9-10s de
   partida.
+
+Terremoto e vento param de vez com `ARENA_EVENTO_FIM_MS` (1s) de tempo
+restante: o último segundo — e todo o desempate depois dele — fica limpo, para
+o momento que decide a partida não ser disputado com a tela sacudindo nem com
+os dois jogadores sendo empurrados.
 
 Terremoto, vento e gelo são **puramente determinísticos**: dependem só do
 relógio (`agora`, o mesmo `Date.now()` que já passa para `stepPlayers`), sem

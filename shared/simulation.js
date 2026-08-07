@@ -19,7 +19,7 @@ import { ventoDirecao, ventoForca, geloAtrito } from './arenaEvents.js';
 export function stepPlayers(players, arena, agora = Date.now(), arenaTipo = null, restanteMs = Infinity) {
   const gelo = arenaTipo === 'gelo';
   const atrito = geloAtrito(restanteMs);
-  const vento = ventoDirecao(arenaTipo, agora) * ventoForca(restanteMs);
+  const vento = ventoDirecao(arenaTipo, agora, restanteMs) * ventoForca(restanteMs);
 
   for (const p of players) {
     if (!p.alive) continue;
