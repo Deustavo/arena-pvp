@@ -587,10 +587,17 @@ espectador).
 - No desempate, `congelarPartida` também descarta as erupções ativas nos dois
   donos de loop, pelo mesmo motivo dos power-ups: a partida está congelada,
   ninguém andaria até lá nem veria o resto da explosão.
-- O som da explosão (`playEruptionSound`, `public/js/audio.js`) é disparado
-  pelo cliente ao ver, no snapshot, a transição de fase de uma erupção
-  (`aviso` → `explosao`) — mesmo padrão de diff entre frames que o HUD usa
-  para tiro/dano/bloqueio e que `powerups.js` usa para spawn/coleta. O
+- As duas pistas sonoras da erupção saem do **diff do snapshot** em
+  `arenaVisuals.js` (`diffErupcoes`) — mesmo padrão de diff entre frames que o
+  HUD usa para tiro/dano/bloqueio e que `powerups.js` usa para spawn/coleta:
+  id novo em `fase: 'aviso'` toca o alarme (`playEruptionWarningSound`, dois
+  bipes agudos avisando que a lava vai cair ali), e a transição `aviso` →
+  `explosao` toca o estrondo (`playEruptionSound`) e joga as partículas
+  laranja de `spawnExplosion` no ponto da erupção, dimensionadas pelo `raio`
+  dela. `ERUPCAO_AVISO_MS` precisa caber reação humana **mais** a caminhada
+  até fora do raio (a erupção nasce em cima do jogador, então sair de dentro
+  custa `ERUPCAO_RAIO` px de deslocamento) — encurtar isso deixa a arena de
+  fogo impossível de desviar. O
   terremoto dispara `playTerremotoSound` na borda de subida de
   `terremotoProgresso(now)` (calculado localmente, sem precisar de snapshot). O
   vento ainda não tem som próprio (só o visual).

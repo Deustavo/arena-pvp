@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   ARENA_TIPOS, sortearArena, terremotoAtivo, terremotoProgresso, terremotoIntensidade,
   ventoDirecao, VENTO_FORCA, criarErupcoes, tickErupcoes, ERUPCAO_RAIO, ERUPCAO_KNOCKBACK,
+  ERUPCAO_AVISO_MS,
   ARENA_FASE_FINAL_MS, ARENA_EVENTO_FIM_MS, faseFinalFator,
 } from '../shared/arenaEvents.js';
 import { createPlayerState } from '../shared/entities.js';
@@ -197,20 +198,20 @@ describe('erupções (fogo)', () => {
     const xAntesExplosao = alvo.x;
 
     // Antes do fim do aviso: continua em aviso, sem dano (o alvo não se mexeu).
-    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 1000);
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, ERUPCAO_AVISO_MS - 1);
     assert.ok(estado.ativas.every((e) => e.fase === 'aviso'));
     assert.equal(alvo.lives, vidasAntes);
 
     // Passa do tempo de aviso: as duas explodem, causando dano/knockback em
     // quem ficou dentro.
-    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 2000);
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, ERUPCAO_AVISO_MS);
     assert.equal(estado.ativas.length, 2);
     assert.ok(estado.ativas.every((e) => e.fase === 'explosao'));
     assert.equal(alvo.lives, vidasAntes - 1);
     assert.notEqual(alvo.x, xAntesExplosao);
 
     // Um tick depois, as explosões somem da lista.
-    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 2001);
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, ERUPCAO_AVISO_MS + 1);
     assert.equal(estado.ativas.length, 0);
   });
 
@@ -242,7 +243,7 @@ describe('erupções (fogo)', () => {
     fugitivo.x = estado.ativas[0].x - ERUPCAO_RAIO * 5;
     fugitivo.y = estado.ativas[0].y;
 
-    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, 2000);
+    tickErupcoes('fogo', estado, players, item.surgeEmRestanteMs, ERUPCAO_AVISO_MS);
     assert.equal(fugitivo.lives, vidasAntes);
   });
 });

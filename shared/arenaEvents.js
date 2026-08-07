@@ -166,7 +166,12 @@ export function geloAtrito(restanteMs = Infinity) {
 // ---------------------------------------------------------------------------
 
 export const ERUPCAO_RAIO = 110;
-export const ERUPCAO_AVISO_MS = 1100;
+// Tempo entre o círculo de aviso aparecer (com o alarme sonoro, ver
+// playEruptionWarningSound) e a explosão. Precisa ser longo o bastante para
+// caber uma reação humana **mais** a caminhada até fora do raio: a erupção
+// nasce em cima do jogador, então sair de dentro dela custa ERUPCAO_RAIO px de
+// deslocamento, não um passo.
+export const ERUPCAO_AVISO_MS = 2300;
 export const ERUPCAO_DANO = 1;
 export const ERUPCAO_KNOCKBACK = 22;
 

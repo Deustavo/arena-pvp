@@ -258,6 +258,33 @@ export const playPowerupPickupSound = efeito('powerupPickup', 400, () => {
 
 // --- Arena -------------------------------------------------------------
 
+// Erupção de lava vai cair aqui (arena de fogo): toca no instante em que o
+// círculo de aviso aparece, ERUPCAO_AVISO_MS antes da explosão. É um alarme de
+// dois bipes agudos — deliberadamente diferente de tudo o mais do combate,
+// porque é a única pista sonora de que dá para sair andando antes de levar
+// dano. A janela anti-repetição cobre a sirene inteira: as duas erupções da
+// onda nascem no mesmo tick (uma por jogador) e o alarme deve tocar uma vez só.
+//
+// É uma **sirene de alerta**: dois toques, cada um subindo e descendo de tom
+// (o "uh-oh" de sirene, que `nota` não faz sozinha — um sweep por nota, então
+// cada toque são duas notas encostadas). Sawtooth com bandpass para o timbre
+// estridente de alarme, não de música.
+const SIRENE_TOQUE_MS = 0.19; // duração de cada metade (subida ou descida)
+const SIRENE_GRAVE = 520;
+const SIRENE_AGUDO = 990;
+
+export const playEruptionWarningSound = efeito('eruptionWarning', 1000, () => {
+  const base = {
+    type: 'sawtooth', dur: SIRENE_TOQUE_MS, gain: 0.16, attack: 0.03,
+    filter: 'bandpass', filterFreq: 1100, Q: 1.2,
+  };
+  for (let toque = 0; toque < 2; toque++) {
+    const at = toque * SIRENE_TOQUE_MS * 2.4; // 2 metades + um respiro entre os toques
+    nota({ ...base, at, freq: SIRENE_GRAVE, to: SIRENE_AGUDO });
+    nota({ ...base, at: at + SIRENE_TOQUE_MS, freq: SIRENE_AGUDO, to: SIRENE_GRAVE });
+  }
+});
+
 // Erupção de lava explodindo (arena de fogo, ver shared/arenaEvents.js). Mais
 // grave e mais longa que playExplosionSound, para não soar como "alguém
 // morreu" quando é só o chão.

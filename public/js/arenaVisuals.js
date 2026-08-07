@@ -15,7 +15,8 @@ import {
   terremotoProgresso, terremotoIntensidade, TERREMOTO_DURACAO_MS, ventoDirecao,
   ERUPCAO_RAIO, faseFinalFator,
 } from '../../shared/arenaEvents.js';
-import { playEruptionSound, playTerremotoSound } from './audio.js';
+import { playEruptionSound, playEruptionWarningSound, playTerremotoSound } from './audio.js';
+import { spawnExplosion } from './explosions.js';
 import { isMatchTutorialActive } from './tutorial/matchTutorial.js';
 
 const hasDom = typeof Image !== 'undefined';
@@ -154,13 +155,32 @@ const ERUPCAO_AVISO_FILL = 'rgba(255, 100, 20, 0.35)';
 const ERUPCAO_AVISO_STROKE = 'rgba(255, 170, 60, 0.9)';
 const ERUPCAO_EXPLOSAO_COLOR = 'rgba(255, 214, 120, 0.85)';
 
-// Por id, só a fase do frame anterior — é a transição 'aviso' -> 'explosao'
-// que dispara o som, mesmo padrão de diffPowerups em powerups.js.
+// Cor das partículas da explosão da erupção: lava, não o vermelho de jogador
+// morrendo (ver EXPLOSION_COLOR em explosions.js).
+const ERUPCAO_PARTICULA_COLOR = '#ff8a1f';
+
+// Por id, só a fase do frame anterior — são as transições dela que disparam
+// som e partículas, mesmo padrão de diffPowerups em powerups.js: id novo em
+// 'aviso' = a lava vai cair aqui (alarme), 'aviso' -> 'explosao' = caiu
+// (estrondo + partículas).
 let fasesAnteriores = new Map();
 
 function diffErupcoes(lista) {
   for (const e of lista) {
-    if (fasesAnteriores.get(e.id) === 'aviso' && e.fase === 'explosao') playEruptionSound();
+    const antes = fasesAnteriores.get(e.id);
+    if (antes === undefined && e.fase === 'aviso') {
+      playEruptionWarningSound();
+    } else if (antes === 'aviso' && e.fase === 'explosao') {
+      playEruptionSound();
+      // Partículas no mesmo lugar/instante do flash, dimensionadas pelo raio
+      // desta erupção (que já vem intensificado na fase final).
+      const raio = e.raio ?? ERUPCAO_RAIO;
+      spawnExplosion(e.x, e.y, {
+        color: ERUPCAO_PARTICULA_COLOR,
+        count: 40,
+        spread: raio / ERUPCAO_RAIO * 1.6,
+      });
+    }
   }
   fasesAnteriores = new Map(lista.map((e) => [e.id, e.fase]));
 }

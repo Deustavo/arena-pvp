@@ -6,12 +6,14 @@ const EXPLOSION_PARTICLE_COUNT = 26;
 const EXPLOSION_LIFE_MS = 800;
 const EXPLOSION_COLOR = '#ff4d4d';
 
-export function spawnExplosion(cx, cy) {
-  const color = EXPLOSION_COLOR;
+// `color`/`count`/`spread` existem para a explosão da erupção de lava (arena de
+// fogo), que é laranja, maior e mais numerosa que a de um jogador morrendo —
+// as partículas precisam cobrir o raio da erupção, não o de um personagem.
+export function spawnExplosion(cx, cy, { color = EXPLOSION_COLOR, count = EXPLOSION_PARTICLE_COUNT, spread = 1 } = {}) {
   const now = Date.now();
-  for (let i = 0; i < EXPLOSION_PARTICLE_COUNT; i++) {
+  for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = 1.5 + Math.random() * 4;
+    const speed = (1.5 + Math.random() * 4) * spread;
     state.explosionParticles.push({
       x: cx,
       y: cy,
