@@ -151,25 +151,24 @@ function drawShotPreview(cx, cy, classId) {
   const spreadRad = (cls.coneSpreadDeg * Math.PI) / 180;
   const length = Number.isFinite(cls.range) ? cls.range : INFINITE_PREVIEW_LENGTH;
 
+  // Exceção deliberada à pixel art (ver CLAUDE.md): traço fino tracejado. A
+  // versão em blocos foi tentada e ficou ruim — a mira é uma linha de leitura,
+  // não arte, e em blocos ela some contra o chão texturizado.
   ctx.save();
-  ctx.fillStyle = AIM_PREVIEW_COLOR;
+  ctx.globalAlpha = 0.45;
+  ctx.strokeStyle = AIM_PREVIEW_COLOR;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 6]);
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? 0 : i / (count - 1) - 0.5;
     const angle = baseAngle + t * spreadRad;
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-    // Blocos espaçados ao longo da reta, em vez de setLineDash: um traço
-    // tracejado em diagonal sai serrilhado e anti-aliased, que é exatamente o
-    // que a arte não pode ter.
-    for (let d = AIM_PREVIEW_PASSO; d < length; d += AIM_PREVIEW_PASSO) {
-      ctx.fillRect(snap(cx + dx * d), snap(cy + dy * d), PX, PX);
-    }
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(angle) * length, cy + Math.sin(angle) * length);
+    ctx.stroke();
   }
   ctx.restore();
 }
-
-// Distância entre os blocos da prévia de mira.
-const AIM_PREVIEW_PASSO = PX * 4;
 
 // Indica o jogador controlado por este cliente sem cobrir o personagem: uma
 // meia-lua pulsante no chão, aos pés (só a metade de baixo da elipse, pra não

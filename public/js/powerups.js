@@ -20,9 +20,6 @@ import {
 // Cinza um pouco mais escuro que o fundo da arena (ARENA_BG_COLOR em
 // render.js): marca a região onde as bolhas nascem sem virar decoração.
 const ZONE_BORDER_COLOR = 'rgba(0, 0, 0, 0.6)';
-// A borda da zona é pontilhada: um bloco a cada tantos passos de ângulo. Um
-// círculo contínuo de 4px de espessura viraria uma parede desenhada no chão.
-const ZONE_DOT_PASSOS = 90;
 
 const CORES = {
   vida: '#e63946',
@@ -251,19 +248,15 @@ function drawColeta(coleta, now) {
 // Região onde as bolhas nascem, no centro da arena. Desenhada logo depois do
 // fundo (e antes de tudo o mais) para ficar por baixo de jogadores e tiros.
 export function drawPowerupZone() {
+  // Exceção deliberada à pixel art (ver CLAUDE.md): traço fino de 1px. A
+  // versão em blocos pontilhados foi tentada e ficou ruim — é uma marcação de
+  // chão, e em blocos passa a competir com o desenho da arena.
   ctx.save();
-  ctx.fillStyle = ZONE_BORDER_COLOR;
-  for (let i = 0; i < ZONE_DOT_PASSOS; i++) {
-    // Um bloco sim, um não: é o pontilhado, feito no ângulo em vez de com
-    // setLineDash (que num círculo sai serrilhado e anti-aliased).
-    if (i % 2 !== 0) continue;
-    const ang = (i / ZONE_DOT_PASSOS) * Math.PI * 2;
-    ctx.fillRect(
-      snap(POWERUP_ZONE.x + Math.cos(ang) * POWERUP_ZONE.r),
-      snap(POWERUP_ZONE.y + Math.sin(ang) * POWERUP_ZONE.r),
-      PX, PX,
-    );
-  }
+  ctx.strokeStyle = ZONE_BORDER_COLOR;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(POWERUP_ZONE.x, POWERUP_ZONE.y, POWERUP_ZONE.r, 0, Math.PI * 2);
+  ctx.stroke();
   ctx.restore();
 }
 

@@ -400,9 +400,9 @@ No CSS, painéis e modais seguem o mesmo vocabulário: canto reto e sombra
 sólida deslocada (`8px 8px 0`) em vez de desfoque, skeleton de loading em
 passos (`steps()`) e barra de cooldown enchendo em blocos.
 
-**Duas exceções deliberadas**, que já foram tentadas em pixel art e
-revertidas por deixarem a interface carregada — não "conserte" nenhuma das
-duas:
+**Quatro exceções deliberadas**, que já foram tentadas em pixel art e
+revertidas por deixarem a interface carregada — não "conserte" nenhuma
+delas:
 
 - **Botões** continuam com `border-radius`, sombra suave no hover e
   `transition`/`scale`. A versão em "bloco de pedra" (bisel de 4px,
@@ -412,6 +412,13 @@ duas:
   traço fino (`fill: none; stroke: currentColor; stroke-width: 2`). A versão
   em grade 16x16 preenchida ficava pesada e menos legível no tamanho em que
   os ícones aparecem (16–20px no HUD e nos cartões).
+- **Prévia de mira** (`drawShotPreview` em `render.js`) continua sendo traço
+  fino tracejado (`setLineDash`, `lineWidth: 1.5`, alpha contínuo). A versão em
+  blocos espaçados sumia contra o chão texturizado da arena: a mira é uma linha
+  de leitura para acertar o tiro, não arte.
+- **Círculo da zona de power-up** (`drawPowerupZone` em `powerups.js`) continua
+  sendo um `arc` de 1px. Em blocos pontilhados a marcação do chão passava a
+  competir com o desenho da arena em vez de só delimitar a região.
 
 #### Paleta de cores (`public/css/style.css`)
 
